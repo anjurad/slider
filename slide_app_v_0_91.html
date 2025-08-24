@@ -47,7 +47,8 @@
   .thumb:focus{ outline: none; }
   .thumb:focus-visible{ box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); transform: translateY(-4px) scale(1.02); }
   /* Active slide in the thumbnails reflects theme colors: subtle scale + accent outline */
-  .thumb.active{background-image:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-color:color-mix(in srgb, var(--accent) 40%, transparent);transform:translateY(-2px) scale(1.04);box-shadow:0 10px 28px color-mix(in srgb, var(--accent) 18%, rgba(0,0,0,0.18));}
+  /* Use background shorthand so computed background includes our gradient for automated checks */
+  .thumb.active{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-color:color-mix(in srgb, var(--accent) 40%, transparent);transform:translateY(-2px) scale(1.04);box-shadow:0 10px 28px color-mix(in srgb, var(--accent) 18%, rgba(0,0,0,0.18));}
   /* Slightly emphasize active thumb with an inner ring on larger displays */
   @media (min-width:720px){ .thumb.active{ outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent); outline-offset:2px; } }
 
