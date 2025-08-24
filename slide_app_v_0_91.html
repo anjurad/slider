@@ -27,13 +27,29 @@
     #bg-canvas{position:fixed;inset:0;z-index:-1;display:none}
     @keyframes moveGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 
-    .thumbs{width:220px;background:#0b1220;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;border-right:1px solid rgba(255,255,255,.08)}
+  .thumbs{width:220px;background:linear-gradient(180deg,var(--app-bg1, #0b1220), var(--app-bg2, #0f172a));overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;border-right:1px solid rgba(255,255,255,.08)}
     .thumbs.overlay{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s ease;z-index:14}
     .thumbs.overlay.open{transform:translateX(0)}
     .thumbs.collapsed{width:0;padding:0;border-right:none}
-  .thumb{cursor:pointer;padding:6px;background:rgba(255,255,255,.05);border-radius:8px;font-size:12px;color:var(--muted)}
-  /* Active slide in the thumbnails should reflect theme colors */
-  .thumb.active{background-image:linear-gradient(135deg,var(--primary),var(--accent));color:#fff}
+  /* Thumbnail visuals (CSS-driven)
+     Variables:
+       --thumb-radius      Border radius for thumbnails
+       --thumb-padding     Padding inside each thumbnail
+       --thumb-font-size   Font size used in thumbnails
+       --thumb-border      Border width for thumbnail frames
+       --thumb-transition  Duration for thumb transitions
+       --thumb-elevation   Shadow/elevation magnitude used on hover/active
+  */
+  :root{ --thumb-radius:8px; --thumb-padding:8px; --thumb-font-size:12px; --thumb-border:1px; --thumb-transition:220ms; --thumb-elevation:6px; }
+  .thumb{cursor:pointer;padding:var(--thumb-padding);border-radius:var(--thumb-radius);font-size:var(--thumb-font-size);color:var(--text);background:linear-gradient(180deg,var(--app-bg1, #0b1220), var(--app-bg2, #0f172a));border:var(--thumb-border) solid rgba(0,0,0,0.12);transition:transform var(--thumb-transition) ease, box-shadow var(--thumb-transition) ease, border-color var(--thumb-transition) ease, background var(--thumb-transition) ease;transform-origin:left center;display:flex;align-items:center;gap:8px}
+  .thumb:hover{ transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.18); }
+  /* Accessible focus styles for keyboard users */
+  .thumb:focus{ outline: none; }
+  .thumb:focus-visible{ box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); transform: translateY(-4px) scale(1.02); }
+  /* Active slide in the thumbnails reflects theme colors: subtle scale + accent outline */
+  .thumb.active{background-image:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;border-color:color-mix(in srgb, var(--accent) 40%, transparent);transform:translateY(-2px) scale(1.04);box-shadow:0 10px 28px color-mix(in srgb, var(--accent) 18%, rgba(0,0,0,0.18));}
+  /* Slightly emphasize active thumb with an inner ring on larger displays */
+  @media (min-width:720px){ .thumb.active{ outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent); outline-offset:2px; } }
 
     .deck{position:relative;flex:1;height:100vh;overflow:hidden}
     .deck-header{position:absolute;top:14px;left:24px;right:24px;display:flex;align-items:center;justify-content:space-between;z-index:5}
@@ -41,7 +57,11 @@
     .brand-badge{height:28px;width:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--accent))}
     .brand-name{font-weight:700}
     .deck-tools{display:flex;gap:8px;align-items:center}
-    .btn{cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);background:rgba(17,24,39,.55);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(6px);font-size:12px}
+  /* Buttons use a subtle translucent overlay so text remains readable on light and dark app backgrounds */
+  .btn{cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);background:linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04));border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);font-size:12px}
+  /* Use CSS variables for button background so themes can update them consistently */
+  :root{ --btn-bg: linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04)); --btn-text: var(--text); }
+  .btn{ background: var(--btn-bg); color: var(--btn-text); }
 
     .slides{position:absolute;inset:0;display:grid;place-items:center;padding:64px 72px 80px 72px}
   .slide{position:absolute;inset:72px;display:grid;place-items:center;background:linear-gradient(180deg,var(--slide-bg1, rgba(17,24,39,.75)),var(--slide-bg2, rgba(17,24,39,.55)));border-radius:var(--radius);box-shadow:var(--slide-shadow, var(--shadow));opacity:0;transform:translate3d(60px,0,0) scale(.98);transition:all 0.6s cubic-bezier(0.4, 0, 0.2, 1);backdrop-filter:blur(var(--slide-blur, 8px));padding:48px;overflow:auto;outline:none}
@@ -53,6 +73,7 @@
   .slide .slide-overlay.pos-br{bottom:18px;right:24px;text-align:right}
   .slide .slide-overlay .slide-title{color:var(--primary);font-family:var(--font-primary);font-weight:800;font-size:var(--title-size);line-height:1.15;letter-spacing:-0.01em}
   .slide .slide-overlay .slide-subtitle{color:var(--primary);font-family:var(--font-secondary);font-weight:400;font-size:var(--subtitle-size);line-height:1.2;opacity:.95}
+  .slide .slide-overlay .accent-subtitle{ color: var(--accent); }
   /* Theme outline around the active slide, uses accent; width configurable via --outline-w; can be disabled via body.border-off */
   .slide.active::before{content:"";position:absolute;inset:0;border-radius:var(--radius);pointer-events:none;box-shadow:inset 0 0 0 var(--outline-w, 3px) var(--accent)}
   body.border-off .slide.active::before{box-shadow:none}
@@ -99,14 +120,21 @@
 
     /* Config modal */
     #cfgOverlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:30}
-  #cfgModal{position:fixed;top:20px;bottom:20px;left:20px;right:20px;transform:none;width:auto;max-width:none;background:#0b1220;color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column}
+  /* Use app background variables so the Style modal previews theme immediately */
+  #cfgModal{position:fixed;top:20px;bottom:20px;left:20px;right:20px;transform:none;width:auto;max-width:none;background:linear-gradient(135deg,var(--app-bg1, #0b1220),var(--app-bg2, #0f172a));color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column}
   #cfgModal header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex:0 0 auto}
   #cfgModal main{padding:14px;overflow:auto;flex:1 1 auto}
   #cfgModal label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-    #cfgModal input[type="text"]{width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:#0f172a;color:var(--text)}
-    #cfgModal input[type="color"]{width:54px;height:32px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:transparent}
+  /* Ensure modal labels and form text follow the configured --text color */
+  #cfgModal, #cfgModal *{ color: inherit; }
+  #cfgModal { color: var(--text); }
+  #cfgModal label{ color: var(--text); }
+  /* Small helper for muted lead text in demo content */
+  .muted-lead{color:var(--muted);margin:-6px 0 12px 0}
+  #cfgModal input[type="text"]{width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,0.03);color:var(--text)}
+  #cfgModal input[type="color"]{width:54px;height:32px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:transparent;color:var(--text)}
     #cfgModal .row{display:flex;gap:10px;align-items:center}
-  #cfgModal footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;background:rgba(11,18,32,.85);backdrop-filter:blur(4px)}
+  #cfgModal footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12));backdrop-filter:blur(4px)}
   /* Active state for overlay position buttons */
   #cfgOverlayPos .btn.active,
   #cfgOverlayPos .btn[aria-pressed="true"]{
@@ -115,6 +143,25 @@
   /* Fallback then accent-derived tint for better theme consistency */
   background: rgba(255,255,255,0.04);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  /* Active state for preset buttons (compact segmented control) */
+  .preset-btn.active,
+  .preset-btn[aria-pressed="true"]{
+    border-color: var(--accent);
+    /* Match overlay-position selected appearance: subtle accent tint and inset highlight */
+    box-shadow: 0 0 0 1px var(--accent) inset;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--btn-text);
+  }
+  /* Base style for preset buttons should match other small controls (no gradient) */
+  .preset-btn{
+    display:inline-block;
+    padding:10px 18px;
+    margin:6px 8px;
+    border-radius:12px;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: 2px solid rgba(255,255,255,0.06);
   }
   /* Disabled state for overlay position buttons */
   #cfgOverlayPos .btn[disabled],
@@ -218,6 +265,32 @@
           <input id="cfgAccent" type="color" />
         </div>
       </div>
+      <div class="row" style="margin-top:6px">
+        <div style="flex:1">
+          <label for="cfgTextColor">General text color</label>
+          <input id="cfgTextColor" type="color" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px; gap:8px;">
+        <div style="flex:1">
+          <label for="cfgAppBg1">App background start</label>
+          <input id="cfgAppBg1" type="color" />
+        </div>
+        <div style="flex:1">
+          <label for="cfgAppBg2">App background end</label>
+          <input id="cfgAppBg2" type="color" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px; gap:8px;">
+        <div style="flex:1">
+          <label for="cfgSlideBg1">Slide background start</label>
+          <input id="cfgSlideBg1" type="color" />
+        </div>
+        <div style="flex:1">
+          <label for="cfgSlideBg2">Slide background end</label>
+          <input id="cfgSlideBg2" type="color" />
+        </div>
+      </div>
       <div class="row" style="margin-top:8px; align-items: flex-end; gap: 10px;">
         <div style="flex:1">
           <label for="cfgSlideOpacity">Slide background opacity <span id="cfgSlideOpacityVal" aria-hidden="true"></span></label>
@@ -229,15 +302,15 @@
       </div>
 
       <div class="row" style="margin-top:8px; gap: 12px; align-items:center; flex-wrap: wrap;">
-        <label style="margin:0; font-size:12px; color:var(--muted);">UI visibility when OFF</label>
+    <label style="margin:0; font-size:12px;">UI visibility when OFF</label>
         <div style="display:flex; gap:10px; align-items:center;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);">
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
             <input id="cfgHideSlidesWithUi" type="checkbox" /> Hide slides panel
           </label>
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);">
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
             <input id="cfgHideProgressWithUi" type="checkbox" /> Hide progress bar
           </label>
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);">
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
             <input id="cfgSlideOutline" type="checkbox" /> Slide outline
           </label>
         </div>
@@ -249,9 +322,9 @@
           <input id="cfgOutlineWidth" type="range" min="0" max="8" step="1" />
         </div>
         <div style="flex:1">
-          <label style="display:block; font-size:12px; color:var(--muted);">Deck restore</label>
+          <label style="display:block; font-size:12px;">Deck restore</label>
           <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
-            <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);">
+            <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
               <input id="cfgRememberDeck" type="checkbox" /> Remember last deck (persist)
             </label>
             <button class="btn" id="cfgForgetDeck" title="Forget stored deck">Forget deck</button>
@@ -261,12 +334,12 @@
 
       <div class="row" style="margin-top:8px; gap: 12px; align-items:flex-end; flex-wrap: wrap;">
         <div style="flex:1; min-width:210px;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);">
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
             <input id="cfgOverlayTitleOn" type="checkbox" /> Show slide title (overlay)
           </label>
           <div style="display:flex; gap:6px; align-items:center; margin-top:6px; flex-wrap: wrap;">
-            <label style="font-size:12px; color:var(--muted);">Position</label>
-            <span id="cfgOverlayPosHint" style="display:none; font-size:12px; color:var(--muted); opacity:.8;">Enable overlay to change</span>
+            <label style="font-size:12px;">Position</label>
+            <span id="cfgOverlayPosHint" style="display:none; font-size:12px; opacity:.8;">Enable overlay to change</span>
             <div id="cfgOverlayPos" role="group" aria-label="Title position" style="display:flex; gap:6px;">
               <button type="button" class="btn" data-pos="tl">TL</button>
               <button type="button" class="btn" data-pos="tr">TR</button>
@@ -278,13 +351,13 @@
           <input id="cfgTitleSize" type="range" min="12" max="64" step="1" />
         </div>
         <div style="flex:1; min-width:210px;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);">
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
             <input id="cfgOverlaySubtitleOn" type="checkbox" /> Show subtitle (if present)
           </label>
           <label for="cfgSubtitleSize">Subtitle size <span id="cfgSubtitleSizeVal" aria-hidden="true"></span></label>
           <input id="cfgSubtitleSize" type="range" min="10" max="48" step="1" />
           <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-            <label style="font-size:12px; color:var(--muted);">Subtitle color</label>
+            <label style="font-size:12px;">Subtitle color</label>
             <select id="cfgSubtitleColor" class="btn" style="padding:6px 8px;">
               <option value="primary">Primary</option>
               <option value="accent">Accent</option>
@@ -347,7 +420,7 @@
           if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
           if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
           const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-          if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.style.color='var(--accent)'; } wrap.appendChild(sEl);} 
+            if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
           wrap.setAttribute('aria-hidden','true');
           slideEl.appendChild(wrap);
         });
@@ -409,11 +482,30 @@
     CONFIG.appName = CONFIG.brand;
   }
   const PRESETS=[
-  {name:'Preset 1', primary:'#01B4E1', accent:'#64FFFC'},
-  {name:'Preset 2', primary:'#086384', accent:'#64FFFC'},
-  {name:'Preset 3', primary:'#232337', accent:'#64FFFC'},
-  {name:'Preset 4', primary:'#50677B', accent:'#01B4E1'}
+  // Default preset (used when no saved config exists)
+  {name:'Default', primary:'#01B4E1', accent:'#64FFFC', textColor:'#e2e8f0', group:'default', appBg1:'#0f172a', appBg2:'#1e293b', slideBg1:'#111827', slideBg2:'#111827'},
+  // Dark presets (order shown in modal)
+  {name:'Dark 1', primary:'#01B4E1', accent:'#64FFFC', textColor:'#ffffff', group:'dark', appBg1:'#0f1723', appBg2:'#111827', slideBg1:'#111827', slideBg2:'#111827'},
+  {name:'Dark 2', primary:'#232337', accent:'#64FFFC', textColor:'#ffffff', group:'dark', appBg1:'#0b1220', appBg2:'#111827', slideBg1:'#0f1723', slideBg2:'#111827'},
+  {name:'Dark 3', primary:'#01B4E1', accent:'#64FFFC', textColor:'#ffffff', group:'dark', appBg1:'#000000', appBg2:'#0b0b0b', slideBg1:'#000000', slideBg2:'#0b0b0b'},
+  // Light presets
+  {name:'Light 1', primary:'#086384', accent:'#64FFFC', textColor:'#0b1220', group:'light', appBg1:'#f8fafc', appBg2:'#eef2ff', slideBg1:'#ffffff', slideBg2:'#f8fafc'},
+  {name:'Light 2', primary:'#50677B', accent:'#01B4E1', textColor:'#0b1220', group:'light', appBg1:'#f8fafc', appBg2:'#ffffff', slideBg1:'#ffffff', slideBg2:'#f7fbff'},
+  {name:'Light 3', primary:'#01B4E1', accent:'#50677B', textColor:'#0b1220', group:'light', appBg1:'#ffffff', appBg2:'#ffffff', slideBg1:'#ffffff', slideBg2:'#ffffff'}
   ];
+
+  // If no theme values in saved CONFIG, apply the Default preset (non-persistent) so the UI shows a consistent base
+  (function applyDefaultIfMissing(){
+    try{
+      const hasAny = (typeof CONFIG.primary === 'string' && CONFIG.primary.trim()) || (typeof CONFIG.accent === 'string' && CONFIG.accent.trim()) || (typeof CONFIG.appBg1 === 'string' && CONFIG.appBg1.trim()) || (typeof CONFIG.textColor === 'string' && CONFIG.textColor.trim());
+      if(!hasAny){
+        const def = PRESETS.find(p=>p.name==='Default');
+        if(def){
+          CONFIG.primary = def.primary; CONFIG.accent = def.accent; CONFIG.textColor = def.textColor; CONFIG.appBg1 = def.appBg1; CONFIG.appBg2 = def.appBg2; CONFIG.slideBg1 = def.slideBg1; CONFIG.slideBg2 = def.slideBg2;
+        }
+      }
+    }catch(e){}
+  })();
   // Default outline setting: on when not present
   if(typeof CONFIG.slideBorderOn !== 'boolean') CONFIG.slideBorderOn = true;
   // Default outline width (px)
@@ -435,7 +527,7 @@
   if(typeof CONFIG.fontPrimary !== 'string') CONFIG.fontPrimary = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
   if(typeof CONFIG.fontSecondary !== 'string') CONFIG.fontSecondary = 'Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
   // Opacity control: 100 equals default look (0.75/0.55); 0 is fully transparent
-  function setSlideOpacity(val){
+  function setSlideOpacity(val, persist = true){
     let v = Number(val);
     if(!isFinite(v)) v = 100;
   // Normalize to integer percent first to avoid float drift when values come from saved decimal * 100
@@ -446,8 +538,13 @@
   const o2 = (base2 * dec).toFixed(3);
     
   // Set the CSS variables that are used in the .slide background
-    document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`);
-    document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`);
+    // Prefer configured slideBg colors if present (stored as #rrggbb)
+    try{
+      const s1 = (typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()) ? normalizeHex(CONFIG.slideBg1) : null;
+      const s2 = (typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()) ? normalizeHex(CONFIG.slideBg2) : null;
+      if(s1){ const c = hexToRgb(s1); if(c) document.documentElement.style.setProperty('--slide-bg1', `rgba(${c.r},${c.g},${c.b},${o1})`); else document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); } else { document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); }
+      if(s2){ const c = hexToRgb(s2); if(c) document.documentElement.style.setProperty('--slide-bg2', `rgba(${c.r},${c.g},${c.b},${o2})`); else document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); } else { document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
+    }catch(e){ document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
   // Also scale blur and shadow so 0% is truly clear
   const blurPx = (8 * dec).toFixed(2) + 'px';
   // scale the alpha of the existing shadow; base shadow is rgba(0,0,0,0.25)
@@ -456,20 +553,88 @@
   document.documentElement.style.setProperty('--slide-blur', blurPx);
   document.documentElement.style.setProperty('--slide-shadow', shadow);
     
-    // persist in CONFIG but do not force-save unless explicitly saving from modal
-  CONFIG.slideOpacity = dec;
+    // persist in CONFIG unless caller asked not to
+    if(persist !== false){ CONFIG.slideOpacity = dec; }
   return dec;
   }
   window.setSlideOpacity = setSlideOpacity;
 
+  // Helper: normalize hex string to #rrggbb or empty string
+  function normalizeHex(input){
+    try{
+      if(!input) return '';
+      let s = String(input).trim().replace(/['"]/g,'');
+      if(!s) return '';
+      if(!s.startsWith('#')) s = '#'+s;
+      const m = s.slice(1);
+      if(/^[0-9a-f]{3}$/i.test(m)) return '#'+m.split('').map(c=>c+c).join('').toLowerCase();
+      if(/^[0-9a-f]{6}$/i.test(m)) return '#'+m.toLowerCase();
+    }catch{}
+    return '';
+  }
+
+  function hexToRgb(hex){
+    try{
+      const h = normalizeHex(hex);
+      if(!h) return null;
+      const v = h.slice(1);
+      return { r: parseInt(v.slice(0,2),16), g: parseInt(v.slice(2,4),16), b: parseInt(v.slice(4,6),16) };
+    }catch{ return null; }
+  }
+
+  // Return '#000000' or '#ffffff' for best contrast against the provided hex color.
+  function bestContrastForHex(hex){
+    try{
+      const rgb = hexToRgb(hex);
+      if(!rgb) return '#000000';
+      // Relative luminance (sRGB)
+      const srgb = [rgb.r, rgb.g, rgb.b].map(c=>{
+        const s = c/255;
+        return s <= 0.03928 ? s/12.92 : Math.pow((s+0.055)/1.055, 2.4);
+      });
+      const L = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+      // Use white for dark backgrounds (low L), black for light backgrounds
+      return (L < 0.5) ? '#ffffff' : '#000000';
+    }catch(e){ return '#000000'; }
+  }
+
+  // Thumbnails are styled via CSS variables; no JS inline styling required.
+
   function applyConfig(){
     const p=CONFIG.primary||getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
     const a=CONFIG.accent||getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-    document.documentElement.style.setProperty('--primary',p);
-    document.documentElement.style.setProperty('--accent',a);
-  document.querySelector('.brand-badge').style.background=`linear-gradient(135deg, ${p}, ${a})`;
+    const primaryVal = p;
+    const accentVal = a;
+    document.documentElement.style.setProperty('--primary', primaryVal);
+    document.documentElement.style.setProperty('--accent', accentVal);
+    // Set derived button/brand variables for consistent theming
+    try{
+      // button bg: subtle gradient using primary->accent
+      document.documentElement.style.setProperty('--btn-bg', `linear-gradient(90deg, ${primaryVal}, ${accentVal})`);
+      // button text: ensure contrast — prefer explicit textColor, otherwise compute best contrast
+      let btnText = '';
+      if(CONFIG.textColor && String(CONFIG.textColor).trim()){
+        const n = normalizeHex(CONFIG.textColor) || String(CONFIG.textColor).trim().replace(/['"]/g,'');
+        if(n) btnText = n;
+      }
+      // If no explicit textColor, compute contrast against a midpoint between primary & accent
+      if(!btnText){
+        try{
+          const pRgb = hexToRgb(primaryVal) || {r:0,g:0,b:0};
+          const aRgb = hexToRgb(accentVal) || {r:0,g:0,b:0};
+          const avg = { r: Math.round((pRgb.r + aRgb.r)/2), g: Math.round((pRgb.g + aRgb.g)/2), b: Math.round((pRgb.b + aRgb.b)/2) };
+          const avgHex = `#${((1<<24) + (avg.r<<16) + (avg.g<<8) + avg.b).toString(16).slice(1)}`;
+          btnText = bestContrastForHex(avgHex);
+        }catch(e){ btnText = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#000000'; }
+      }
+      document.documentElement.style.setProperty('--btn-text', btnText);
+      // Also set the global text color var so UI labels and elements follow the configured text color
+      document.documentElement.style.setProperty('--text', btnText);
+      // brand badge bg uses the same primary->accent gradient
+      const bb = document.querySelector('.brand-badge'); if(bb) bb.style.background = `linear-gradient(135deg, ${primaryVal}, ${accentVal})`;
+    }catch(e){}
   appNameEl.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp');
-    // Apply app background colors and effect color if configured
+  // Apply app background colors and effect color if configured
     try{
       if(typeof CONFIG.appBg1 === 'string' && CONFIG.appBg1.trim()){
         document.documentElement.style.setProperty('--app-bg1', CONFIG.appBg1.trim());
@@ -480,9 +645,25 @@
       if(typeof CONFIG.effectColor === 'string' && CONFIG.effectColor.trim()){
         document.documentElement.style.setProperty('--effect-color', CONFIG.effectColor.trim());
       }
+      // General text color
+      if(typeof CONFIG.textColor === 'string' && CONFIG.textColor.trim()){
+        document.documentElement.style.setProperty('--text', CONFIG.textColor.trim());
+      }
     }catch{}
-    // apply slide opacity if present; default to 1 (no change from baseline)
-    if(typeof CONFIG.slideOpacity === 'number') setSlideOpacity(CONFIG.slideOpacity * 100);
+    // Refresh bg-gradient visibility to reflect current bgMode preference
+    try{ if(bgMode === 'gradient'){ document.querySelector('.bg-gradient').style.display = 'block'; bgCanvas.style.display='none'; } else if(bgMode === 'particles'){ document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='block'; resizeCanvas(); initParticles(); if(!rafId) stepParticles(); } else { document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='none'; } }catch{}
+    // If slide background colors changed, update computed slide CSS vars immediately
+    try{
+      // If CONFIG.slideBg1/2 are set, also set CSS vars (hex strings). setSlideOpacity will compute rgba with current opacity.
+      if(typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()){
+        document.documentElement.style.setProperty('--slide-bg1', CONFIG.slideBg1.trim());
+      }
+      if(typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()){
+        document.documentElement.style.setProperty('--slide-bg2', CONFIG.slideBg2.trim());
+      }
+    }catch{}
+    // apply slide opacity if present; call with persist=false to avoid mutating saved baseline during live preview
+    if(typeof CONFIG.slideOpacity === 'number') setSlideOpacity(CONFIG.slideOpacity * 100, false);
   // Apply outline visibility
   document.body.classList.toggle('border-off', CONFIG.slideBorderOn===false);
   // Apply outline width
@@ -493,7 +674,27 @@
   // Apply overlay sizes
   try{ const ts = Math.max(12, Math.min(64, Math.round(CONFIG.overlayTitleSize||22))); document.documentElement.style.setProperty('--title-size', `${ts}px`);}catch{}
   try{ const ss = Math.max(10, Math.min(48, Math.round(CONFIG.overlaySubtitleSize||16))); document.documentElement.style.setProperty('--subtitle-size', `${ss}px`);}catch{}
+  // Thumbnails are CSS-driven; no explicit JS refresh required here.
   }
+    // Also apply text color to specific UI elements (immediate effect)
+  try{
+    // Let CSS handle color via variables; ensure derived --muted exists for label contrast
+    const currentText = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || getComputedStyle(document.documentElement).getPropertyValue('--text');
+    try{
+      // compute a simple muted fallback based on luminance of --text when it's a hex; otherwise keep existing --muted
+      const rgb = hexToRgb(currentText);
+      if(rgb){
+        const lin = (c)=>{ const s=c/255; return s<=0.03928? s/12.92 : Math.pow((s+0.055)/1.055, 2.4); };
+        const L = 0.2126*lin(rgb.r) + 0.7152*lin(rgb.g) + 0.0722*lin(rgb.b);
+        if(L > 0.5){ document.documentElement.style.setProperty('--muted', 'rgba(11,18,32,0.55)'); }
+        else { document.documentElement.style.setProperty('--muted', 'rgba(255,255,255,0.55)'); }
+      }
+    }catch(e){}
+    // Clear inline colors so CSS variables control visuals; remove inline style.color where present
+  [...document.querySelectorAll('.thumb, .deck-header .btn, .deck-footer .btn, #drawerBtn, #bgBtn, #notesBtn, #cfgModal .btn')].forEach(el=>{ el.style.removeProperty('color'); });
+    // Ensure brand-badge text color follows vars
+    try{ const bb=document.querySelector('.brand-badge'); if(bb) bb.style.removeProperty('color'); }catch{}
+  }catch{}
 
   // ===== Markdown + Front-matter =====
   function parseFrontmatter(text){
@@ -505,8 +706,12 @@
       const lines = trimmedStart.split('\n');
       let endIndex=-1;
       for(let i=1;i<lines.length;i++){
-        const t=lines[i].trim();
-        if(t==='---' || t==='...'){ endIndex=i; break; }
+        const rawLine = lines[i];
+        const t = rawLine.trim();
+        // Only treat a closing fence if it starts at the true line start (no leading indentation).
+        // This prevents indented '---' inside a multiline frontmatter value (for example in notes)
+        // from being interpreted as the end of the frontmatter block.
+        if((rawLine.startsWith('---') || rawLine.startsWith('...')) && (t==='---' || t==='...')){ endIndex=i; break; }
       }
       if(endIndex<=0) return { fm:{}, body: src.trim() };
       // Parse key: value lines between the fences, allow leading spaces and continuations
@@ -531,11 +736,20 @@
   function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));}
 
   function parseMarkdown(md, opts={allowColumns:true}){
-      // First handle code blocks to protect them from other processing
-      md=md.replace(/```(\w+)?\n([\s\S]*?)```/g,(m,lang,code)=>`<pre><code>${code.replace(/</g,'&lt;')}</code></pre>`);
-      
-      // Handle inline code
-      md=md.replace(/`([^`]+)`/g,(m,code)=>`<code>${code.replace(/</g,'&lt;')}</code>`);
+      // Extract code fences into placeholders so inner backticks don't get processed
+      // Support fences like ``` or ~~~ with optional language info; preserve leading newline
+      const CODE_BLOCKS = [];
+      md = md.replace(/(^|\n)(`{3,}|~{3,})([^\n]*)\n([\s\S]*?)\n\2(?:\n|$)/g, (m, pre, fence, info, code) => {
+        const lang = (info||'').trim().split(/\s+/)[0];
+        const cls = lang ? ` class="lang-${escapeHtml(lang)}"` : '';
+        const html = `${pre}<pre><code${cls}>${escapeHtml(code)}</code></pre>`;
+        const key = `@@CODE_BLOCK_${CODE_BLOCKS.length}@@`;
+        CODE_BLOCKS.push(html);
+        return key;
+      });
+
+      // Handle inline code (safe now that code fences are placeholders)
+      md = md.replace(/`([^`]+)`/g, (m, code) => `<code>${escapeHtml(code)}</code>`);
       
       // Custom columns shortcode
       if(opts.allowColumns){
@@ -696,19 +910,27 @@
       md=md.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
       md=md.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
       
-      // Handle paragraphs: split by double newlines, but avoid wrapping existing block elements
+  // Handle paragraphs: split by double newlines, but avoid wrapping existing block elements
       md = md.split(/\n{2,}/).map(chunk => {
         const trimmed = chunk.trim();
         if (!trimmed) return '';
-        
+
+        // If this chunk is a code block placeholder (we stored them as @@CODE_BLOCK_n@@),
+        // return it as-is so it remains a top-level block element and isn't wrapped in <p>.
+        if (/^@@CODE_BLOCK_\d+@@$/.test(trimmed)) {
+          return trimmed;
+        }
+
         // Don't wrap block-level elements
         if (/^\s*<(h\d|ul|ol|pre|blockquote|p|table|div|img)/i.test(trimmed)) {
           return trimmed;
         }
-        
+
         // Wrap in paragraph
         return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
       }).join('\n');
+  // Restore code blocks placeholders
+  md = md.replace(/@@CODE_BLOCK_(\d+)@@/g, (m, idx) => CODE_BLOCKS[Number(idx)] || '');
       
       return md;
     }
@@ -867,9 +1089,21 @@
           if(c1) node.setAttribute('data-slidebg1', c1);
           if(c2) node.setAttribute('data-slidebg2', c2);
         }catch{}
-      }
+  }
     }catch{}
-    node.innerHTML=sanitizeHTML(obj.html); slidesRoot.append(node); const thumb=document.createElement('div'); thumb.className='thumb'; const t=(obj.fm.title||'').toString().trim(); thumb.textContent=t||`Slide ${i+1}`; thumb.onclick=()=>setActive(i); thumbsRoot.append(thumb); }); setActive(0); 
+  node.innerHTML=sanitizeHTML(obj.html); slidesRoot.append(node);
+  const thumb=document.createElement('div');
+  thumb.className='thumb';
+  const t=(obj.fm.title||'').toString().trim();
+  thumb.textContent = t || `Slide ${i+1}`;
+  // Accessibility: keyboard focus and activation
+  thumb.setAttribute('tabindex','0');
+  thumb.setAttribute('role','button');
+  thumb.setAttribute('aria-label', t ? `Slide ${i+1}: ${t}` : `Slide ${i+1}`);
+  thumb.onclick = () => setActive(i);
+  thumb.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); setActive(i); } });
+  // Thumbnails are styled via CSS using --app-bg1/2 and other CSS vars. No inline styles needed.
+      thumbsRoot.append(thumb); }); setActive(0); 
     // Apply current opacity to newly rendered slides
     if(typeof CONFIG.slideOpacity==='number'){ 
       setSlideOpacity(CONFIG.slideOpacity * 100);
@@ -895,7 +1129,7 @@
           if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
           if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
           const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-          if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.style.color='var(--accent)'; } wrap.appendChild(sEl);} 
+          if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
           wrap.setAttribute('aria-hidden','true');
           slideEl.appendChild(wrap);
         });
@@ -936,6 +1170,7 @@
     document.getElementById('slideNo').textContent = `${i + 1}/${all.length}`;
     
     [...document.querySelectorAll('.thumb')].forEach((t, j) => t.classList.toggle('active', j === i));
+  // Thumbnails are CSS-driven; no inline style toggling required here.
     
     const notesMd = slidesHTML[i]?.fm?.notes || '';
     notesEl.innerHTML = notesMd ? sanitizeHTML(`<div class="md">${parseMarkdown(notesMd, {allowColumns: false})}</div>`) : `<em>[No notes for slide ${i + 1}]</em>`;
@@ -1057,7 +1292,110 @@
   })();
 
   // Style modal
-  const cfgOverlay=document.getElementById('cfgOverlay'); const cfgModal=document.getElementById('cfgModal'); document.getElementById('styleBtn').addEventListener('click',()=>{ cfgOverlay.style.display='block'; cfgModal.style.display='flex'; document.getElementById('cfgName').value=(CONFIG.appName||CONFIG.brand||''); document.getElementById('cfgPrimary').value=CONFIG.primary||'#01B4E1'; document.getElementById('cfgAccent').value=CONFIG.accent||'#64FFFC'; const row=document.getElementById('presetRow'); row.innerHTML=''; PRESETS.forEach((p,idx)=>{ const b=document.createElement('button'); b.className='btn'; b.textContent=p.name; b.style.background=`linear-gradient(90deg, ${p.primary}, ${p.accent})`; b.title = `Apply ${p.name}`; b.onclick=()=>{ document.getElementById('cfgPrimary').value=p.primary; document.getElementById('cfgAccent').value=p.accent; try{ showToast(`Preset: ${p.name}`);}catch{} }; row.append(b); });
+  const cfgOverlay=document.getElementById('cfgOverlay'); const cfgModal=document.getElementById('cfgModal'); document.getElementById('styleBtn').addEventListener('click',()=>{
+  cfgOverlay.style.display='block'; cfgModal.style.display='flex';
+  document.getElementById('cfgName').value=(CONFIG.appName||CONFIG.brand||'');
+  try{ const pNorm = normalizeHex(CONFIG.primary||'') || '#01B4E1'; document.getElementById('cfgPrimary').value = pNorm; }catch{}
+  try{ const aNorm = normalizeHex(CONFIG.accent||'') || '#64FFFC'; document.getElementById('cfgAccent').value = aNorm; }catch{}
+    // Initialize background pickers from CONFIG or computed CSS vars
+    try{
+  const appBg1 = normalizeHex(CONFIG.appBg1) || normalizeHex(getComputedStyle(document.documentElement).getPropertyValue('--app-bg1').trim()) || '#0f172a';
+  const appBg2 = normalizeHex(CONFIG.appBg2) || normalizeHex(getComputedStyle(document.documentElement).getPropertyValue('--app-bg2').trim()) || '#1e293b';
+  const slideBg1 = normalizeHex(CONFIG.slideBg1) || '#111827';
+  const slideBg2 = normalizeHex(CONFIG.slideBg2) || '#111827';
+      const elApp1 = document.getElementById('cfgAppBg1'); if(elApp1) elApp1.value = appBg1;
+      const elApp2 = document.getElementById('cfgAppBg2'); if(elApp2) elApp2.value = appBg2;
+      const elS1 = document.getElementById('cfgSlideBg1'); if(elS1) elS1.value = slideBg1;
+      const elS2 = document.getElementById('cfgSlideBg2'); if(elS2) elS2.value = slideBg2;
+    }catch(e){}
+    // Initialize text color picker from CONFIG or computed --text
+    try{
+  const txt = normalizeHex(CONFIG.textColor) || normalizeHex(getComputedStyle(document.documentElement).getPropertyValue('--text').trim()) || '#e2e8f0';
+  const elText = document.getElementById('cfgTextColor'); if(elText) elText.value = txt;
+    }catch{}
+    // Live-preview bindings for color pickers: update CONFIG and applyConfig immediately
+    try{
+      const bindLive=(id,key,norm)=>{ const el=document.getElementById(id); if(!el) return; el.oninput=(ev)=>{ const v=(ev.target.value||'').toString(); try{ if(norm){ const n=normalizeHex(v); if(n) CONFIG[key]=n; else delete CONFIG[key]; } else { CONFIG[key]=v; } }catch{} try{ applyConfig(); }catch{} }; };
+      bindLive('cfgPrimary','primary', false);
+      bindLive('cfgAccent','accent', false);
+      bindLive('cfgTextColor','textColor', true);
+      bindLive('cfgAppBg1','appBg1', true);
+      bindLive('cfgAppBg2','appBg2', true);
+      bindLive('cfgSlideBg1','slideBg1', true);
+      bindLive('cfgSlideBg2','slideBg2', true);
+    }catch(e){}
+    const row=document.getElementById('presetRow'); row.innerHTML='';
+    // Build compact segmented preset buttons (behaves like overlay-position selector)
+    const makeGroup = (title)=>{
+      const container=document.createElement('div'); container.style.display='flex'; container.style.flexDirection='column'; container.style.gap='6px';
+  const label=document.createElement('label'); label.style.fontSize='12px'; label.textContent=title;
+      const group=document.createElement('div'); group.style.display='flex'; group.style.gap='6px'; group.setAttribute('role','toolbar');
+      container.appendChild(label); container.appendChild(group);
+      return {container, group};
+    };
+    const darkGroup = makeGroup('Dark presets');
+    const lightGroup = makeGroup('Light presets');
+
+    // Active state helper (single active at a time across all presets)
+    const setActivePreset = (idx)=>{
+      [...row.querySelectorAll('button.preset-btn')].forEach(b=>{ const on = b.dataset.presetIndex===String(idx); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); });
+    };
+
+    PRESETS.forEach((p,idx)=>{
+      const b=document.createElement('button'); b.className='btn preset-btn'; b.textContent=p.name; b.title = `Apply ${p.name}`;
+  // Use CSS-driven button background; no inline gradient so it matches other controls
+      b.dataset.presetIndex = String(idx);
+      b.setAttribute('aria-pressed','false');
+      try{ b.style.removeProperty('color'); }catch{}
+      try{ b.style.borderColor = 'rgba(255,255,255,0.06)'; }catch{}
+      b.onclick = ()=>{
+        // populate inputs
+        try{ document.getElementById('cfgPrimary').value = p.primary; }catch{}
+        try{ document.getElementById('cfgAccent').value = p.accent; }catch{}
+        try{ if(p.textColor) document.getElementById('cfgTextColor').value = p.textColor; }catch{}
+        try{ if(p.appBg1) document.getElementById('cfgAppBg1').value = p.appBg1; }catch{}
+        try{ if(p.appBg2) document.getElementById('cfgAppBg2').value = p.appBg2; }catch{}
+        try{ if(p.slideBg1) document.getElementById('cfgSlideBg1').value = p.slideBg1; }catch{}
+        try{ if(p.slideBg2) document.getElementById('cfgSlideBg2').value = p.slideBg2; }catch{}
+        // apply immediately (update CONFIG and set CSS vars for instant preview)
+        try{
+          // normalize and store
+          const nPrimary = normalizeHex(p.primary) || p.primary;
+          const nAccent = normalizeHex(p.accent) || p.accent;
+          CONFIG.primary = nPrimary;
+          CONFIG.accent = nAccent;
+          if(p.textColor){ const nt = normalizeHex(p.textColor) || p.textColor; CONFIG.textColor = nt; } else { delete CONFIG.textColor; }
+          if(p.appBg1) CONFIG.appBg1 = normalizeHex(p.appBg1) || p.appBg1; else delete CONFIG.appBg1;
+          if(p.appBg2) CONFIG.appBg2 = normalizeHex(p.appBg2) || p.appBg2; else delete CONFIG.appBg2;
+          if(p.slideBg1) CONFIG.slideBg1 = normalizeHex(p.slideBg1) || p.slideBg1; else delete CONFIG.slideBg1;
+          if(p.slideBg2) CONFIG.slideBg2 = normalizeHex(p.slideBg2) || p.slideBg2; else delete CONFIG.slideBg2;
+          // set CSS vars explicitly so modal and UI reflect the preset immediately
+          try{ document.documentElement.style.setProperty('--primary', CONFIG.primary); }catch{}
+          try{ document.documentElement.style.setProperty('--accent', CONFIG.accent); }catch{}
+          try{ if(CONFIG.textColor) document.documentElement.style.setProperty('--text', CONFIG.textColor); }catch{}
+          try{ if(CONFIG.appBg1) document.documentElement.style.setProperty('--app-bg1', CONFIG.appBg1); }catch{}
+          try{ if(CONFIG.appBg2) document.documentElement.style.setProperty('--app-bg2', CONFIG.appBg2); }catch{}
+          try{ if(CONFIG.slideBg1) document.documentElement.style.setProperty('--slide-bg1', CONFIG.slideBg1); }catch{}
+          try{ if(CONFIG.slideBg2) document.documentElement.style.setProperty('--slide-bg2', CONFIG.slideBg2); }catch{}
+          // Recompute derived values and update UI (use non-persisting opacity preview)
+          applyConfig();
+          setSlideOpacity(typeof CONFIG.slideOpacity==='number' ? Math.round(CONFIG.slideOpacity*100) : 100, false);
+        }catch{}
+        // set active visual state
+        setActivePreset(idx);
+        try{ showToast(`Preset: ${p.name}`);}catch{}
+      };
+      if(p.group==='dark') darkGroup.group.appendChild(b); else lightGroup.group.appendChild(b);
+    });
+
+    if(darkGroup.group.children.length){ row.appendChild(darkGroup.container); }
+    if(lightGroup.group.children.length){ row.appendChild(lightGroup.container); }
+
+    // If no saved config present, mark the Default preset active for clarity
+    try{
+      const raw = localStorage.getItem('slideapp.config');
+      if(!raw){ const defaultIdx = PRESETS.findIndex(p=>p.name && p.name.toLowerCase()==='default'); if(defaultIdx>=0) setActivePreset(defaultIdx); }
+    }catch(e){}
     // init slide opacity slider
     const slider = document.getElementById('cfgSlideOpacity');
     const readout = document.getElementById('cfgSlideOpacityVal');
@@ -1170,6 +1508,19 @@
   // Save under new key appName (keep legacy brand for compatibility)
   const nm = document.getElementById('cfgName').value.trim();
   CONFIG.appName = nm; if(!CONFIG.brand) CONFIG.brand = nm; // keep brand populated once for older versions
+  // Persist background pickers (normalize hex values)
+  try{
+    const ra = (document.getElementById('cfgAppBg1')?.value || '').toString(); const na = normalizeHex(ra);
+    const rb = (document.getElementById('cfgAppBg2')?.value || '').toString(); const nb = normalizeHex(rb);
+    if(na) CONFIG.appBg1 = na; else delete CONFIG.appBg1;
+    if(nb) CONFIG.appBg2 = nb; else delete CONFIG.appBg2;
+    const rs1 = (document.getElementById('cfgSlideBg1')?.value || '').toString(); const ns1 = normalizeHex(rs1);
+    const rs2 = (document.getElementById('cfgSlideBg2')?.value || '').toString(); const ns2 = normalizeHex(rs2);
+    if(ns1) CONFIG.slideBg1 = ns1; else delete CONFIG.slideBg1;
+    if(ns2) CONFIG.slideBg2 = ns2; else delete CONFIG.slideBg2;
+  // text color
+  try{ const rt = (document.getElementById('cfgTextColor')?.value || '').toString(); const nt = normalizeHex(rt); if(nt) CONFIG.textColor = nt; else delete CONFIG.textColor; }catch{}
+  }catch(e){}
   // Save UI visibility checkboxes
   CONFIG.hideSlidesWithUi = document.getElementById('cfgHideSlidesWithUi').checked;
   CONFIG.hideProgressWithUi = document.getElementById('cfgHideProgressWithUi').checked;
@@ -1216,7 +1567,7 @@
           if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
           if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
           const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-          if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.style.color='var(--accent)'; } wrap.appendChild(sEl);} 
+    if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
           wrap.setAttribute('aria-hidden','true');
           slideEl.appendChild(wrap);
         });
@@ -1449,7 +1800,7 @@ notes: A classic visual + text layout. Inline HTML is safe (no scripts/events).
 ---
 
 ## Launch Overview
-<p style="color: var(--muted); margin: -6px 0 12px 0;">Fast, modern slides with Markdown + a touch of inline HTML when needed.</p>
+<p class="muted-lead">Fast, modern slides with Markdown + a touch of inline HTML when needed.</p>
 
 <div style="display:flex; gap:24px; align-items:center;">
   <div style="flex:1; min-width:0;">
@@ -1708,9 +2059,8 @@ Everything else in front matter is ignored by the app.`;
     const setLabel=()=>{ btn.textContent = CONFIG.overlayOn===true ? '🏷️ Title (on)' : '🏷️ Title'; };
     setLabel();
     btn.addEventListener('click',()=>{
-      CONFIG.overlayOn = !(CONFIG.overlayOn===true);
-      // Persist toggle as a convenience
-      try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{}
+  CONFIG.overlayOn = !(CONFIG.overlayOn===true);
+  // Do not auto-persist full CONFIG here; Save in the Style modal is the explicit persistence action.
       setLabel();
       rebuild();
       try{ showToast(CONFIG.overlayOn ? 'Overlay: shown' : 'Overlay: hidden'); }catch{}
@@ -1754,32 +2104,44 @@ Everything else in front matter is ignored by the app.`;
     }catch{}
     // Colors (hex)
     const hexRe = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
-    try{
-      const p = (fm.primary||fm.color||'').toString().trim();
-      if(p && hexRe.test(p)) CONFIG.primary = p;
-    }catch{}
-    try{
-      const a = (fm.accent||'').toString().trim();
-      if(a && hexRe.test(a)) CONFIG.accent = a;
-    }catch{}
+      const strip = s=> (s||'').toString().trim().replace(/^['"]|['"]$/g,'');
+      try{
+        const pRaw = strip(fm.primary||fm.color||'');
+        const p = normalizeHex(pRaw);
+        if(p) CONFIG.primary = p;
+      }catch{}
+      try{
+        const aRaw = strip(fm.accent||'');
+        const a = normalizeHex(aRaw);
+        if(a) CONFIG.accent = a;
+      }catch{}
     // App background colors (hex)
     try{
-      const ab1 = (fm.appbg1 || fm['app-bg1'] || fm['app-bg-1'] || '').toString().trim();
-      if(ab1 && hexRe.test(ab1)) CONFIG.appBg1 = ab1;
+      const ab1Raw = strip(fm.appbg1 || fm['app-bg1'] || fm['app-bg-1'] || '');
+      const ab1 = normalizeHex(ab1Raw);
+      if(ab1) CONFIG.appBg1 = ab1;
     }catch{}
     try{
-      const ab2 = (fm.appbg2 || fm['app-bg2'] || fm['app-bg-2'] || '').toString().trim();
-      if(ab2 && hexRe.test(ab2)) CONFIG.appBg2 = ab2;
+      const ab2Raw = strip(fm.appbg2 || fm['app-bg2'] || fm['app-bg-2'] || '');
+      const ab2 = normalizeHex(ab2Raw);
+      if(ab2) CONFIG.appBg2 = ab2;
     }catch{}
     // Effect color (hex) used by particles/gradients
     try{
-      const ec = (fm.effectcolor || fm['effect-color'] || fm.effect || '').toString().trim();
-      if(ec && hexRe.test(ec)) CONFIG.effectColor = ec;
+      const ecRaw = strip(fm.effectcolor || fm['effect-color'] || fm.effect || '');
+      const ec = normalizeHex(ecRaw);
+      if(ec) CONFIG.effectColor = ec;
+    }catch{}
+    // Text color
+    try{
+      const tcRaw = strip(fm.textcolor || fm['text-color'] || fm.text || '');
+      const tc = normalizeHex(tcRaw);
+      if(tc) CONFIG.textColor = tc;
     }catch{}
     // Opacity (percent 0-100 or decimal 0-1 or with %)
     let hasOpacity=false; let decOpacity=null;
     try{
-      const raw = (fm.opacity || fm.slideopacity || '').toString().trim();
+      const raw = strip(fm.opacity || fm.slideopacity || '');
       if(raw){
         hasOpacity = true;
         let pct;
@@ -1832,7 +2194,7 @@ Everything else in front matter is ignored by the app.`;
       if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
       if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
       const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-      if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.style.color='var(--accent)'; } wrap.appendChild(sEl);} 
+  if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
             wrap.setAttribute('aria-hidden','true');
             slideEl.appendChild(wrap);
           });
