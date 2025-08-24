@@ -53,7 +53,8 @@
 
     .deck{position:relative;flex:1;height:100vh;overflow:hidden}
     .deck-header{position:absolute;top:14px;left:24px;right:24px;display:flex;align-items:center;justify-content:space-between;z-index:5}
-    .brand{display:flex;align-items:center;gap:12px;padding:8px 12px;background:rgba(17,24,39,.55);border-radius:999px;box-shadow:var(--shadow)}
+  /* Show brand as plain text (no pill) so presets like Light 1 don't create a grey rounded background */
+  .brand{display:flex;align-items:center;gap:12px;padding:0;background:transparent;border-radius:0;box-shadow:none}
     .brand-badge{height:28px;width:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--accent))}
     .brand-name{font-weight:700}
     .deck-tools{display:flex;gap:8px;align-items:center}
