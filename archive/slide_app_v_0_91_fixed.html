@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SlideApp v0.9.1 — Fixed Markdown</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+  <style>
+    :root { --bg-1:#0f172a;--bg-2:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--primary:#7c3aed;--accent:#22d3ee;--card:#111827cc;--radius:18px;--shadow:0 10px 30px rgba(0,0,0,0.25);} 
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;color:var(--text);background:linear-gradient(120deg,var(--bg-1),var(--bg-2));overflow:hidden;height:100vh;display:flex}
+    .bg-gradient{position:fixed;inset:0;z-index:-2;background:linear-gradient(45deg,#0f172a,#1e293b,#111827,#0b1220,#1f2937,#0f172a);background-size:400% 400%;animation:moveGradient 30s ease-in-out infinite;filter:saturate(1.1)}
+    #bg-canvas{position:fixed;inset:0;z-index:-1;display:none}
+    @keyframes moveGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .deck{position:relative;flex:1;height:100vh;overflow:hidden}
+    .deck-header{position:absolute;top:14px;left:24px;right:24px;display:flex;align-items:center;justify-content:space-between;z-index:5}
+    .brand{display:flex;align-items:center;gap:12px;padding:8px 12px;background:rgba(17,24,39,.55);border-radius:999px;box-shadow:var(--shadow)}
+    .brand-badge{height:28px;width:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--accent))}
+    .brand-name{font-weight:700}
+    .deck-tools{display:flex;gap:8px;align-items:center}
+    .btn{cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);background:rgba(17,24,39,.55);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(6px);font-size:12px}
+    .slides{position:absolute;inset:0;display:grid;place-items:center;padding:64px 72px 80px 72px}
+    .slide{position:absolute;inset:72px;display:grid;place-items:center;background:linear-gradient(180deg,rgba(17,24,39,.75),rgba(17,24,39,.55));border-radius:var(--radius);box-shadow:var(--shadow);opacity:0;transform:translate3d(60px,0,0) scale(.98);transition:all 0.6s cubic-bezier(0.4, 0, 0.2, 1);backdrop-filter:blur(8px);padding:48px;overflow:auto}
+    .slide.active{opacity:1;transform:translate3d(0,0,0) scale(1);z-index:2}
+    .slide.prev{opacity:0;transform:translate3d(-50px,0,0) scale(.98);z-index:1}
+    .slide.slide-in-right{opacity:0;transform:translate3d(100px,0,0) scale(.95)}
+    .slide.slide-in-left{opacity:0;transform:translate3d(-100px,0,0) scale(.95)}
+    .slide.slide-out-left{opacity:0;transform:translate3d(-100px,0,0) scale(.95)}
+    .slide.slide-out-right{opacity:0;transform:translate3d(100px,0,0) scale(.95)}
+    .md{width:min(1100px,92%)}
+  .md ul,.md ol{padding-left:20px;margin:16px 0}
+  .md li{margin:8px 0}
+  .md ul li{list-style-type:disc}
+  .md ol li{list-style-type:decimal}
+    .md blockquote{border-left:4px solid var(--accent);padding-left:16px;margin:16px 0;font-style:italic;color:var(--muted)}
+    .md img{max-width:100%;height:auto;border-radius:8px;margin:16px 0}
+    .md a{color:var(--accent);text-decoration:none}
+    .md a:hover{text-decoration:underline}
+  /* Headings hierarchy */
+  .md h1{font-size:clamp(28px,3.2vw,40px);line-height:1.2;margin:0 0 12px;font-weight:800}
+  .md h2{font-size:clamp(22px,2.4vw,30px);line-height:1.25;margin:18px 0 10px;font-weight:700}
+  .md h3{font-size:clamp(18px,1.9vw,24px);line-height:1.3;margin:16px 0 8px;font-weight:700;color:var(--text)}
+  /* Tables */
+  .md table{width:100%;border-collapse:collapse;margin:16px 0;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden}
+  .md th,.md td{padding:10px 12px;border:1px solid rgba(255,255,255,.08)}
+  .md thead th{background:rgba(255,255,255,.06);font-weight:700}
+  .md tbody tr:nth-child(odd) td{background:rgba(255,255,255,.03)}
+  /* Columns shortcode */
+  .md .cols{display:flex;gap:24px;align-items:flex-start}
+  .md .cols .col{flex:1;min-width:0}
+  @media (max-width: 820px){.md .cols{flex-direction:column}}
+    pre{background:rgba(0,0,0,.35);padding:10px;border-radius:8px;overflow:auto}
+    code{font-family:monospace}
+  .deck-footer{position:absolute;left:24px;right:24px;bottom:18px;display:flex;align-items:center;justify-content:space-between;z-index:5}
+    .progress{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+    .progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent))}
+    .notes{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.95);color:#ffffff;padding:20px 24px;font-size:16px;font-weight:500;display:none;z-index:10;max-height:30%;overflow:auto;border-top:3px solid var(--accent);box-shadow:0 -4px 20px rgba(0,0,0,0.5)}
+    .notes.show{display:block}
+  .thumbs{width:140px;background:#0b1220;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;transition:width .25s ease}
+  .thumbs.collapsed{width:0;padding:8px 0;overflow:hidden}
+  .thumbs.overlay{position:fixed;left:0;top:0;bottom:0;width:260px;transform:translateX(-100%);transition:transform .25s ease;z-index:16;padding:16px 12px;background:#0b1220;box-shadow:4px 0 24px rgba(0,0,0,.4)}
+  .thumbs.overlay.open{transform:translateX(0)}
+  #scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:14}
+    .thumb{cursor:pointer;padding:6px;background:rgba(255,255,255,.05);border-radius:6px;font-size:12px;color:var(--muted)}
+    .thumb.active{background:rgba(124,58,237,.4);color:white}
+    @media print{body{overflow:visible;background:white;color:black}.deck-header,.deck-footer,.bg-gradient,#bg-canvas{display:none!important}.slide{position:static;opacity:1;transform:none;page-break-after:always;box-shadow:none;background:white;color:black}.notes{display:none!important}}
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <canvas id="bg-canvas"></canvas>
+  <div id="scrim"></div>
+  <div class="thumbs" id="thumbs"></div>
+  <div class="deck">
+    <div class="deck-header">
+      <div class="brand"><div class="brand-badge"></div><div class="brand-name">SlideApp</div></div>
+    <div class="deck-tools">
+        <input type="file" id="fileInput" class="btn" accept=".md,.markdown,.txt" title="Load Markdown" />
+  <button class="btn" id="notesBtn">📝 Notes</button>
+  <button class="btn" onclick="window.print()">📄 PDF</button>
+      </div>
+    </div>
+    <main class="slides" id="slides"></main>
+    <footer class="deck-footer">
+      <div><button class="btn" onclick="prev()">◀</button><button class="btn" onclick="next()">▶</button></div>
+      <div class="progress"><span id="progress"></span></div>
+      <div id="slideNo">0/0</div>
+    </footer>
+    <div class="notes" id="notes"></div>
+  </div>
+  <script>
+    const slidesRoot=document.getElementById('slides');
+    const thumbsRoot=document.getElementById('thumbs');
+    const notesEl=document.getElementById('notes');
+    let current=0,slidesHTML=[];
+
+    function parseFrontmatter(text){
+      const fm={};
+      
+      // Check if text starts with frontmatter
+      if(text.trim().startsWith('---')){
+        const lines = text.split('\n');
+        let endIndex = -1;
+        
+        // Find the closing ---
+        for(let i = 1; i < lines.length; i++){
+          if(lines[i].trim() === '---'){
+            endIndex = i;
+            break;
+          }
+        }
+        
+        if(endIndex > 0){
+          // Parse the frontmatter section
+          let currentKey = null;
+          let currentValue = [];
+          
+          for(let i = 1; i < endIndex; i++){
+            const line = lines[i];
+            if(line.includes(':') && !/^\s/.test(line)){
+              // New key found, save previous if exists
+              if(currentKey){
+                fm[currentKey.toLowerCase()] = currentValue.join(' ').trim();
+              }
+              
+              // Start new key
+              const colonIndex = line.indexOf(':');
+              currentKey = line.substring(0, colonIndex).trim();
+              currentValue = [line.substring(colonIndex + 1).trim()];
+            } else if(currentKey){
+              // Continuation line
+              currentValue.push(line.trim());
+            }
+          }
+          
+          // Don't forget the last key-value pair
+          if(currentKey){
+            fm[currentKey.toLowerCase()] = currentValue.join(' ').trim();
+          }
+          
+          // Return the body without frontmatter
+          const body = lines.slice(endIndex + 1).join('\n').trim();
+          return {fm, body};
+        }
+      }
+      
+      return {fm:{}, body:text.trim()};
+    }
+
+    function parseMarkdown(md, opts={allowColumns:true}){
+      // First handle code blocks to protect them from other processing
+      md=md.replace(/```(\w+)?\n([\s\S]*?)```/g,(m,lang,code)=>`<pre><code>${code.replace(/</g,'&lt;')}</code></pre>`);
+      
+      // Custom columns shortcode
+      if(opts.allowColumns){
+        const lines = md.split('\n');
+        const out = [];
+        for(let i = 0; i < lines.length; i++){
+          if(/^:::\s*columns\b/i.test(lines[i].trim())){
+            const block = [];
+            i++; // skip the :::columns line
+            while(i < lines.length && lines[i].trim() !== ':::'){
+              block.push(lines[i]);
+              i++;
+            }
+            // Parse columns separated by :::col
+            const cols = [];
+            let buf = [];
+            for(const ln of block){
+              if(ln.trim().toLowerCase() === ':::col'){
+                cols.push(buf.join('\n'));
+                buf = [];
+              } else {
+                buf.push(ln);
+              }
+            }
+            cols.push(buf.join('\n')); // last column
+            const htmlCols = cols.map(c => `<div class="col">${parseMarkdown(c.trim(), {allowColumns:false})}</div>`).join('');
+            out.push(`<div class="cols">${htmlCols}</div>`);
+            continue;
+          }
+          out.push(lines[i]);
+        }
+        md = out.join('\n');
+      }
+      
+      // Handle headings
+      md=md.replace(/^# (.*)$/gm,'<h1>$1</h1>').replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^### (.*)$/gm,'<h3>$1</h3>');
+      
+      // Handle blockquotes
+      md = md.replace(/^> (.*)$/gm, '<blockquote>$1</blockquote>');
+      
+  // Handle images BEFORE links so the link regex doesn't consume image syntax
+  md = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;height:auto;border-radius:8px;margin:16px 0;">');
+
+  // Handle links (after images)
+  md = md.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      
+      // Handle tables (GFM style): header | separator | rows
+      (function(){
+        const lines = md.split('\n');
+        const out = [];
+        let i = 0;
+        function splitRow(line){
+          let s = line.trim();
+          if(s.startsWith('|')) s = s.slice(1);
+          if(s.endsWith('|')) s = s.slice(0, -1);
+          return s.split('|').map(c => c.trim());
+        }
+        function isSep(line){
+          let s = line.trim();
+          if(s.startsWith('|')) s = s.slice(1);
+          if(s.endsWith('|')) s = s.slice(0, -1);
+          const parts = s.split('|').map(p => p.trim());
+          return parts.length > 0 && parts.every(p => /^:?-{3,}:?$/.test(p));
+        }
+        function alignFrom(token){
+          token = token.trim();
+          const left = token.startsWith(':');
+          const right = token.endsWith(':');
+          if(left && right) return 'center';
+          if(right) return 'right';
+          return 'left';
+        }
+        while (i < lines.length) {
+          const line = lines[i];
+          const nextLine = lines[i+1];
+          
+          if (line && line.includes('|') && nextLine && isSep(nextLine)) {
+            const headers = splitRow(line);
+            const aligns = splitRow(nextLine).map(alignFrom);
+            i += 2; // skip header and separator
+            
+            const rows = [];
+            while (i < lines.length) {
+              const row = lines[i];
+              if (!row || !row.includes('|') || isSep(row)) break;
+              rows.push(splitRow(row));
+              i++;
+            }
+            
+            const colCount = Math.max(headers.length, aligns.length, ...rows.map(r => r.length));
+            const getAlign = (idx) => aligns[idx] || 'left';
+            
+            let html = '<table><thead><tr>';
+            for (let c = 0; c < colCount; c++) {
+              html += `<th style="text-align:${getAlign(c)}">${headers[c] || ''}</th>`;
+            }
+            html += '</tr></thead><tbody>';
+            
+            for (const row of rows) {
+              html += '<tr>';
+              for (let c = 0; c < colCount; c++) {
+                html += `<td style="text-align:${getAlign(c)}">${row[c] || ''}</td>`;
+              }
+              html += '</tr>';
+            }
+            html += '</tbody></table>';
+            
+            out.push(html);
+            continue;
+          }
+          
+          out.push(line);
+          i++;
+        }
+        md = out.join('\n');
+      })();
+      
+  // Handle lists (unordered and ordered)
+      const lines = md.split('\n');
+      let listType = null; // 'ul' | 'ol' | null
+      const result = [];
+      const ulRe = /^[\*\-]\s+(.+)$/;
+      const olRe = /^\d+\.\s+(.+)$/;
+
+      function open(type){ result.push(type==='ul' ? '<ul>' : '<ol>'); listType = type; }
+      function close(){ if(listType){ result.push(listType==='ul' ? '</ul>' : '</ol>'); listType = null; } }
+
+      for (let line of lines) {
+        const ulMatch = line.match(ulRe);
+        const olMatch = line.match(olRe);
+
+        if (ulMatch) {
+          if (listType !== 'ul') {
+            close();
+            open('ul');
+          }
+          result.push(`<li>${ulMatch[1]}</li>`);
+          continue;
+        }
+        
+        if (olMatch) {
+          if (listType !== 'ol') {
+            close();
+            open('ol');
+          }
+          result.push(`<li>${olMatch[1]}</li>`);
+          continue;
+        }
+        
+        // Not a list item; close any open list before adding the line
+        close();
+        result.push(line);
+      }
+      close();
+      md = result.join('\n');
+      
+      // Handle bold and italic
+      md=md.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      md=md.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+      
+      return md;
+    }
+
+    function splitSlides(md){
+      // Robust line-by-line parser that treats '---' as slide separators
+      const slides = [];
+      const chunks = md.split(/\n---\n/);
+      
+      for(let chunk of chunks) {
+        const trimmed = chunk.trim();
+        if(trimmed) {
+          slides.push(trimmed);
+        }
+      }
+      
+      console.log(`Found ${slides.length} slides`);
+      
+      return slides.map((slideContent, i) => {
+        const {fm, body} = parseFrontmatter(slideContent);
+        console.log(`Slide ${i+1}: "${fm.title || 'Untitled'}" - body length: ${body.length}`);
+        
+        return {
+          html: `<div class="md">${parseMarkdown(body)}</div>`,
+          fm: fm
+        };
+      });
+    }
+
+    function renderSlides(list){
+      slidesRoot.innerHTML = '';
+      thumbsRoot.innerHTML = '';
+      
+      if(!Array.isArray(list) || !list.length){
+        current = 0;
+        document.getElementById('progress').style.width = '0%';
+        document.getElementById('slideNo').textContent = '0/0';
+        return;
+      }
+      
+      list.forEach((obj, i) => {
+        const node = document.createElement('section');
+        node.className = 'slide';
+        node.innerHTML = obj.html;
+        slidesRoot.append(node);
+        
+        const thumb = document.createElement('div');
+        thumb.className = 'thumb';
+        const title = (obj.fm.title || '').toString().trim();
+        thumb.textContent = title || `Slide ${i+1}`;
+        thumb.onclick = () => setActive(i);
+        thumbsRoot.append(thumb);
+      });
+      
+      setActive(0);
+    }
+
+    function setActive(i, direction = 'none'){
+      const all = [...document.querySelectorAll('.slide')];
+      all.forEach(s => s.classList.remove('active', 'prev', 'slide-in-right', 'slide-in-left', 'slide-out-left', 'slide-out-right'));
+      
+      if (all[i]) {
+        if (direction === 'next') {
+          all[i].classList.add('slide-in-right');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              all[i].classList.remove('slide-in-right');
+            });
+          });
+        } else if (direction === 'prev') {
+          all[i].classList.add('slide-in-left');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              all[i].classList.remove('slide-in-left');
+            });
+          });
+        }
+        
+        all[i].classList.add('active');
+        all[i].setAttribute('tabindex', '-1');
+        all[i].focus({ preventScroll: true });
+      }
+      
+      if (all[i - 1]) all[i - 1].classList.add('prev');
+      
+      current = i;
+      document.getElementById('progress').style.width = ((i + 1) / all.length * 100) + '%';
+      document.getElementById('slideNo').textContent = `${i + 1}/${all.length}`;
+      
+      [...document.querySelectorAll('.thumb')].forEach((t, j) => t.classList.toggle('active', j === i));
+      
+      const notesMd = slidesHTML[i]?.fm?.notes || '';
+      notesEl.innerHTML = notesMd ? `<div class="md">${parseMarkdown(notesMd, {allowColumns: false})}</div>` : `<em>[No notes for slide ${i + 1}]</em>`;
+      
+      try {
+        history.replaceState(null, '', `#/${i + 1}`);
+      } catch {}
+    }
+
+    function next(){if(current<slidesHTML.length-1)setActive(++current, 'next')}
+    function prev(){if(current>0)setActive(--current, 'prev')}
+
+    document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')next();if(e.key==='ArrowLeft')prev();if(e.key.toLowerCase()==='n')toggleNotes();});
+    document.getElementById('notesBtn').addEventListener('click',toggleNotes);
+    function toggleNotes(){notesEl.classList.toggle('show');}
+
+    // File loader
+    document.getElementById('fileInput').addEventListener('change',async e=>{
+      const f=e.target.files[0]; 
+      if(!f) return; 
+      try{ 
+        const text=await f.text(); 
+        slidesHTML=splitSlides(text); 
+        renderSlides(slidesHTML); 
+        e.target.value=''; 
+      }catch(err){ 
+        alert('Failed to load file: '+(err?.message||err)); 
+      } 
+    });
+
+    // Initialize with simple demo
+    const DEMO_MD = `---
+title: Welcome to SlideApp
+notes: This is a test slide with speaker notes.
+---
+
+# Hello SlideApp
+
+Welcome to the presentation app!
+
+* **Bold** and *italic* text
+* Bullet points work
+* Links like [Example](https://example.com)
+
+---
+
+## Second Slide
+
+This slide demonstrates formatting:
+
+> This is a blockquote
+
+Some regular paragraph text here.
+
+---
+
+### Third Slide
+
+Final slide with a numbered list:
+
+1. First item
+2. Second item  
+3. Third item
+
+**Thank you!**`;
+
+    console.log('Initializing with demo...');
+    slidesHTML = splitSlides(DEMO_MD);
+    renderSlides(slidesHTML);
+    console.log('Demo loaded successfully');
+  </script>
+</body>
+</html>

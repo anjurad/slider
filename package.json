@@ -1,0 +1,17 @@
+{
+  "name": "slider",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+  "test": "playwright test --project=webkit",
+  "test:ui": "playwright test --ui",
+  "test:all": "playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}
