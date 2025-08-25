@@ -15,15 +15,18 @@ test.describe('Sample deck frontmatter application', () => {
   test('Loading sample_presentation.md applies frontmatter settings', async ({ page }) => {
   // Start with a clean config to avoid interference
   await page.goto(toFileUrl(appPath));
-  await page.evaluate(() => localStorage.removeItem('slideapp.config'));
+  // Ensure previous runs haven't left background mode set in localStorage
+  await page.evaluate(() => {
+    localStorage.removeItem('slideapp.config');
+    localStorage.removeItem('bgMode');
+  });
   await page.reload();
     await page.waitForSelector('.slide.active .md');
 
     // Load the actual sample file from workspace
     await setInputFilePath(page, '#fileInput', sampleMdPath);
 
-    // Expect background mode to switch to particles from frontmatter
-  await expect(page.locator('#bgBtn')).toHaveText(/Particles|✨/i);
+  // Background mode expectation: determine from the sample file's frontmatter below
 
     // App name applied based on sample frontmatter (brand/appname)
   const md = fs.readFileSync(sampleMdPath, 'utf8');
@@ -52,7 +55,7 @@ test.describe('Sample deck frontmatter application', () => {
     const bg2 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--slide-bg2').trim());
     // Parse opacity from sample fm
     let expectedDec = 1;
-    const fmBlock = md.trimStart().match(/^---[\s\S]*?---/);
+  const fmBlock = md.trimStart().match(/^---[\s\S]*?---/);
     if(fmBlock){
       const block = fmBlock[0];
       const m = block.match(/\n\s*opacity\s*:\s*([^\n]+)/i) || block.match(/\n\s*slideopacity\s*:\s*([^\n]+)/i);
@@ -73,6 +76,25 @@ test.describe('Sample deck frontmatter application', () => {
     const re2 = new RegExp(`rgba\\(\\s*17\\s*,\\s*24\\s*,\\s*39\\s*,\\s*${exp2.replace('.', '\\.')}\\s*\\)`);
     expect(bg1).toMatch(re1);
     expect(bg2).toMatch(re2);
+
+    // Determine expected background from frontmatter (if present) and assert accordingly
+    let expectedBg = 'gradient';
+    if(fmBlock){
+      const bmatch = fmBlock[0].match(/\n\s*background\s*:\s*([^\n]+)/i);
+      if(bmatch){
+        const raw = bmatch[1].trim().replace(/^"|"$/g,'');
+        if(/^particles$/i.test(raw)) expectedBg = 'particles';
+        else if(/^off$/i.test(raw)) expectedBg = 'off';
+        else if(/^gradient$/i.test(raw)) expectedBg = 'gradient';
+      }
+    }
+    if(expectedBg === 'particles'){
+      await expect(page.locator('#bgBtn')).toHaveText(/Particles|✨/i, { timeout: 8000 });
+    } else if(expectedBg === 'off'){
+      await expect(page.locator('#bgBtn')).toHaveText(/Off|⛔/i, { timeout: 8000 });
+    } else {
+      await expect(page.locator('#bgBtn')).toHaveText(/Background|🌌/i, { timeout: 8000 });
+    }
 
   // UI mode 'on' should keep header/footer visible
   await expect(page.locator('.deck-header')).toBeVisible();

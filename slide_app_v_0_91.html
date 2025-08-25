@@ -1687,13 +1687,13 @@
 
   // File loader
   document.getElementById('fileInput').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; try{ if(f.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; } const valid=['text/markdown','text/plain','application/octet-stream']; if(!valid.includes(f.type) && !/\.(md|markdown|txt)$/i.test(f.name)){ alert('Please select a Markdown file (.md/.markdown/.txt)'); return; } const text=await f.text(); if(!text.trim()){ alert('File appears empty.'); return; } slidesHTML=splitSlides(text); if(!slidesHTML.length){ alert('No slides found. Separate slides with a line containing only ---'); return; } renderSlides(slidesHTML);
-    // Apply deck-level frontmatter settings
-    try{
-      const fm = slidesHTML[0]?.fm || {};
-      applyDeckFrontmatter(fm);
-      // Ensure background button label reflects any programmatic change
-      try{ setBgButtonLabel(); }catch{}
-    }catch{}
+      // Apply deck-level frontmatter settings
+      try{
+        const fm = slidesHTML[0]?.fm || {};
+        applyDeckFrontmatter(fm);
+        // Ensure background button label reflects any programmatic change
+        try{ setBgButtonLabel(); }catch{}
+      }catch{}
     // Store deck for session restore; optionally persist if configured
     try{
       const payload = { deckContent: text, fileName: f.name||'', loadedAt: Date.now() };
@@ -1724,7 +1724,7 @@
         if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
           slidesHTML = splitSlides(data.deckContent);
           renderSlides(slidesHTML);
-          try{ const fm = slidesHTML[0]?.fm || {}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
+          try{ const fm = slidesHTML[0]?.fm || {}; try{ window.__lastAppliedFrontmatter = fm; }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
           try{ showToast('Restored last deck (session)'); }catch{}
           return;
         }
