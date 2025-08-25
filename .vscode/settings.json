@@ -1,7 +1,0 @@
-{
-  "settings": {
-    "chat.agent.enabled": true,
-    "chat.tools.autoApprove": true,
-    "chat.agent.maxRequests": 250
-  }
-}

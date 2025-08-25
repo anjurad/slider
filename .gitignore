@@ -5,3 +5,12 @@ node_modules/
 
 # Local test run outputs
 test-results/
+
+# macOS
+.DS_Store
+
+# Editor directories
+.vscode/
+
+# Logs
+npm-debug.log*
