@@ -1427,7 +1427,7 @@
     }catch{}
     // Live-preview bindings for color pickers: update CONFIG and applyConfig immediately
     try{
-      const bindLive=(id,key,norm)=>{ const el=document.getElementById(id); if(!el) return; el.oninput=(ev)=>{ const v=(ev.target.value||'').toString(); try{ if(norm){ const n=normalizeHex(v); if(n) CONFIG[key]=n; else delete CONFIG[key]; } else { CONFIG[key]=v; } }catch{} try{ applyConfig(); }catch{} }; };
+  const bindLive=(id,key,norm)=>{ const el=document.getElementById(id); if(!el) return; el.oninput=(ev)=>{ const v=(ev.target.value||'').toString(); try{ if(norm){ const n=normalizeHex(v); if(n) CONFIG[key]=n; else delete CONFIG[key]; } else { CONFIG[key]=v; } }catch{} try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{} }; };
       bindLive('cfgPrimary','primary', false);
       bindLive('cfgAccent','accent', false);
       bindLive('cfgTextColor','textColor', true);
@@ -1654,7 +1654,10 @@
   const fp = document.getElementById('cfgFontPrimary').value.trim(); const fs = document.getElementById('cfgFontSecondary').value.trim(); if(fp) CONFIG.fontPrimary = fp; if(fs) CONFIG.fontSecondary = fs;
   // Persist a temporary overlay position preview if present
   try{ if(window.__tempOverlayPos){ CONFIG.overlayPos = window.__tempOverlayPos; delete window.__tempOverlayPos; } }catch{}
-  localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); applyConfig(); try{ updateActiveThumbGradient(); }catch{} cfgOverlay.style.display=cfgModal.style.display='none';
+  localStorage.setItem('slideapp.config', JSON.stringify(CONFIG));
+  try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
+  try{ updateActiveThumbGradient(); }catch{}
+  cfgOverlay.style.display=cfgModal.style.display='none';
   // Notify with a summary of settings
   try{ const app=CONFIG.appName||CONFIG.brand||'SlideApp'; const primary=CONFIG.primary||'#01B4E1'; const accent=CONFIG.accent||'#64FFFC'; const outline=CONFIG.slideBorderOn!==false?'on':'off'; showToast(`Saved: ${app} • ${primary} / ${accent} • Opacity ${pct}% • Outline ${outline} ${px}px`);}catch{}
   // Update baseline after save so T toggles to the saved value
