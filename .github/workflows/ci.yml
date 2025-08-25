@@ -23,7 +23,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install
-        run: npm ci
+        run: npm install
       - name: Run unit tests
         run: npm run test:unit
 
@@ -48,7 +48,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install
-        run: npm ci
+        run: npm install
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
       - name: Cache Playwright browsers
