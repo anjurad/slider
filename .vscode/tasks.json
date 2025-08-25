@@ -72,6 +72,12 @@
 			"type": "shell",
 			"command": "npm test --silent -- tests/playwright.style.spec.ts tests/opacity.spec.ts tests/outline.spec.ts",
 			"isBackground": false
+		},
+		{
+			"label": "playwright: quick subset",
+			"type": "shell",
+			"command": "npm test --silent -- tests/playwright.style.spec.ts tests/opacity.spec.ts tests/outline.spec.ts",
+			"isBackground": false
 		}
 	]
 }

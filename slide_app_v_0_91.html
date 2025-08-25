@@ -606,10 +606,25 @@
   // Thumbnails are styled via CSS variables; no JS inline styling required.
 
   function applyConfig(){
-    const p=CONFIG.primary||getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-    const a=CONFIG.accent||getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-    const primaryVal = p;
-    const accentVal = a;
+    // Prefer runtime Theme helper to compute vars consistently when available
+    let primaryVal, accentVal, textVal, btnTextVal;
+    try{
+      if(window.Theme && typeof window.Theme.computeThemeCssVars === 'function'){
+        const vars = window.Theme.computeThemeCssVars({
+          primary: CONFIG.primary,
+          accent: CONFIG.accent,
+          textColor: CONFIG.textColor,
+          btnTextColor: CONFIG.btnTextColor,
+          slideOpacity: CONFIG.slideOpacity
+        }) || {};
+        primaryVal = CONFIG.primary || vars['--primary'] || getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+        accentVal  = CONFIG.accent  || vars['--accent']  || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+        textVal    = CONFIG.textColor || vars['--text'] || getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+        btnTextVal = CONFIG.btnTextColor || vars['--btn-text'] || textVal;
+      }
+    }catch{}
+    if(!primaryVal){ primaryVal = CONFIG.primary||getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(); }
+    if(!accentVal){  accentVal  = CONFIG.accent ||getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); }
     document.documentElement.style.setProperty('--primary', primaryVal);
     document.documentElement.style.setProperty('--accent', accentVal);
     // Set derived button/brand variables for consistent theming
@@ -617,7 +632,7 @@
       // button bg: subtle gradient using primary->accent
       document.documentElement.style.setProperty('--btn-bg', `linear-gradient(90deg, ${primaryVal}, ${accentVal})`);
       // button text: ensure contrast — prefer explicit textColor, otherwise compute best contrast
-      let btnText = '';
+      let btnText = btnTextVal || '';
       if(CONFIG.textColor && String(CONFIG.textColor).trim()){
         const n = normalizeHex(CONFIG.textColor) || String(CONFIG.textColor).trim().replace(/['"]/g,'');
         if(n) btnText = n;
@@ -632,9 +647,10 @@
           btnText = bestContrastForHex(avgHex);
         }catch(e){ btnText = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#000000'; }
       }
-      document.documentElement.style.setProperty('--btn-text', btnText);
-      // Also set the global text color var so UI labels and elements follow the configured text color
-      document.documentElement.style.setProperty('--text', btnText);
+  document.documentElement.style.setProperty('--btn-text', btnText);
+  // Also set the global text color var so UI labels and elements follow the configured text color
+  const finalText = textVal || btnText;
+  if(finalText){ document.documentElement.style.setProperty('--text', finalText); }
       // brand badge bg uses the same primary->accent gradient
       const bb = document.querySelector('.brand-badge'); if(bb) bb.style.background = `linear-gradient(135deg, ${primaryVal}, ${accentVal})`;
     }catch(e){}

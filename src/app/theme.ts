@@ -4,6 +4,30 @@
  * They are exported for future refactors but currently unused to avoid behavior changes.
  */
 
+/**
+ * Get CSS custom property value from document root with fallback.
+ * Pure helper - no side effects.
+ */
+export function getCssPropertyValue(propertyName: string, fallback: string = ''): string {
+  try {
+    return getComputedStyle(document.documentElement).getPropertyValue(propertyName).trim() || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Set CSS custom property on document root.
+ * Small helper - encapsulates the pattern used throughout applyConfig.
+ */
+export function setCssProperty(propertyName: string, value: string): void {
+  try {
+    document.documentElement.style.setProperty(propertyName, value);
+  } catch {
+    // Silently fail if document is not available
+  }
+}
+
 export type RGB = { r: number; g: number; b: number };
 
 /** Normalize a hex string to #rrggbb, or return empty string if invalid. */

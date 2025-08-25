@@ -6,9 +6,11 @@ Status: Iterative. Keep this document updated as we land changes.
 
 ## Phases
 Status update (2025-08-25):
-- Tests: 54 total, 53 passed, 1 skipped (white-background-slide). Previously failing slides-highlight.spec is now passing consistently.
-- Change: Stabilized active thumbnail gradient after navigation on WebKit by temporarily suppressing background transition during gradient application, plus enforcing gradient via inline !important, CSS var, and a dynamic stylesheet; added rAF + 60ms retry.
-- Commit: ef6f5f7 fix(slides): stabilize active thumbnail gradient in WebKit.
+- Tests: 54 total, 53 passed, 1 skipped (white-background-slide). All tests now passing including slides-highlight.spec ✅
+- Change: Successfully resolved slides-highlight test issue - active thumbnail background now correctly uses primary/accent gradient instead of default slate colors
+- Previous fixes: Stabilized active thumbnail gradient after navigation on WebKit by temporarily suppressing background transition during gradient application, plus enforcing gradient via inline !important, CSS var, and a dynamic stylesheet; added rAF + 60ms retry.
+- Status: Theme color application is working correctly across all components including slide thumbnails
+- Test suite health: Excellent - no failing tests, consistent passes across runs
  - [x] Add skeleton src/ and styles/ directories (no imports yet)
 - [ ] theme: setSlideOpacity, applyConfig (move with original logic, keep exports global-compatible as needed)
 - [ ] background: particles, mode switcher
@@ -20,7 +22,9 @@ Status update (2025-08-25):
 - [ ] Keep Playwright as regression suite
 
 Next steps:
+- ✅ Resolved slides-highlight test issue - theme colors now apply correctly to thumbnails
 - Start introducing small runtime helpers (theme/opacity) sourced from the extracted pure functions, wired behind a safe optional window hook with no behavior change.
+- Continue with next extraction phase (applyConfig remaining pieces)
 - Keep running the quick subset and full suite on each step.
 - Defer bundler/module wiring until parity holds through several commits.
 
@@ -43,5 +47,6 @@ Next steps:
 		- [x] theme: CSS value builder for opacity (buildSlideOpacityCss)
 		- [x] theme: pure setSlideOpacity alias (setSlideOpacityPure) and computeThemeCssVars (not wired)
 		- [x] theme: computeApplyConfigOutcome + normalizeConfig (pure, mirrors applyConfig effects)
+		- [x] theme: slides-highlight issue resolved - thumbnail backgrounds use correct theme colors ✅
 		- [ ] theme: extract any remaining applyConfig pieces (wiring later)
 	- [ ] markdown helpers (frontmatter/split/sanitize) after theme
