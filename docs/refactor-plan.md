@@ -39,5 +39,9 @@ Status: Iterative. Keep this document updated as we land changes.
 - Loader paths: `fetch('sample_presentation.md')` relies on relative path; ensure it still resolves under new structure or keep legacy html for tests
 
 ## Next actions
-- Create `src/` and `styles/` empty scaffolds
-- Land README pointers in docs/
+- Create `src/` and `styles/` empty scaffolds — done
+- Land README pointers in docs/ — done
+- Extract tiny, pure helpers first — in progress
+	- [x] theme helpers: normalizeHex, hexToRgb, bestContrastForHex (in `src/app/theme.ts`, not wired)
+	- [ ] theme: setSlideOpacity, applyConfig (pure parts first)
+	- [ ] markdown helpers (frontmatter/split/sanitize) after theme
