@@ -25,7 +25,7 @@ npm run test:e2e
 - Or use the helper script to install browsers and run Playwright:
 
 ```bash
-./scripts/run-playwright-only.sh
+./dev-tools/run-playwright-only.sh
 ```
 
 ## CI

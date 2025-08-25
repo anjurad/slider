@@ -49,7 +49,7 @@ Thanks for contributing. Quick notes to get your development environment ready a
 - Or use the helper script to install browsers and run Playwright:
 
   ```bash
-  ./scripts/run-playwright-only.sh
+  ./dev-tools/run-playwright-only.sh
   ```
 
 ### CI
