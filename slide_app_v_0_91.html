@@ -216,6 +216,8 @@
 <body>
   <!-- Optional runtime theming helpers (no behavior change if absent) -->
   <script src="src/runtime/theme.js"></script>
+  <!-- Particles runtime: provides start/stop/resize for canvas effects -->
+  <script src="src/runtime/particles.js"></script>
   <div class="bg-gradient"></div>
   <canvas id="bg-canvas"></canvas>
   <div id="scrim"></div>
@@ -403,7 +405,8 @@
   const bgCanvas=document.getElementById('bg-canvas'); const ctx = bgCanvas.getContext('2d');
   let bgMode = localStorage.getItem('bgMode')||'gradient';
   const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let particles=[], rafId=null, gridSize=120, grid=new Map();
+  // Particle runtime now lives in src/runtime/particles.js and is exposed via window.Particles.
+  // Legacy in-file particle state removed to avoid duplication; runtime manages its own state.
 
   // Helper to rebuild overlays on all current slides using CONFIG and per-slide frontmatter
   function rebuildOverlays(tempPos){
@@ -434,12 +437,30 @@
   }
 
   // Particle lifecycle is implemented in `src/runtime/particles.js` and exposed via window.Particles
-  function resizeCanvas(){ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); else { const dpr=Math.min(2,devicePixelRatio||1); bgCanvas.width=Math.floor(innerWidth*dpr); bgCanvas.height=Math.floor(innerHeight*dpr); bgCanvas.style.width=innerWidth+'px'; bgCanvas.style.height=innerHeight+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); } }catch{}
+  // Delegate resize handling to the runtime; runtime is expected to manage canvas sizing.
+  function resizeCanvas(){ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{}
   }
   function setBgButtonLabel(){ document.getElementById('bgBtn').textContent = (bgMode==='gradient'?'🌌 Background':bgMode==='particles'?'✨ Particles':'⛔ Background Off'); }
-  function setBackgroundMode(mode){ bgMode=mode; localStorage.setItem('bgMode',bgMode); setBgButtonLabel(); if(bgMode==='off'){ try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); else { if(rafId) cancelAnimationFrame(rafId); rafId=null; ctx.clearRect(0,0,innerWidth,innerHeight); } }catch{} bgCanvas.style.display='none'; document.querySelector('.bg-gradient').style.display='none'; } else if(bgMode==='gradient'){ try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); else { if(rafId) cancelAnimationFrame(rafId); rafId=null; ctx.clearRect(0,0,innerWidth,innerHeight); } }catch{} bgCanvas.style.display='none'; document.querySelector('.bg-gradient').style.display='block'; } else { document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='block'; try{ if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) }); else { resizeCanvas(); initParticles(); stepParticles(); } }catch{} } }
+  function setBackgroundMode(mode){
+    bgMode = mode;
+    localStorage.setItem('bgMode', bgMode);
+    setBgButtonLabel();
+    if (bgMode === 'off'){
+      try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
+      bgCanvas.style.display = 'none';
+      document.querySelector('.bg-gradient').style.display = 'none';
+    } else if (bgMode === 'gradient'){
+      try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
+      bgCanvas.style.display = 'none';
+      document.querySelector('.bg-gradient').style.display = 'block';
+    } else {
+      document.querySelector('.bg-gradient').style.display = 'none';
+      bgCanvas.style.display = 'block';
+      try{ if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) }); }catch{}
+    }
+  }
   const cycleBackground=()=>{ const order=['gradient','particles','off']; setBackgroundMode(order[(order.indexOf(bgMode)+1)%order.length]); try{ showToast(`Background: ${bgMode}`);}catch{} };
-  let resizeTimer=null; window.addEventListener('resize',()=>{ if(bgMode!=='particles') return; clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); else { resizeCanvas(); initParticles(); } },120); });
+  let resizeTimer=null; window.addEventListener('resize',()=>{ if(bgMode!=='particles') return; clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{} },120); });
 
   // ===== Config & Theme =====
   const CONFIG = JSON.parse(localStorage.getItem('slideapp.config')||'{}');
@@ -639,7 +660,7 @@
       }
     }catch{}
     // Refresh bg-gradient visibility to reflect current bgMode preference
-    try{ if(bgMode === 'gradient'){ document.querySelector('.bg-gradient').style.display = 'block'; bgCanvas.style.display='none'; } else if(bgMode === 'particles'){ document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='block'; resizeCanvas(); initParticles(); if(!rafId) stepParticles(); } else { document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='none'; } }catch{}
+  try{ if(bgMode === 'gradient'){ document.querySelector('.bg-gradient').style.display = 'block'; bgCanvas.style.display='none'; } else if(bgMode === 'particles'){ document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='block'; if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced }); else { resizeCanvas(); } } else { document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='none'; } }catch{}
     // If slide background colors changed, update computed slide CSS vars immediately
     try{
       // If CONFIG.slideBg1/2 are set, also set CSS vars (hex strings). setSlideOpacity will compute rgba with current opacity.
