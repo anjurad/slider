@@ -46,5 +46,6 @@ Status: Iterative. Keep this document updated as we land changes.
 	- [x] theme: pure helpers for opacity and derived UI colors (computeSlideOpacityVars, computeBtnTextColor, computeMutedFromText)
 		- [x] theme: CSS value builder for opacity (buildSlideOpacityCss)
 		- [x] theme: pure setSlideOpacity alias (setSlideOpacityPure) and computeThemeCssVars (not wired)
-		- [ ] theme: extract remaining applyConfig pieces (wiring later)
+		- [x] theme: computeApplyConfigOutcome + normalizeConfig (pure, mirrors applyConfig effects)
+		- [ ] theme: extract any remaining applyConfig pieces (wiring later)
 	- [ ] markdown helpers (frontmatter/split/sanitize) after theme

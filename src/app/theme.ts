@@ -129,6 +129,8 @@ export type ThemeConfig = {
   slideBg1?: string;
   slideBg2?: string;
   effectColor?: string;
+  slideOpacity?: number; // decimal 0..1
+  slideBorderOn?: boolean;
   slideBorderWidth?: number; // px
   fontPrimary?: string;
   fontSecondary?: string;
@@ -178,4 +180,63 @@ export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResu
   const activeThumbGradient = (primary && accent) ? `linear-gradient(135deg, ${primary}, ${accent})` : null;
 
   return { cssVars, derived: { btnText, muted, activeThumbGradient } };
+}
+
+export type ApplyOutcome = {
+  cssVars: Record<string, string>;
+  classes: Record<string, boolean>;
+  derived: ThemeComputeResult['derived'] & {
+    slideOpacity?: number; // decimal 0..1
+  };
+};
+
+/**
+ * Normalize a partial config with sensible defaults and simple migrations.
+ * Does not mutate the input object.
+ */
+export function normalizeConfig(cfg: Partial<ThemeConfig & { brand?: string; appName?: string; overlayOn?: boolean; overlaySubtitleOn?: boolean; overlaySubtitleColor?: 'primary'|'accent'; }>): Partial<ThemeConfig & { appName?: string; overlayOn?: boolean; overlaySubtitleOn?: boolean; overlaySubtitleColor?: 'primary'|'accent'; }>{
+  const out: any = { ...cfg };
+  // appName from brand fallback (do not delete brand here)
+  if (typeof out.appName !== 'string' && typeof (out as any).brand === 'string') {
+    out.appName = (out as any).brand;
+  }
+  if (typeof out.slideBorderOn !== 'boolean') out.slideBorderOn = true;
+  if (!Number.isFinite(out.slideBorderWidth)) out.slideBorderWidth = 3;
+  if (!Number.isFinite(out.overlayTitleSize)) out.overlayTitleSize = 22;
+  if (typeof out.overlaySubtitleOn !== 'boolean') out.overlaySubtitleOn = true;
+  if (!Number.isFinite(out.overlaySubtitleSize)) out.overlaySubtitleSize = 16;
+  if (typeof out.overlaySubtitleColor !== 'string') out.overlaySubtitleColor = 'primary';
+  if (typeof out.fontPrimary !== 'string') out.fontPrimary = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+  if (typeof out.fontSecondary !== 'string') out.fontSecondary = 'Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+  // slideOpacity stays as-is if provided (decimal 0..1)
+  return out;
+}
+
+/**
+ * Compute the effect of applyConfig as data: cssVars to set, classes to toggle,
+ * and derived values. This function is pure and does not touch the DOM.
+ */
+export function computeApplyConfigOutcome(cfg: Partial<ThemeConfig>): ApplyOutcome {
+  const { cssVars, derived } = computeThemeCssVars(cfg);
+
+  // Compute slide opacity CSS vars if provided (decimal 0..1)
+  if (typeof cfg.slideOpacity === 'number' && isFinite(cfg.slideOpacity)) {
+    const pct = Math.round(Math.max(0, Math.min(100, cfg.slideOpacity * 100)));
+    const built = buildSlideOpacityCss(pct, cfg.slideBg1, cfg.slideBg2);
+    cssVars['--slide-bg1'] = built.slideBg1Rgba;
+    cssVars['--slide-bg2'] = built.slideBg2Rgba;
+    cssVars['--slide-blur'] = built.blurPx;
+    cssVars['--slide-shadow'] = built.shadow;
+  }
+
+  // Outline visibility
+  const classes: Record<string, boolean> = {
+    'border-off': cfg.slideBorderOn === false,
+  };
+
+  return {
+    cssVars,
+    classes,
+    derived: { ...derived, slideOpacity: cfg.slideOpacity },
+  };
 }
