@@ -44,5 +44,6 @@ Status: Iterative. Keep this document updated as we land changes.
 - Extract tiny, pure helpers first — in progress
 	- [x] theme helpers: normalizeHex, hexToRgb, bestContrastForHex (in `src/app/theme.ts`, not wired)
 	- [x] theme: pure helpers for opacity and derived UI colors (computeSlideOpacityVars, computeBtnTextColor, computeMutedFromText)
+		- [x] theme: CSS value builder for opacity (buildSlideOpacityCss)
 	- [ ] theme: setSlideOpacity, applyConfig (extract next, keep behavior identical)
 	- [ ] markdown helpers (frontmatter/split/sanitize) after theme

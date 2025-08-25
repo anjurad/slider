@@ -94,3 +94,19 @@ export function computeMutedFromText(textHex: string): string | null {
   const L = 0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
   return L > 0.5 ? 'rgba(11,18,32,0.55)' : 'rgba(255,255,255,0.55)';
 }
+
+/**
+ * Build the CSS var values for slide background given current opacity percent and
+ * optional slideBg1/slideBg2 hex strings (fallback to dark rgba when invalid).
+ */
+export function buildSlideOpacityCss(pct: number, slideBg1?: string, slideBg2?: string) {
+  const { o1, o2, blurPx, shadow, dec } = computeSlideOpacityVars(pct);
+  const fallback = { r: 17, g: 24, b: 39 };
+  const s1 = normalizeHex(slideBg1 || '') || '';
+  const s2 = normalizeHex(slideBg2 || '') || '';
+  const c1 = hexToRgb(s1) || fallback;
+  const c2 = hexToRgb(s2) || fallback;
+  const slideBg1Rgba = `rgba(${c1.r},${c1.g},${c1.b},${o1})`;
+  const slideBg2Rgba = `rgba(${c2.r},${c2.g},${c2.b},${o2})`;
+  return { dec, slideBg1Rgba, slideBg2Rgba, blurPx, shadow };
+}
