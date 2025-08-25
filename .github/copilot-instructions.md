@@ -7,12 +7,18 @@ Slider is a single-file HTML5 slide presentation application that renders Markdo
 ## Working Effectively
 
 ### Bootstrap and Dependencies
-- **REQUIRED**: Install dependencies first:
+- **REQUIRED**: Install dependencies first (local dev):
   ```bash
   npm install
   ```
   - Takes ~11 seconds to complete
   - Installs 257 packages including Playwright, Vitest, ESLint, TypeScript
+
+  For CI or reproducible installs, prefer:
+  ```bash
+  npm ci
+  ```
+  This installs from package-lock.json and ensures repeatable CI builds.
 
 ### When Browser Installation Fails
 If `npx playwright install --with-deps` fails due to network restrictions:
@@ -31,6 +37,8 @@ If `npx playwright install --with-deps` fails due to network restrictions:
   - Uses ESLint with TypeScript support
   - Must pass with zero warnings (--max-warnings=0)
   - Lints all .js and .ts files in the repository
+
+Note: If you see a TypeScript parser warning from ESLint (about incompatible versions), align your local TypeScript version with the project's devDependencies (the project pins a TypeScript version compatible with @typescript-eslint). See package.json for the exact version used in CI.
 
 ### Testing
 - **Unit Tests** (fast, always run these):
