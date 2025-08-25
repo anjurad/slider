@@ -6,7 +6,8 @@
     "test": "playwright test --project=webkit",
     "test:ui": "playwright test --ui",
     "test:all": "playwright test",
-    "test:unit": "vitest run unit --reporter verbose",
+  "test:unit": "vitest run unit --reporter verbose",
+  "lint": "eslint \"**/*.{js,ts}\" --max-warnings=0",
     "test:e2e": "playwright test tests"
   },
   "keywords": [],
@@ -16,6 +17,9 @@
   "devDependencies": {
     "@playwright/test": "^1.55.0",
     "vitest": "^1.0.0",
-    "jsdom": "^22.1.0"
+    "jsdom": "^22.1.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0"
   }
 }

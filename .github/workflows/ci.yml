@@ -62,17 +62,27 @@ jobs:
         id: playwright_run
         run: npx playwright test tests --project=${{ matrix.browser }}
 
-      - name: Upload Playwright artifacts on failure
-        if: failure()
+      - name: Compress Playwright reports (if present)
+        id: compress_reports
+        run: |
+          ART=playwright-artifacts-${{ matrix.browser }}-${{ github.run_id }}.tar.gz
+          DIRS=""
+          for d in playwright-report playwright-report/traces playwright-report/screenshots playwright-report/videos test-results; do
+            if [ -e "$d" ]; then DIRS="$DIRS $d"; fi
+          done
+          if [ -n "$DIRS" ]; then
+            echo "Compressing:$DIRS"
+            tar -czf "$ART" $DIRS
+            echo "artifact=$ART" >> $GITHUB_OUTPUT
+          else
+            echo "No Playwright artifacts found to compress"
+            echo "artifact=" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+      - name: Upload compressed Playwright artifacts
         uses: actions/upload-artifact@v4
         with:
-          # upload common Playwright outputs to help debugging
           name: playwright-artifacts-${{ matrix.browser }}-${{ github.run_id }}
-          path: |
-            playwright-report
-            playwright-report/traces
-            playwright-report/screenshots
-            playwright-report/videos
-            test-results
-            ./playwright-report/**
+          path: ${{ steps.compress_reports.outputs.artifact }}
           retention-days: 7
