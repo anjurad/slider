@@ -284,3 +284,14 @@ export function computeApplyConfigOutcome(cfg: Partial<ThemeConfig>): ApplyOutco
     derived: { ...derived, slideOpacity: cfg.slideOpacity },
   };
 }
+
+/**
+ * Safely sets a CSS custom property if the value is a non-empty string.
+ * @param property CSS custom property name (e.g., '--app-bg1')
+ * @param value The value to set (checked for string type and non-empty)
+ */
+export function setColorProperty(property: string, value: any): void {
+  if (typeof value === 'string' && value.trim()) {
+    document.documentElement.style.setProperty(property, value.trim());
+  }
+}
