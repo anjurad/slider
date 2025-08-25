@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "playwright: quick subset",
+			"type": "shell",
+			"command": "npm test --silent -- tests/playwright.style.spec.ts tests/opacity.spec.ts tests/outline.spec.ts",
+			"isBackground": false
+		}
+	]
+}

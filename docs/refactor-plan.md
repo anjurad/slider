@@ -45,5 +45,6 @@ Status: Iterative. Keep this document updated as we land changes.
 	- [x] theme helpers: normalizeHex, hexToRgb, bestContrastForHex (in `src/app/theme.ts`, not wired)
 	- [x] theme: pure helpers for opacity and derived UI colors (computeSlideOpacityVars, computeBtnTextColor, computeMutedFromText)
 		- [x] theme: CSS value builder for opacity (buildSlideOpacityCss)
-	- [ ] theme: setSlideOpacity, applyConfig (extract next, keep behavior identical)
+		- [x] theme: pure setSlideOpacity alias (setSlideOpacityPure) and computeThemeCssVars (not wired)
+		- [ ] theme: extract remaining applyConfig pieces (wiring later)
 	- [ ] markdown helpers (frontmatter/split/sanitize) after theme

@@ -110,3 +110,72 @@ export function buildSlideOpacityCss(pct: number, slideBg1?: string, slideBg2?: 
   const slideBg2Rgba = `rgba(${c2.r},${c2.g},${c2.b},${o2})`;
   return { dec, slideBg1Rgba, slideBg2Rgba, blurPx, shadow };
 }
+
+/**
+ * Pure version of setSlideOpacity. Returns computed CSS values without touching the DOM.
+ * Alias of buildSlideOpacityCss for clarity of intent.
+ */
+export function setSlideOpacityPure(pct: number, slideBg1?: string, slideBg2?: string) {
+  return buildSlideOpacityCss(pct, slideBg1, slideBg2);
+}
+
+// Minimal shape for config we care about in theme computations
+export type ThemeConfig = {
+  primary?: string;
+  accent?: string;
+  textColor?: string;
+  appBg1?: string;
+  appBg2?: string;
+  slideBg1?: string;
+  slideBg2?: string;
+  effectColor?: string;
+  slideBorderWidth?: number; // px
+  fontPrimary?: string;
+  fontSecondary?: string;
+  overlayTitleSize?: number; // px
+  overlaySubtitleSize?: number; // px
+};
+
+export type ThemeComputeResult = {
+  cssVars: Record<string, string>;
+  derived: {
+    btnText: string;
+    muted?: string | null;
+    activeThumbGradient?: string | null;
+  };
+};
+
+/**
+ * Compute CSS variables and a few derived values from a partial ThemeConfig.
+ * This is a pure helper mirroring logic in applyConfig (no DOM reads/writes).
+ */
+export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResult {
+  const primary = cfg.primary && normalizeHex(cfg.primary) || cfg.primary || '';
+  const accent = cfg.accent && normalizeHex(cfg.accent) || cfg.accent || '';
+
+  // Button text prefers explicit textColor, else contrast of average(primary, accent)
+  const btnText = computeBtnTextColor(primary || '#000000', accent || '#000000', cfg.textColor);
+  const muted = computeMutedFromText(btnText);
+
+  const cssVars: Record<string, string> = {};
+  if (primary) cssVars['--primary'] = primary;
+  if (accent) cssVars['--accent'] = accent;
+  if (primary && accent) cssVars['--btn-bg'] = `linear-gradient(90deg, ${primary}, ${accent})`;
+  // Apply global text color
+  cssVars['--btn-text'] = btnText;
+  cssVars['--text'] = cfg.textColor && normalizeHex(cfg.textColor) || btnText;
+  if (cfg.appBg1) cssVars['--app-bg1'] = normalizeHex(cfg.appBg1) || cfg.appBg1;
+  if (cfg.appBg2) cssVars['--app-bg2'] = normalizeHex(cfg.appBg2) || cfg.appBg2;
+  if (cfg.effectColor) cssVars['--effect-color'] = normalizeHex(cfg.effectColor) || cfg.effectColor;
+  if (cfg.slideBg1) cssVars['--slide-bg1'] = normalizeHex(cfg.slideBg1) || cfg.slideBg1;
+  if (cfg.slideBg2) cssVars['--slide-bg2'] = normalizeHex(cfg.slideBg2) || cfg.slideBg2;
+  if (Number.isFinite(cfg.slideBorderWidth as number)) cssVars['--outline-w'] = `${Math.max(0, Math.min(20, Math.round(cfg.slideBorderWidth as number)))}px`;
+  if (cfg.fontPrimary) cssVars['--font-primary'] = cfg.fontPrimary;
+  if (cfg.fontSecondary) cssVars['--font-secondary'] = cfg.fontSecondary;
+  if (Number.isFinite(cfg.overlayTitleSize as number)) cssVars['--title-size'] = `${Math.max(12, Math.min(64, Math.round(cfg.overlayTitleSize as number)))}px`;
+  if (Number.isFinite(cfg.overlaySubtitleSize as number)) cssVars['--subtitle-size'] = `${Math.max(10, Math.min(48, Math.round(cfg.overlaySubtitleSize as number)))}px`;
+
+  const activeThumbGradient = (primary && accent) ? `linear-gradient(135deg, ${primary}, ${accent})` : null;
+
+  return { cssVars, derived: { btnText, muted, activeThumbGradient } };
+}
