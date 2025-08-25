@@ -7,7 +7,10 @@ export default defineConfig({
   reporter: 'list',
   use: {
     actionTimeout: 10_000,
-    trace: 'off',
+  trace: 'on-first-retry',
+  // keep videos and screenshots for failures to aid CI debugging
+  video: 'retain-on-failure',
+  screenshot: 'only-on-failure',
   },
   projects: [
     {
