@@ -295,3 +295,17 @@ export function setColorProperty(property: string, value: any): void {
     document.documentElement.style.setProperty(property, value.trim());
   }
 }
+
+/**
+ * Sets a CSS custom property to a pixel value with safe numeric clamping.
+ * @param property CSS custom property name (e.g., '--title-size')
+ * @param value The numeric value to clamp and set
+ * @param min Minimum allowed value
+ * @param max Maximum allowed value
+ */
+export function setPixelProperty(property: string, value: any, min: number, max: number): void {
+  if (typeof value === 'number' && isFinite(value)) {
+    const clamped = Math.max(min, Math.min(max, Math.round(value)));
+    document.documentElement.style.setProperty(property, `${clamped}px`);
+  }
+}
