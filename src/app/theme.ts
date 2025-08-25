@@ -189,6 +189,30 @@ export function setSlideOpacity(input: number | string, slideBg1?: string, slide
   return computed;
 }
 
+/**
+ * Apply fonts and outline-related config to the document.
+ * Only wires the subset of applyConfig that touches fonts and outline so
+ * it can be extracted and tested independently.
+ */
+export function applyFontOutline(cfg: Partial<ThemeConfig>) {
+  const outcome = computeApplyConfigOutcome(cfg);
+  try {
+    const root = document && document.documentElement;
+    if (root) {
+      if (outcome.cssVars['--font-primary']) root.style.setProperty('--font-primary', outcome.cssVars['--font-primary']);
+      if (outcome.cssVars['--font-secondary']) root.style.setProperty('--font-secondary', outcome.cssVars['--font-secondary']);
+      if (outcome.cssVars['--outline-w']) root.style.setProperty('--outline-w', outcome.cssVars['--outline-w']);
+      // toggle border-off class as computed
+      if (typeof outcome.classes['border-off'] !== 'undefined') {
+        if (outcome.classes['border-off']) root.classList.add('border-off'); else root.classList.remove('border-off');
+      }
+    }
+  } catch {
+    // ignore DOM errors in non-browser environments
+  }
+  return outcome;
+}
+
 // Minimal shape for config we care about in theme computations
 export type ThemeConfig = {
   primary?: string;

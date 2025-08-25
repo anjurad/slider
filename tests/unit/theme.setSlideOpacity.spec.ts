@@ -1,21 +1,6 @@
+/* @vitest-environment jsdom */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setSlideOpacityPure, setSlideOpacity } from '../../src/app/theme';
-
-// Lightweight DOM shim to avoid installing jsdom for this single test file.
-function ensureDocumentShim() {
-  if (typeof globalThis.document !== 'undefined') return;
-  const styleMap = new Map();
-  const style = {
-    setProperty(k, v) { styleMap.set(k, v); },
-    getPropertyValue(k) { return styleMap.get(k) || ''; },
-    removeProperty(k) { styleMap.delete(k); },
-  };
-  globalThis.document = {
-    documentElement: { style },
-  } as any;
-}
-
-ensureDocumentShim();
 
 // jsdom-like environment provided by Vitest should expose document
 
