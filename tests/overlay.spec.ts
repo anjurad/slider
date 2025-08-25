@@ -12,9 +12,9 @@ async function overlayInfo(page) {
   const subtitleText = await page.locator('.slide.active .slide-overlay .slide-subtitle').first().textContent().catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.subtitleText catch', e && e.message); return ''; });
   const classList = await page.locator('.slide.active .slide-overlay').first().getAttribute('class').catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.classList catch', e && e.message); return ''; });
   const styles = {
-  titleSize: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-title') as Element).fontSize).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.titleSize catch', e && e.message); return ''; }),
-  subtitleSize: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-subtitle') as Element).fontSize).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.subtitleSize catch', e && e.message); return ''; }),
-  subtitleColor: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-subtitle') as Element).color).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.subtitleColor catch', e && e.message); return ''; }),
+  titleSize: await page.evaluate(() => { const el = document.querySelector('.slide.active .slide-overlay .slide-title'); return el ? getComputedStyle(el).fontSize : ''; }).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.titleSize catch', e && e.message); return ''; }),
+  subtitleSize: await page.evaluate(() => { const el = document.querySelector('.slide.active .slide-overlay .slide-subtitle'); return el ? getComputedStyle(el).fontSize : ''; }).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.subtitleSize catch', e && e.message); return ''; }),
+  subtitleColor: await page.evaluate(() => { const el = document.querySelector('.slide.active .slide-overlay .slide-subtitle'); return el ? getComputedStyle(el).color : ''; }).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.subtitleColor catch', e && e.message); return ''; }),
   };
   return { hasOverlay, titleText, subtitleText, classList, styles };
 }
@@ -49,10 +49,15 @@ test.describe('Overlay title/subtitle', () => {
       if (has > 0) break;
     }
     await expect(page.locator('.slide.active .slide-overlay .slide-title')).toHaveCount(1);
+    // Wait for title and subtitle elements to be attached and visible before measuring
+    await page.waitForSelector('.slide.active .slide-overlay .slide-title', { state: 'visible', timeout: 5000 });
+    await page.waitForSelector('.slide.active .slide-overlay .slide-subtitle', { state: 'attached', timeout: 2000 }).catch(() => {});
     // Subtitle should be thinner than title
     const weights = await page.evaluate(() => {
-      const t = getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-title') as Element).fontWeight;
-      const s = getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-subtitle') as Element).fontWeight;
+      const titleEl = document.querySelector('.slide.active .slide-overlay .slide-title');
+      const subEl = document.querySelector('.slide.active .slide-overlay .slide-subtitle');
+      const t = titleEl ? getComputedStyle(titleEl as Element).fontWeight : '';
+      const s = subEl ? getComputedStyle(subEl as Element).fontWeight : '';
       const parse = (w: string) => parseInt(w, 10) || 0;
       return { tw: parse(t), sw: parse(s) };
     });
