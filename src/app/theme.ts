@@ -28,6 +28,18 @@ export function setCssProperty(propertyName: string, value: string): void {
   }
 }
 
+/**
+ * Average two RGB color values.
+ * Pure helper - takes two RGB objects and returns their average.
+ */
+export function averageRgb(rgb1: {r: number, g: number, b: number}, rgb2: {r: number, g: number, b: number}): {r: number, g: number, b: number} {
+  return {
+    r: Math.round((rgb1.r + rgb2.r) / 2),
+    g: Math.round((rgb1.g + rgb2.g) / 2),
+    b: Math.round((rgb1.b + rgb2.b) / 2)
+  };
+}
+
 export type RGB = { r: number; g: number; b: number };
 
 /** Normalize a hex string to #rrggbb, or return empty string if invalid. */
