@@ -660,7 +660,7 @@
       }
     }catch{}
     // Refresh bg-gradient visibility to reflect current bgMode preference
-  try{ if(bgMode === 'gradient'){ document.querySelector('.bg-gradient').style.display = 'block'; bgCanvas.style.display='none'; } else if(bgMode === 'particles'){ document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='block'; if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced }); else { resizeCanvas(); } } else { document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='none'; } }catch{}
+  try{ if(bgMode === 'gradient'){ document.querySelector('.bg-gradient').style.display = 'block'; bgCanvas.style.display='none'; } else if(bgMode === 'particles'){ document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='block'; if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced }); } else { document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='none'; } }catch{}
     // If slide background colors changed, update computed slide CSS vars immediately
     try{
       // If CONFIG.slideBg1/2 are set, also set CSS vars (hex strings). setSlideOpacity will compute rgba with current opacity.

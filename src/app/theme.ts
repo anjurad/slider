@@ -276,6 +276,147 @@ export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResu
   return { cssVars, derived: { btnText, muted, activeThumbGradient } };
 }
 
+/**
+ * Compute background/effect CSS vars and classes from partial config.
+ * Pure helper so it can be unit tested independently.
+ */
+export function computeBackgroundOutcome(cfg: Partial<ThemeConfig>): { cssVars: Record<string,string>; classes: Record<string,boolean> } {
+  const cssVars: Record<string,string> = {};
+  if (cfg.appBg1) cssVars['--app-bg1'] = normalizeHex(cfg.appBg1) || cfg.appBg1 as string;
+  if (cfg.appBg2) cssVars['--app-bg2'] = normalizeHex(cfg.appBg2) || cfg.appBg2 as string;
+  if (cfg.effectColor) cssVars['--effect-color'] = normalizeHex(cfg.effectColor) || cfg.effectColor as string;
+
+  // particles / visual mode flags are not part of ThemeConfig yet; allow flexible keys
+  const anyCfg: any = cfg as any;
+  const classes: Record<string, boolean> = {};
+  classes['particles-on'] = !!anyCfg.particlesOn || !!anyCfg.particles;
+  classes['dark-mode'] = anyCfg.mode === 'dark';
+
+  return { cssVars, classes };
+}
+
+/**
+ * Compute particles/mode related classes and css vars.
+ * Pure helper to decide whether particles should run, whether canvas/gradient/off
+ * is the active mode, and whether reduced-motion should force a fallback.
+ */
+export function computeParticlesOutcome(cfg: Partial<ThemeConfig> & Record<string, any>): { cssVars: Record<string,string>; classes: Record<string,boolean>; mode: 'particles'|'gradient'|'off' } {
+  const cssVars: Record<string,string> = {};
+  const anyCfg = cfg || {} as any;
+
+  // Accept explicit 'mode' (gradient|particles|off) or flexible booleans
+  let mode: 'particles'|'gradient'|'off' = 'gradient';
+  if (anyCfg.mode === 'particles' || anyCfg.bg === 'particles') mode = 'particles';
+  else if (anyCfg.mode === 'off' || anyCfg.bg === 'off') mode = 'off';
+
+  // Respect prefers-reduced-motion if present in cfg or via a runtime hint
+  const prefersReduced = !!anyCfg.prefersReduced || typeof window !== 'undefined' && (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (prefersReduced && mode === 'particles') mode = 'gradient';
+
+  const classes: Record<string,boolean> = {
+    'particles-on': mode === 'particles',
+    'bg-gradient': mode === 'gradient',
+    'bg-off': mode === 'off'
+  };
+
+  // Allow effectColor to flow through for particle color usage
+  if (cfg.effectColor) cssVars['--effect-color'] = normalizeHex(cfg.effectColor) || cfg.effectColor as string;
+
+  return { cssVars, classes, mode };
+}
+
+/**
+ * DOM-wiring wrapper for particles/mode. Applies css vars and toggles classes on root.
+ */
+export function applyParticlesAndMode(cfg: Partial<ThemeConfig> & Record<string, any>): { cssVars: Record<string,string>; classes: Record<string,boolean>; mode: 'particles'|'gradient'|'off' } {
+  const outcome = computeParticlesOutcome(cfg);
+  try {
+    const root = document && document.documentElement;
+    if (root) {
+      for (const [k, v] of Object.entries(outcome.cssVars)) {
+        if (typeof v === 'string' && v.trim()) root.style.setProperty(k, v);
+      }
+      // Toggle classes: particles-on, bg-gradient, bg-off
+      for (const [cls, on] of Object.entries(outcome.classes)) {
+        if (on) root.classList.add(cls); else root.classList.remove(cls);
+      }
+    }
+  } catch {}
+  return outcome;
+}
+
+/**
+ * Compute next background mode given current mode.
+ * Cycle order: gradient -> particles -> off -> gradient
+ * Pure utility to be used by UI wiring.
+ */
+export function nextBackgroundMode(current?: string): 'particles'|'gradient'|'off' {
+  const order: Array<'gradient'|'particles'|'off'> = ['gradient','particles','off'];
+  const idx = Math.max(0, order.indexOf((current as any) || 'gradient'));
+  return order[(idx + 1) % order.length];
+}
+
+/**
+ * DOM-wiring: set background mode, persist to localStorage under 'bgMode', and apply via applyParticlesAndMode.
+ * Returns the applied mode and the apply outcome. No-op in non-DOM environments.
+ */
+export function setBackgroundMode(mode: 'particles'|'gradient'|'off'): { mode: 'particles'|'gradient'|'off'; outcome: ReturnType<typeof applyParticlesAndMode> | null } {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('bgMode', mode);
+    }
+    // delegate to applyParticlesAndMode for DOM changes
+    const outcome = applyParticlesAndMode({ mode } as any);
+    return { mode: outcome.mode, outcome };
+  } catch (e) {
+    return { mode, outcome: null };
+  }
+}
+
+/**
+ * Compute particle system configuration from partial ThemeConfig or runtime hints.
+ * Pure helper returning sanitized numeric values and colors.
+ */
+export function computeParticleConfig(cfg: Partial<ThemeConfig> & Record<string, any>) {
+  const anyCfg = cfg || {} as any;
+  // Respect reduced-motion preference from cfg hint or runtime matchMedia
+  const prefersReduced = !!( !!anyCfg.prefersReduced || (typeof window !== 'undefined' && typeof (window.matchMedia) === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) );
+
+  // Defaults tuned to original app: fewer particles when reduced-motion
+  const defaults = prefersReduced ? { count: 30, gridSize: 160, maxVelocity: 0.3, lineDistance: 90 } : { count: 90, gridSize: 120, maxVelocity: 0.6, lineDistance: 140 };
+
+  const count = Number.isFinite(Number(anyCfg.particleCount)) ? Math.max(0, Math.min(500, Math.round(Number(anyCfg.particleCount)))) : defaults.count;
+  const gridSize = Number.isFinite(Number(anyCfg.gridSize)) ? Math.max(40, Math.min(400, Math.round(Number(anyCfg.gridSize)))) : defaults.gridSize;
+  const maxVelocity = Number.isFinite(Number(anyCfg.maxVelocity)) ? Math.max(0.05, Math.min(4, Number(anyCfg.maxVelocity))) : defaults.maxVelocity;
+  const lineDistance = Number.isFinite(Number(anyCfg.lineDistance)) ? Math.max(10, Math.min(400, Math.round(Number(anyCfg.lineDistance)))) : defaults.lineDistance;
+
+  const effectColor = anyCfg.effectColor ? (normalizeHex(anyCfg.effectColor) || anyCfg.effectColor) : (cfg.effectColor ? normalizeHex(cfg.effectColor) : undefined);
+
+  return { count, gridSize, maxVelocity, lineDistance, effectColor, prefersReduced };
+}
+
+/**
+ * DOM-wiring wrapper for background/effects. Sets CSS vars and toggles classes on root.
+ * Returns the computed outcome (pure data) and no-ops in non-DOM environments.
+ */
+export function applyBackgroundAndEffects(cfg: Partial<ThemeConfig>): { cssVars: Record<string,string>; classes: Record<string,boolean> } {
+  const outcome = computeBackgroundOutcome(cfg);
+  try {
+    const root = document && document.documentElement;
+    if (root) {
+      for (const [k, v] of Object.entries(outcome.cssVars)) {
+        if (typeof v === 'string' && v.trim()) root.style.setProperty(k, v);
+      }
+      for (const [cls, on] of Object.entries(outcome.classes)) {
+        if (on) root.classList.add(cls); else root.classList.remove(cls);
+      }
+    }
+  } catch {
+    // noop in non-browser environments
+  }
+  return outcome;
+}
+
 export type ApplyOutcome = {
   cssVars: Record<string, string>;
   classes: Record<string, boolean>;

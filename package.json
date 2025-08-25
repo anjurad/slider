@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-  "test": "playwright test --project=webkit",
-  "test:ui": "playwright test --ui",
-  "test:all": "playwright test",
-  "test:unit": "vitest run tests/unit --reporter verbose"
+    "test": "playwright test --project=webkit",
+    "test:ui": "playwright test --ui",
+    "test:all": "playwright test",
+    "test:unit": "vitest run unit --reporter verbose",
+    "test:e2e": "playwright test tests"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +15,7 @@
   "description": "",
   "devDependencies": {
     "@playwright/test": "^1.55.0",
-  "vitest": "^1.0.0",
-  "jsdom": "^22.1.0"
+    "vitest": "^1.0.0",
+    "jsdom": "^22.1.0"
   }
 }
