@@ -40,6 +40,14 @@ export function averageRgb(rgb1: {r: number, g: number, b: number}, rgb2: {r: nu
   };
 }
 
+/**
+ * Convert RGB color to hex string.
+ * Pure helper - converts {r,g,b} to "#rrggbb" format.
+ */
+export function rgbToHex(rgb: {r: number, g: number, b: number}): string {
+  return `#${((1<<24) + (rgb.r<<16) + (rgb.g<<8) + rgb.b).toString(16).slice(1)}`;
+}
+
 export type RGB = { r: number; g: number; b: number };
 
 /** Normalize a hex string to #rrggbb, or return empty string if invalid. */
