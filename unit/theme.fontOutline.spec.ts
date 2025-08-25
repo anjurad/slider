@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { applyFontOutline } from '../../src/app/theme';
+import { applyFontOutline } from '../src/app/theme';
 
 describe('applyFontOutline', () => {
   beforeEach(() => {

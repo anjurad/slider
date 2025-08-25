@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeHex } from '../../src/app/theme';
+import { normalizeHex } from '../src/app/theme';
 
 describe('normalizeHex', () => {
   it('returns #rrggbb for 3-digit hex', () => {

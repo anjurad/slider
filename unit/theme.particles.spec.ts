@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { computeParticlesOutcome, applyParticlesAndMode } from '../../src/app/theme';
+import { computeParticlesOutcome, applyParticlesAndMode } from '../src/app/theme';
 
 describe('particles & mode compute/apply', () => {
   beforeEach(() => {

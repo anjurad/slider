@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { nextBackgroundMode, setBackgroundMode } from '../../src/app/theme';
+import { nextBackgroundMode, setBackgroundMode } from '../src/app/theme';
 
 describe('background mode helper and setter', () => {
   beforeEach(() => {

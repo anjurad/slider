@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { computeBackgroundOutcome, applyBackgroundAndEffects } from '../../src/app/theme';
+import { computeBackgroundOutcome, applyBackgroundAndEffects } from '../src/app/theme';
 
 describe('background & effects compute/apply', () => {
   beforeEach(() => {

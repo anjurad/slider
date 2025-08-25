@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hexToRgb } from '../../src/app/theme';
+import { hexToRgb } from '../src/app/theme';
 
 describe('hexToRgb', () => {
   it('parses #rrggbb correctly', () => {

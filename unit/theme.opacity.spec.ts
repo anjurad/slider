@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildSlideOpacityCss } from '../../src/app/theme';
+import { buildSlideOpacityCss } from '../src/app/theme';
 
 describe('buildSlideOpacityCss', () => {
   it('computes rgba strings and blur for 100%', () => {

@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setSlideOpacityPure, setSlideOpacity } from '../../src/app/theme';
+import { setSlideOpacityPure, setSlideOpacity } from '../src/app/theme';
 
 // jsdom-like environment provided by Vitest should expose document
 

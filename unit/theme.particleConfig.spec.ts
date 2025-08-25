@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import { describe, it, expect } from 'vitest';
-import { computeParticleConfig } from '../../src/app/theme';
+import { computeParticleConfig } from '../src/app/theme';
 
 describe('computeParticleConfig', () => {
   it('returns defaults for normal motion', () => {
