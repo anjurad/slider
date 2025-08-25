@@ -26,10 +26,7 @@ async function getActiveSlideBackgrounds(page){
 }
 
 // Navigate to the next slide with a small wait for animation
-async function next(page){
-  await page.click('#btnNext');
-  await page.waitForTimeout(120);
-}
+// navigation helper removed: not used anymore
 
 // Find the slide index containing text
 async function findSlideIndexByText(page, text){
@@ -53,19 +50,7 @@ async function goTo(page, idx, expectText){
 }
 
 // Extract rgb tuple from css string like 'rgb(255, 255, 255)' or 'rgba(255,255,255,1)'
-function parseRgbTuple(s){
-  const m = s.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
-  if(!m) return null;
-  return [parseInt(m[1],10), parseInt(m[2],10), parseInt(m[3],10)];
-}
-
-// Parse the linear-gradient and return the first color's rgb tuple
-function firstGradientColorRgbTuple(bg){
-  // linear-gradient(180deg, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 100%)
-  const m = bg.match(/linear-gradient\([^,]+,\s*([^,]+),/i);
-  if(!m) return null;
-  return parseRgbTuple(m[1]);
-}
+// parseRgbTuple removed: previously unused helper
 
 test.describe.skip('White per-slide background (skipped - spec updated)', () => {
   test('sample deck has a pure white slide background (SKIPPED)', async ({ page }) => {

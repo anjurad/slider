@@ -15,7 +15,11 @@
       if(window && window.Theme && typeof window.Theme.computeParticleConfig === 'function'){
         return window.Theme.computeParticleConfig(hint || {});
       }
-    }catch{}
+    }catch(err){
+      // defensive: if Theme.computeParticleConfig throws, fall back to local cfg
+      // keep a minimal console debug when available to aid troubleshooting
+      if(typeof console !== 'undefined' && typeof console.debug === 'function') console.debug('Particles.safeGetConfig error', err && err.message);
+    }
     return cfg;
   }
 

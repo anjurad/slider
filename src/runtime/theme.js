@@ -46,7 +46,7 @@
     // If setSlideOpacity is available from the extracted module, prefer it,
     // otherwise provide a simple DOM-wiring shim using computeThemeCssVars.
     if (!window.Theme.setSlideOpacity) {
-      window.Theme.setSlideOpacity = function(input, slideBg1, slideBg2) {
+      window.Theme.setSlideOpacity = function(input, _slideBg1, _slideBg2) {
         try {
           // Accept 0..1 decimals or 0..100 percentages
           var n = Number(input);

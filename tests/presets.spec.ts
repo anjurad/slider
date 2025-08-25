@@ -9,12 +9,7 @@ async function getCssVar(page, name){
   return page.evaluate(n => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), name);
 }
 
-function hexToRgb(hex){
-  const h = hex.replace('#','');
-  const v = h.length === 3 ? h.split('').map(c=>c+c).join('') : h;
-  const r = parseInt(v.slice(0,2),16), g = parseInt(v.slice(2,4),16), b = parseInt(v.slice(4,6),16);
-  return `rgb(${r}, ${g}, ${b})`;
-}
+// helper removed: not used in tests
 
 test.describe('Style Presets', () => {
   test('clicking a preset updates inputs, previews, and persists after Save', async ({ page }) => {
@@ -26,7 +21,7 @@ test.describe('Style Presets', () => {
 
     // Find first preset button and click it
     const firstPreset = page.locator('#presetRow .btn').first();
-    const presetName = await firstPreset.textContent();
+    // preset name fetched but not needed in this test
     await firstPreset.click();
 
     // Read current input values

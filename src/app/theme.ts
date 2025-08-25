@@ -60,7 +60,9 @@ export function normalizeHex(input: string): string {
     const m = s.slice(1);
     if (/^[0-9a-f]{3}$/i.test(m)) return '#' + m.split('').map(c => c + c).join('').toLowerCase();
     if (/^[0-9a-f]{6}$/i.test(m)) return '#' + m.toLowerCase();
-  } catch {}
+  } catch {
+    // ignore parsing errors
+  }
   return '';
 }
 
@@ -76,6 +78,7 @@ export function hexToRgb(hex: string): RGB | null {
       b: parseInt(v.slice(4, 6), 16),
     };
   } catch {
+    // ignore runtime errors
     return null;
   }
 }
@@ -95,6 +98,7 @@ export function bestContrastForHex(hex: string): '#000000' | '#ffffff' {
     const L = 0.2126 * toLin(rgb.r) + 0.7152 * toLin(rgb.g) + 0.0722 * toLin(rgb.b);
     return L < 0.5 ? '#ffffff' : '#000000';
   } catch {
+    // fallback on error
     return '#000000';
   }
 }
@@ -265,11 +269,11 @@ export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResu
   if (cfg.effectColor) cssVars['--effect-color'] = normalizeHex(cfg.effectColor) || cfg.effectColor;
   if (cfg.slideBg1) cssVars['--slide-bg1'] = normalizeHex(cfg.slideBg1) || cfg.slideBg1;
   if (cfg.slideBg2) cssVars['--slide-bg2'] = normalizeHex(cfg.slideBg2) || cfg.slideBg2;
-  if (Number.isFinite(cfg.slideBorderWidth as number)) cssVars['--outline-w'] = `${Math.max(0, Math.min(20, Math.round(cfg.slideBorderWidth as number)))}px`;
+  if (typeof cfg.slideBorderWidth === 'number' && Number.isFinite(cfg.slideBorderWidth)) cssVars['--outline-w'] = `${Math.max(0, Math.min(20, Math.round(cfg.slideBorderWidth)))}px`;
   if (cfg.fontPrimary) cssVars['--font-primary'] = cfg.fontPrimary;
   if (cfg.fontSecondary) cssVars['--font-secondary'] = cfg.fontSecondary;
-  if (Number.isFinite(cfg.overlayTitleSize as number)) cssVars['--title-size'] = `${Math.max(12, Math.min(64, Math.round(cfg.overlayTitleSize as number)))}px`;
-  if (Number.isFinite(cfg.overlaySubtitleSize as number)) cssVars['--subtitle-size'] = `${Math.max(10, Math.min(48, Math.round(cfg.overlaySubtitleSize as number)))}px`;
+  if (typeof cfg.overlayTitleSize === 'number' && Number.isFinite(cfg.overlayTitleSize)) cssVars['--title-size'] = `${Math.max(12, Math.min(64, Math.round(cfg.overlayTitleSize)))}px`;
+  if (typeof cfg.overlaySubtitleSize === 'number' && Number.isFinite(cfg.overlaySubtitleSize)) cssVars['--subtitle-size'] = `${Math.max(10, Math.min(48, Math.round(cfg.overlaySubtitleSize)))}px`;
 
   const activeThumbGradient = (primary && accent) ? `linear-gradient(135deg, ${primary}, ${accent})` : null;
 
@@ -282,15 +286,15 @@ export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResu
  */
 export function computeBackgroundOutcome(cfg: Partial<ThemeConfig>): { cssVars: Record<string,string>; classes: Record<string,boolean> } {
   const cssVars: Record<string,string> = {};
-  if (cfg.appBg1) cssVars['--app-bg1'] = normalizeHex(cfg.appBg1) || cfg.appBg1 as string;
-  if (cfg.appBg2) cssVars['--app-bg2'] = normalizeHex(cfg.appBg2) || cfg.appBg2 as string;
-  if (cfg.effectColor) cssVars['--effect-color'] = normalizeHex(cfg.effectColor) || cfg.effectColor as string;
+  if (cfg.appBg1) cssVars['--app-bg1'] = normalizeHex(String(cfg.appBg1)) || String(cfg.appBg1);
+  if (cfg.appBg2) cssVars['--app-bg2'] = normalizeHex(String(cfg.appBg2)) || String(cfg.appBg2);
+  if (cfg.effectColor) cssVars['--effect-color'] = normalizeHex(String(cfg.effectColor)) || String(cfg.effectColor);
 
   // particles / visual mode flags are not part of ThemeConfig yet; allow flexible keys
-  const anyCfg: any = cfg as any;
+  const anyCfg = cfg as Record<string, unknown>;
   const classes: Record<string, boolean> = {};
-  classes['particles-on'] = !!anyCfg.particlesOn || !!anyCfg.particles;
-  classes['dark-mode'] = anyCfg.mode === 'dark';
+  classes['particles-on'] = Boolean(anyCfg['particlesOn']) || Boolean(anyCfg['particles']);
+  classes['dark-mode'] = (typeof anyCfg['mode'] === 'string' && anyCfg['mode'] === 'dark');
 
   return { cssVars, classes };
 }
@@ -300,17 +304,19 @@ export function computeBackgroundOutcome(cfg: Partial<ThemeConfig>): { cssVars: 
  * Pure helper to decide whether particles should run, whether canvas/gradient/off
  * is the active mode, and whether reduced-motion should force a fallback.
  */
-export function computeParticlesOutcome(cfg: Partial<ThemeConfig> & Record<string, any>): { cssVars: Record<string,string>; classes: Record<string,boolean>; mode: 'particles'|'gradient'|'off' } {
+export function computeParticlesOutcome(cfg: Partial<ThemeConfig> & Record<string, unknown>): { cssVars: Record<string,string>; classes: Record<string,boolean>; mode: 'particles'|'gradient'|'off' } {
   const cssVars: Record<string,string> = {};
-  const anyCfg = cfg || {} as any;
+  const anyCfg = (cfg || {}) as Record<string, unknown>;
 
   // Accept explicit 'mode' (gradient|particles|off) or flexible booleans
   let mode: 'particles'|'gradient'|'off' = 'gradient';
-  if (anyCfg.mode === 'particles' || anyCfg.bg === 'particles') mode = 'particles';
-  else if (anyCfg.mode === 'off' || anyCfg.bg === 'off') mode = 'off';
+  const modeHint = typeof anyCfg['mode'] === 'string' ? String(anyCfg['mode']) : undefined;
+  const bgHint = typeof anyCfg['bg'] === 'string' ? String(anyCfg['bg']) : undefined;
+  if (modeHint === 'particles' || bgHint === 'particles') mode = 'particles';
+  else if (modeHint === 'off' || bgHint === 'off') mode = 'off';
 
   // Respect prefers-reduced-motion if present in cfg or via a runtime hint
-  const prefersReduced = !!anyCfg.prefersReduced || typeof window !== 'undefined' && (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const prefersReduced = Boolean(anyCfg['prefersReduced']) || (typeof window !== 'undefined' && (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches));
   if (prefersReduced && mode === 'particles') mode = 'gradient';
 
   const classes: Record<string,boolean> = {
@@ -320,7 +326,10 @@ export function computeParticlesOutcome(cfg: Partial<ThemeConfig> & Record<strin
   };
 
   // Allow effectColor to flow through for particle color usage
-  if (cfg.effectColor) cssVars['--effect-color'] = normalizeHex(cfg.effectColor) || cfg.effectColor as string;
+  if (typeof cfg.effectColor === 'string') {
+    const eff = normalizeHex(cfg.effectColor) || cfg.effectColor;
+    if (eff) cssVars['--effect-color'] = eff;
+  }
 
   return { cssVars, classes, mode };
 }
@@ -328,7 +337,7 @@ export function computeParticlesOutcome(cfg: Partial<ThemeConfig> & Record<strin
 /**
  * DOM-wiring wrapper for particles/mode. Applies css vars and toggles classes on root.
  */
-export function applyParticlesAndMode(cfg: Partial<ThemeConfig> & Record<string, any>): { cssVars: Record<string,string>; classes: Record<string,boolean>; mode: 'particles'|'gradient'|'off' } {
+export function applyParticlesAndMode(cfg: Partial<ThemeConfig> & Record<string, unknown>): { cssVars: Record<string,string>; classes: Record<string,boolean>; mode: 'particles'|'gradient'|'off' } {
   const outcome = computeParticlesOutcome(cfg);
   try {
     const root = document && document.documentElement;
@@ -341,7 +350,9 @@ export function applyParticlesAndMode(cfg: Partial<ThemeConfig> & Record<string,
         if (on) root.classList.add(cls); else root.classList.remove(cls);
       }
     }
-  } catch {}
+  } catch (e) {
+    // ignore DOM errors in non-browser environments
+  }
   return outcome;
 }
 
@@ -352,7 +363,9 @@ export function applyParticlesAndMode(cfg: Partial<ThemeConfig> & Record<string,
  */
 export function nextBackgroundMode(current?: string): 'particles'|'gradient'|'off' {
   const order: Array<'gradient'|'particles'|'off'> = ['gradient','particles','off'];
-  const idx = Math.max(0, order.indexOf((current as any) || 'gradient'));
+  const cur = (current ?? 'gradient') as string;
+  const curMode = (cur === 'particles' || cur === 'gradient' || cur === 'off') ? cur as 'particles'|'gradient'|'off' : 'gradient';
+  const idx = Math.max(0, order.indexOf(curMode));
   return order[(idx + 1) % order.length];
 }
 
@@ -366,7 +379,7 @@ export function setBackgroundMode(mode: 'particles'|'gradient'|'off'): { mode: '
       window.localStorage.setItem('bgMode', mode);
     }
     // delegate to applyParticlesAndMode for DOM changes
-    const outcome = applyParticlesAndMode({ mode } as any);
+  const outcome = applyParticlesAndMode({ mode } as Partial<ThemeConfig> & Record<string, unknown>);
     return { mode: outcome.mode, outcome };
   } catch (e) {
     return { mode, outcome: null };
@@ -377,20 +390,38 @@ export function setBackgroundMode(mode: 'particles'|'gradient'|'off'): { mode: '
  * Compute particle system configuration from partial ThemeConfig or runtime hints.
  * Pure helper returning sanitized numeric values and colors.
  */
-export function computeParticleConfig(cfg: Partial<ThemeConfig> & Record<string, any>) {
-  const anyCfg = cfg || {} as any;
+export function computeParticleConfig(cfg: Partial<ThemeConfig> & Record<string, unknown>) {
+  const anyCfg = (cfg || {}) as Record<string, unknown>;
   // Respect reduced-motion preference from cfg hint or runtime matchMedia
-  const prefersReduced = !!( !!anyCfg.prefersReduced || (typeof window !== 'undefined' && typeof (window.matchMedia) === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) );
+  const prefersReduced = Boolean(anyCfg['prefersReduced']) || (typeof window !== 'undefined' && typeof (window.matchMedia) === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   // Defaults tuned to original app: fewer particles when reduced-motion
   const defaults = prefersReduced ? { count: 30, gridSize: 160, maxVelocity: 0.3, lineDistance: 90 } : { count: 90, gridSize: 120, maxVelocity: 0.6, lineDistance: 140 };
 
-  const count = Number.isFinite(Number(anyCfg.particleCount)) ? Math.max(0, Math.min(500, Math.round(Number(anyCfg.particleCount)))) : defaults.count;
-  const gridSize = Number.isFinite(Number(anyCfg.gridSize)) ? Math.max(40, Math.min(400, Math.round(Number(anyCfg.gridSize)))) : defaults.gridSize;
-  const maxVelocity = Number.isFinite(Number(anyCfg.maxVelocity)) ? Math.max(0.05, Math.min(4, Number(anyCfg.maxVelocity))) : defaults.maxVelocity;
-  const lineDistance = Number.isFinite(Number(anyCfg.lineDistance)) ? Math.max(10, Math.min(400, Math.round(Number(anyCfg.lineDistance)))) : defaults.lineDistance;
+  const asNum = (k: string, fallback?: number) => {
+    const v = anyCfg[k];
+  const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
 
-  const effectColor = anyCfg.effectColor ? (normalizeHex(anyCfg.effectColor) || anyCfg.effectColor) : (cfg.effectColor ? normalizeHex(cfg.effectColor) : undefined);
+  const count = ((): number => {
+    const n = asNum('particleCount');
+    return typeof n === 'number' ? Math.max(0, Math.min(500, Math.round(n))) : defaults.count;
+  })();
+  const gridSize = ((): number => {
+    const n = asNum('gridSize');
+    return typeof n === 'number' ? Math.max(40, Math.min(400, Math.round(n))) : defaults.gridSize;
+  })();
+  const maxVelocity = ((): number => {
+    const n = asNum('maxVelocity');
+    return typeof n === 'number' ? Math.max(0.05, Math.min(4, n)) : defaults.maxVelocity;
+  })();
+  const lineDistance = ((): number => {
+    const n = asNum('lineDistance');
+    return typeof n === 'number' ? Math.max(10, Math.min(400, Math.round(n))) : defaults.lineDistance;
+  })();
+
+  const effectColor = anyCfg['effectColor'] ? (normalizeHex(String(anyCfg['effectColor'])) || String(anyCfg['effectColor'])) : (cfg.effectColor ? normalizeHex(cfg.effectColor) : undefined);
 
   return { count, gridSize, maxVelocity, lineDistance, effectColor, prefersReduced };
 }
@@ -430,19 +461,22 @@ export type ApplyOutcome = {
  * Does not mutate the input object.
  */
 export function normalizeConfig(cfg: Partial<ThemeConfig & { brand?: string; appName?: string; overlayOn?: boolean; overlaySubtitleOn?: boolean; overlaySubtitleColor?: 'primary'|'accent'; }>): Partial<ThemeConfig & { appName?: string; overlayOn?: boolean; overlaySubtitleOn?: boolean; overlaySubtitleColor?: 'primary'|'accent'; }>{
-  const out: any = { ...cfg };
+  const out = { ...cfg } as Record<string, unknown>;
   // appName from brand fallback (do not delete brand here)
-  if (typeof out.appName !== 'string' && typeof (out as any).brand === 'string') {
-    out.appName = (out as any).brand;
+  if (typeof out['appName'] !== 'string' && typeof out['brand'] === 'string') {
+    (out as Record<string, unknown>)['appName'] = out['brand'];
   }
-  if (typeof out.slideBorderOn !== 'boolean') out.slideBorderOn = true;
-  if (!Number.isFinite(out.slideBorderWidth)) out.slideBorderWidth = 3;
-  if (!Number.isFinite(out.overlayTitleSize)) out.overlayTitleSize = 22;
-  if (typeof out.overlaySubtitleOn !== 'boolean') out.overlaySubtitleOn = true;
-  if (!Number.isFinite(out.overlaySubtitleSize)) out.overlaySubtitleSize = 16;
-  if (typeof out.overlaySubtitleColor !== 'string') out.overlaySubtitleColor = 'primary';
-  if (typeof out.fontPrimary !== 'string') out.fontPrimary = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
-  if (typeof out.fontSecondary !== 'string') out.fontSecondary = 'Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+  if (typeof out['slideBorderOn'] !== 'boolean') out['slideBorderOn'] = true;
+  const sbw = out['slideBorderWidth'];
+  if (typeof sbw !== 'number' || !Number.isFinite(sbw)) out['slideBorderWidth'] = 3;
+  const ots = out['overlayTitleSize'];
+  if (typeof ots !== 'number' || !Number.isFinite(ots)) out['overlayTitleSize'] = 22;
+  if (typeof out['overlaySubtitleOn'] !== 'boolean') out['overlaySubtitleOn'] = true;
+  const oss = out['overlaySubtitleSize'];
+  if (typeof oss !== 'number' || !Number.isFinite(oss)) out['overlaySubtitleSize'] = 16;
+  if (typeof out['overlaySubtitleColor'] !== 'string') out['overlaySubtitleColor'] = 'primary';
+  if (typeof out['fontPrimary'] !== 'string') out['fontPrimary'] = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+  if (typeof out['fontSecondary'] !== 'string') out['fontSecondary'] = 'Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
   // slideOpacity stays as-is if provided (decimal 0..1)
   return out;
 }
@@ -481,7 +515,7 @@ export function computeApplyConfigOutcome(cfg: Partial<ThemeConfig>): ApplyOutco
  * @param property CSS custom property name (e.g., '--app-bg1')
  * @param value The value to set (checked for string type and non-empty)
  */
-export function setColorProperty(property: string, value: any): void {
+export function setColorProperty(property: string, value: unknown): void {
   if (typeof value === 'string' && value.trim()) {
     document.documentElement.style.setProperty(property, value.trim());
   }
@@ -494,7 +528,7 @@ export function setColorProperty(property: string, value: any): void {
  * @param min Minimum allowed value
  * @param max Maximum allowed value
  */
-export function setPixelProperty(property: string, value: any, min: number, max: number): void {
+export function setPixelProperty(property: string, value: unknown, min: number, max: number): void {
   if (typeof value === 'number' && isFinite(value)) {
     const clamped = Math.max(min, Math.min(max, Math.round(value)));
     document.documentElement.style.setProperty(property, `${clamped}px`);

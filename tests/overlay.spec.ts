@@ -8,13 +8,13 @@ const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
 // Helper to count overlays on current active slide
 async function overlayInfo(page) {
   const hasOverlay = await page.locator('.slide.active .slide-overlay').count();
-  const titleText = await page.locator('.slide.active .slide-overlay .slide-title').first().textContent().catch(() => '');
-  const subtitleText = await page.locator('.slide.active .slide-overlay .slide-subtitle').first().textContent().catch(() => '');
-  const classList = await page.locator('.slide.active .slide-overlay').first().getAttribute('class').catch(() => '');
+  const titleText = await page.locator('.slide.active .slide-overlay .slide-title').first().textContent().catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.titleText catch', e && e.message); return ''; });
+  const subtitleText = await page.locator('.slide.active .slide-overlay .slide-subtitle').first().textContent().catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.subtitleText catch', e && e.message); return ''; });
+  const classList = await page.locator('.slide.active .slide-overlay').first().getAttribute('class').catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.classList catch', e && e.message); return ''; });
   const styles = {
-    titleSize: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-title') as Element).fontSize).catch(() => ''),
-    subtitleSize: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-subtitle') as Element).fontSize).catch(() => ''),
-    subtitleColor: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-subtitle') as Element).color).catch(() => ''),
+  titleSize: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-title') as Element).fontSize).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.titleSize catch', e && e.message); return ''; }),
+  subtitleSize: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-subtitle') as Element).fontSize).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.subtitleSize catch', e && e.message); return ''; }),
+  subtitleColor: await page.evaluate(() => getComputedStyle(document.querySelector('.slide.active .slide-overlay .slide-subtitle') as Element).color).catch((e) => { if(typeof console !== 'undefined' && console.debug) console.debug('overlay.subtitleColor catch', e && e.message); return ''; }),
   };
   return { hasOverlay, titleText, subtitleText, classList, styles };
 }
@@ -71,7 +71,7 @@ test.describe('Overlay title/subtitle', () => {
   await page.waitForTimeout(80);
   // Check overlay present and positioned correctly on first content slide
   await expect(page.locator('.slide.active .slide-overlay')).toHaveClass(/pos-br/);
-  let info = await overlayInfo(page);
+  const info = await overlayInfo(page);
   expect(info.hasOverlay).toBeGreaterThan(0);
   // Subtitle color present (style computed)
   expect(info.styles.subtitleColor).not.toBe('');

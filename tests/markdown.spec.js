@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
-const fs = require('fs');
+// fs intentionally removed - not used in tests
 
 function toFileUrl(p) {
   const abs = path.resolve(p);

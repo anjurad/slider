@@ -1,4 +1,4 @@
-const { chromium, webkit, firefox } = require('playwright');
+const { /*chromium,*/ webkit, /*firefox*/ } = require('playwright');
 const path = require('path');
 (async ()=>{
   const browser = await webkit.launch();

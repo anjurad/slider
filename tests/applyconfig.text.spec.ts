@@ -16,8 +16,8 @@ test('applyConfig sets --text from CONFIG.textColor edge cases', async ({ page }
   for(const c of cases){
     await page.evaluate((val)=>{
       // mutate existing CONFIG object so applyConfig reads the new value
-      try{ if(typeof CONFIG === 'object') { CONFIG.textColor = val; } else { window.CONFIG = window.CONFIG || {}; window.CONFIG.textColor = val; } }catch{}
-      try{ applyConfig(); }catch{}
+      try{ if(typeof CONFIG === 'object') { CONFIG.textColor = val; } else { window.CONFIG = window.CONFIG || {}; window.CONFIG.textColor = val; } }catch(e){ if(typeof console !== 'undefined' && console.debug) console.debug('applyconfig mutation error', e && e.message); }
+      try{ applyConfig(); }catch(e){ if(typeof console !== 'undefined' && console.debug) console.debug('applyConfig threw', e && e.message); }
     }, c.input);
 
     // read computed --text
