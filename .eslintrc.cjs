@@ -23,7 +23,7 @@ module.exports = {
   overrides: [
     // TypeScript-specific override: enable project parsing for TS files only
     {
-      files: ['**/*.ts', 'tests/**/*.ts', 'unit/**/*.ts', 'scripts/**/*.ts'],
+      files: ['**/*.ts', 'tests/**/*.ts', 'unit/**/*.ts', 'dev-tools/**/*.ts', 'scripts/**/*.ts'],
       parserOptions: { project: './tsconfig.json', tsconfigRootDir: __dirname },
       env: { node: true, browser: true },
       globals: {
@@ -43,7 +43,7 @@ module.exports = {
     },
     // JS/test scripts override: do not apply parserOptions.project to plain JS
     {
-      files: ['tests/**/*.js', 'scripts/**/*.js'],
+      files: ['tests/**/*.js', 'dev-tools/**/*.js', 'scripts/**/*.js'],
       env: { node: true, browser: true },
       globals: {
         CONFIG: 'readonly',
