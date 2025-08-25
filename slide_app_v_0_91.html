@@ -214,6 +214,8 @@
   </style>
 </head>
 <body>
+  <!-- Optional runtime theming helpers (no behavior change if absent) -->
+  <script src="src/runtime/theme.js"></script>
   <div class="bg-gradient"></div>
   <canvas id="bg-canvas"></canvas>
   <div id="scrim"></div>
@@ -636,6 +638,10 @@
       // brand badge bg uses the same primary->accent gradient
       const bb = document.querySelector('.brand-badge'); if(bb) bb.style.background = `linear-gradient(135deg, ${primaryVal}, ${accentVal})`;
     }catch(e){}
+    // No-op: if runtime Theme helper exists, exercise it without modifying behavior
+    try{ if(window.Theme && typeof window.Theme.computeThemeCssVars === 'function'){ window.Theme.computeThemeCssVars({
+      primary: CONFIG.primary, accent: CONFIG.accent, textColor: CONFIG.textColor, btnTextColor: CONFIG.btnTextColor, slideOpacity: CONFIG.slideOpacity
+    }); } }catch{}
   appNameEl.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp');
   // Apply app background colors and effect color if configured
     try{

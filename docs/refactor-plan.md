@@ -5,18 +5,13 @@ Goal: Gradual extraction of CSS/JS from `slide_app_v_0_91.html` into a modular s
 Status: Iterative. Keep this document updated as we land changes.
 
 ## Phases
-
-1) Plan and scaffolding (no behavior changes)
- - [x] Capture plan file (this one)
+Status update (2025-08-25):
+- Tests: 54 total, 53 passed, 1 skipped (white-background-slide). Previously failing slides-highlight.spec is now passing consistently.
+- Change: Stabilized active thumbnail gradient after navigation on WebKit by temporarily suppressing background transition during gradient application, plus enforcing gradient via inline !important, CSS var, and a dynamic stylesheet; added rAF + 60ms retry.
+- Commit: ef6f5f7 fix(slides): stabilize active thumbnail gradient in WebKit.
  - [x] Add skeleton src/ and styles/ directories (no imports yet)
- - [x] Add tooling config placeholders (tsconfig, eslint/prettier, vite) — not wired yet
-
-2) Extract minimal, test-neutral modules
 - [ ] theme: setSlideOpacity, applyConfig (move with original logic, keep exports global-compatible as needed)
 - [ ] background: particles, mode switcher
-- [ ] markdown: parseFrontmatter, splitSlides, parseMarkdown, sanitizeHTML
-
-3) Replace inline script with module imports
 - [ ] public/index.html with same DOM, referencing built JS/CSS
 - [ ] Keep all tests pointing to original HTML until parity is proven; then switch
 
@@ -24,9 +19,10 @@ Status: Iterative. Keep this document updated as we land changes.
 - [ ] Add Vitest unit tests for markdown/frontmatter/sanitize
 - [ ] Keep Playwright as regression suite
 
-5) Cleanup & CI
-- [ ] Linting/formatting
-- [ ] GitHub Actions or local CI script
+Next steps:
+- Start introducing small runtime helpers (theme/opacity) sourced from the extracted pure functions, wired behind a safe optional window hook with no behavior change.
+- Keep running the quick subset and full suite on each step.
+- Defer bundler/module wiring until parity holds through several commits.
 
 ## Non-goals (for now)
 - No framework adoption
