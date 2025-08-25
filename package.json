@@ -5,13 +5,15 @@
   "scripts": {
   "test": "playwright test --project=webkit",
   "test:ui": "playwright test --ui",
-  "test:all": "playwright test"
+  "test:all": "playwright test",
+  "test:unit": "vitest run tests/unit --reporter verbose"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@playwright/test": "^1.55.0"
+    "@playwright/test": "^1.55.0",
+    "vitest": "^1.0.0"
   }
 }
