@@ -309,3 +309,28 @@ export function setPixelProperty(property: string, value: any, min: number, max:
     document.documentElement.style.setProperty(property, `${clamped}px`);
   }
 }
+
+/**
+ * Apply a partial theme config to the document.
+ * This is a thin DOM-wiring wrapper around computeApplyConfigOutcome.
+ * It returns the computed outcome for testing and does not throw when DOM is missing.
+ */
+export function applyConfig(cfg: Partial<ThemeConfig>): ApplyOutcome {
+  const outcome = computeApplyConfigOutcome(cfg);
+  try {
+    const root = document && document.documentElement;
+    if (root) {
+      // set css vars
+      for (const [k, v] of Object.entries(outcome.cssVars)) {
+        if (typeof v === 'string' && v.trim()) root.style.setProperty(k, v);
+      }
+      // toggle classes on root element
+      for (const [cls, on] of Object.entries(outcome.classes)) {
+        if (on) root.classList.add(cls); else root.classList.remove(cls);
+      }
+    }
+  } catch {
+    // ignore DOM errors in non-browser environments
+  }
+  return outcome;
+}
