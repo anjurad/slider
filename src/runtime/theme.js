@@ -41,6 +41,29 @@
 
   const Theme = { normalizeHex, hexToRgb, computeThemeCssVars };
   if(typeof window !== 'undefined'){
+    // Merge into existing window.Theme for backward compatibility.
     window.Theme = Object.assign(window.Theme || {}, Theme);
+    // If setSlideOpacity is available from the extracted module, prefer it,
+    // otherwise provide a simple DOM-wiring shim using computeThemeCssVars.
+    if (!window.Theme.setSlideOpacity) {
+      window.Theme.setSlideOpacity = function(input, slideBg1, slideBg2) {
+        try {
+          // Accept 0..1 decimals or 0..100 percentages
+          var n = Number(input);
+          if (!isFinite(n)) n = 100;
+          var pct = n > 0 && n <= 1 ? Math.round(n * 100) : Math.round(Math.max(0, Math.min(100, n)));
+          var built = (window.Theme && window.Theme.computeThemeCssVars) ? window.Theme.computeThemeCssVars({ slideOpacity: pct/100 }) : {};
+          var root = document && document.documentElement;
+          if (root && built) {
+            if (built['--slide-bg1']) root.style.setProperty('--slide-bg1', built['--slide-bg1']);
+            if (built['--slide-bg2']) root.style.setProperty('--slide-bg2', built['--slide-bg2']);
+            if (built['--slide-blur']) root.style.setProperty('--slide-blur', built['--slide-blur']);
+            if (built['--slide-shadow']) root.style.setProperty('--slide-shadow', built['--slide-shadow']);
+            root.style.setProperty('--slide-opacity', String(pct/100));
+          }
+          return built;
+        } catch (e) { return {}; }
+      };
+    }
   }
 })();

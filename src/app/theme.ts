@@ -163,6 +163,32 @@ export function setSlideOpacityPure(pct: number, slideBg1?: string, slideBg2?: s
   return buildSlideOpacityCss(pct, slideBg1, slideBg2);
 }
 
+/**
+ * DOM-wiring version of setSlideOpacity. Accepts pct as 0..1 or 0..100 and
+ * sets CSS custom properties on document.documentElement. Returns the computed
+ * CSS values (same shape as setSlideOpacityPure result).
+ */
+export function setSlideOpacity(input: number | string, slideBg1?: string, slideBg2?: string) {
+  let n = Number(input);
+  if (!Number.isFinite(n)) n = 100;
+  // Allow decimal 0..1 or percent 0..100
+  const pct = n > 0 && n <= 1 ? Math.round(n * 100) : Math.round(Math.max(0, Math.min(100, n)));
+  const computed = buildSlideOpacityCss(pct, slideBg1, slideBg2);
+  try {
+    const root = document && document.documentElement;
+    if (root) {
+      root.style.setProperty('--slide-bg1', computed.slideBg1Rgba);
+      root.style.setProperty('--slide-bg2', computed.slideBg2Rgba);
+      root.style.setProperty('--slide-blur', computed.blurPx);
+      root.style.setProperty('--slide-shadow', computed.shadow);
+      root.style.setProperty('--slide-opacity', String(computed.dec));
+    }
+  } catch {
+    // noop in non-DOM environments
+  }
+  return computed;
+}
+
 // Minimal shape for config we care about in theme computations
 export type ThemeConfig = {
   primary?: string;

@@ -1490,7 +1490,7 @@
           try{ if(CONFIG.slideBg1) document.documentElement.style.setProperty('--slide-bg1', CONFIG.slideBg1); }catch{}
           try{ if(CONFIG.slideBg2) document.documentElement.style.setProperty('--slide-bg2', CONFIG.slideBg2); }catch{}
           // Recompute derived values and update UI (use non-persisting opacity preview)
-          applyConfig();
+          try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
           setSlideOpacity(typeof CONFIG.slideOpacity==='number' ? Math.round(CONFIG.slideOpacity*100) : 100, false);
         }catch{}
         // set active visual state
@@ -2273,8 +2273,8 @@ Everything else in front matter is ignored by the app.`;
         CONFIG.slideOpacity = decOpacity;
       }
     }catch{}
-    // Apply brand/colors and opacity via existing helper
-    applyConfig();
+  // Apply brand/colors and opacity via existing helper
+  try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
     if(hasOpacity){
       try{ setSlideOpacity(decOpacity * 100); }catch{}
     }
