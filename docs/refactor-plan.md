@@ -7,9 +7,9 @@ Status: Iterative. Keep this document updated as we land changes.
 ## Phases
 
 1) Plan and scaffolding (no behavior changes)
-- [x] Capture plan file (this one)
-- [x] Add skeleton src/ and styles/ directories (no imports yet)
-- [ ] Add tooling config placeholders (tsconfig, eslint/prettier, vite) — deferred until extraction starts
+ - [x] Capture plan file (this one)
+ - [x] Add skeleton src/ and styles/ directories (no imports yet)
+ - [x] Add tooling config placeholders (tsconfig, eslint/prettier, vite) — not wired yet
 
 2) Extract minimal, test-neutral modules
 - [ ] theme: setSlideOpacity, applyConfig (move with original logic, keep exports global-compatible as needed)
