@@ -212,6 +212,19 @@
   .toast.show{display:block;opacity:1;transform:translateY(0)}
   .toast.no-anim{transition:none}
   </style>
+    <script>
+      // Global helper for test-driven deterministic behavior.
+      // Usage: if (window.__isDeterministicTestMode && window.__isDeterministicTestMode()) { ... }
+      try{
+        window.__isDeterministicTestMode = function(){
+          try{
+            if (window.__SLIDEAPP_TEST_DETERMINISTIC === true) return true;
+            if (window.location && window.location.search){ const p = new URLSearchParams(window.location.search); if (p.get('deterministicTest') === '1') return true; }
+          }catch(e){}
+          return false;
+        };
+      }catch(e){}
+    </script>
 </head>
 <body>
   <!-- Optional runtime theming helpers (no behavior change if absent) -->
@@ -703,18 +716,16 @@
       overlayTitleSize: (typeof CONFIG.overlayTitleSize === 'number') ? Math.max(12, Math.min(64, Math.round(CONFIG.overlayTitleSize))) : undefined,
       overlaySubtitleSize: (typeof CONFIG.overlaySubtitleSize === 'number') ? Math.max(10, Math.min(48, Math.round(CONFIG.overlaySubtitleSize))) : undefined
     };
-    if(window.Theme && typeof window.Theme.applyFontOutline === 'function'){
-      // applyFontOutline modifies only outline/font related vars and classes
-      // so it won't overwrite theme color vars computed earlier by Theme.applyConfig
-      window.Theme.applyFontOutline(partial);
-    } else {
-      // fallback: set variables directly
-      try{ const w = partial.slideBorderWidth; document.documentElement.style.setProperty('--outline-w', `${w}px`); }catch{}
-      try{ if(partial.fontPrimary) document.documentElement.style.setProperty('--font-primary', partial.fontPrimary); }catch{}
-      try{ if(partial.fontSecondary) document.documentElement.style.setProperty('--font-secondary', partial.fontSecondary); }catch{}
-      try{ if(typeof partial.overlayTitleSize === 'number') document.documentElement.style.setProperty('--title-size', `${partial.overlayTitleSize}px`); }catch{}
-      try{ if(typeof partial.overlaySubtitleSize === 'number') document.documentElement.style.setProperty('--subtitle-size', `${partial.overlaySubtitleSize}px`); }catch{}
-    }
+    // Prefer runtime helper to apply outline/font/overlay sizes. If it throws, apply a minimal fallback
+    try{
+      if(window.Theme && typeof window.Theme.applyFontOutline === 'function'){
+        window.Theme.applyFontOutline(partial);
+      } else {
+        // minimal fallback: apply outline width only
+        const w = partial.slideBorderWidth;
+        try{ document.documentElement.style.setProperty('--outline-w', `${w}px`); }catch{}
+      }
+    }catch(e){ try{ document.documentElement.style.setProperty('--outline-w', `${partial.slideBorderWidth}px`); }catch{} }
   }catch(e){
     // Best-effort fallback in case of errors
     try{ const w = (typeof CONFIG.slideBorderWidth === 'number' && isFinite(CONFIG.slideBorderWidth)) ? CONFIG.slideBorderWidth : 3; document.documentElement.style.setProperty('--outline-w', `${Math.max(0, Math.min(20, Math.round(w)))}px`); }catch{}
@@ -1736,14 +1747,20 @@
   });
 
   // File loader
-  document.getElementById('fileInput').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; try{ if(f.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; } const valid=['text/markdown','text/plain','application/octet-stream']; if(!valid.includes(f.type) && !/\.(md|markdown|txt)$/i.test(f.name)){ alert('Please select a Markdown file (.md/.markdown/.txt)'); return; } const text=await f.text(); if(!text.trim()){ alert('File appears empty.'); return; } slidesHTML=splitSlides(text); if(!slidesHTML.length){ alert('No slides found. Separate slides with a line containing only ---'); return; } renderSlides(slidesHTML);
-      // Apply deck-level frontmatter settings
-      try{
-        const fm = slidesHTML[0]?.fm || {};
-        // If the loaded deck does not specify a background, ensure we reset to the default
-        // so we don't accidentally preserve a previous bgMode from localStorage/session.
-  try{ if(!fm.background && !fm.bg){ if((typeof navigator !== 'undefined' && navigator.webdriver === true) || window.__SLIDEAPP_TEST_DETERMINISTIC === true){ setBackgroundMode('gradient'); } } }catch{}
-        applyDeckFrontmatter(fm);
+  document.getElementById('fileInput').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; try{
+    // Test-only deterministic guard: if tests opt-in, clear persisted bgMode and prefer gradient
+    try{ if(typeof window.__isDeterministicTestMode === 'function' && window.__isDeterministicTestMode()){ try{ localStorage.removeItem('bgMode'); }catch{} bgMode = 'gradient'; setBackgroundMode('gradient'); } }catch{}
+  // debug hooks removed
+    if(f.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; } const valid=['text/markdown','text/plain','application/octet-stream']; if(!valid.includes(f.type) && !/\.(md|markdown|txt)$/i.test(f.name)){ alert('Please select a Markdown file (.md/.markdown/.txt)'); return; } const text=await f.text(); if(!text.trim()){ alert('File appears empty.'); return; } slidesHTML=splitSlides(text); if(!slidesHTML.length){ alert('No slides found. Separate slides with a line containing only ---'); return; } renderSlides(slidesHTML);
+    // Apply deck-level frontmatter settings
+    try{
+  const fm = slidesHTML[0]?.fm || {};
+  // Expose parsed frontmatter for debug/tests
+  // debug hook removed
+  // If the loaded deck does not specify a background, ensure we reset to the default
+  // so we don't accidentally preserve a previous bgMode from localStorage/session.
+  try{ if(!fm.background && !fm.bg){ if(typeof window.__isDeterministicTestMode === 'function' && window.__isDeterministicTestMode()){ setBackgroundMode('gradient'); } } }catch(e){}
+  applyDeckFrontmatter(fm);
         // Ensure background button label reflects any programmatic change
         try{ setBgButtonLabel(); }catch{}
       }catch{}
@@ -1777,7 +1794,7 @@
         if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
           slidesHTML = splitSlides(data.deckContent);
           renderSlides(slidesHTML);
-          try{ const fm = slidesHTML[0]?.fm || {}; try{ window.__lastAppliedFrontmatter = fm; }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
+          try{ const fm = slidesHTML[0]?.fm || {}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
           try{ showToast('Restored last deck (session)'); }catch{}
           return;
         }
@@ -1807,7 +1824,7 @@
     slidesHTML = splitSlides(text);
   renderSlides(slidesHTML);
   // Apply deck-level frontmatter (sample)
-  try{ const fm = slidesHTML[0]?.fm || {}; try{ if(!fm.background && !fm.bg){ if((typeof navigator !== 'undefined' && navigator.webdriver === true) || window.__SLIDEAPP_TEST_DETERMINISTIC === true){ setBackgroundMode('gradient'); } } }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
+  try{ const fm = slidesHTML[0]?.fm || {}; try{ if(!fm.background && !fm.bg){ if(typeof __isDeterministicTestMode === 'function' && __isDeterministicTestMode()){ setBackgroundMode('gradient'); } } }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
     return;
   }
     }catch{}
