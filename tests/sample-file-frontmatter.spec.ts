@@ -20,7 +20,12 @@ test.describe('Sample deck frontmatter application', () => {
     localStorage.removeItem('slideapp.config');
     localStorage.removeItem('bgMode');
   });
+  // Reload to ensure a fresh app instance, then opt-in deterministic test mode in the new page
   await page.reload();
+  await page.evaluate(() => {
+    try { window.__SLIDEAPP_TEST_DETERMINISTIC = true; } catch(e){ console.warn('deterministic flag set failed', String(e)); }
+    try { localStorage.removeItem('bgMode'); } catch(e){ console.warn('clear bgMode failed', String(e)); }
+  });
     await page.waitForSelector('.slide.active .md');
 
     // Load the actual sample file from workspace
