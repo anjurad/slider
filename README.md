@@ -43,32 +43,10 @@ python3 -m http.server 8000
 
 ## Visual preview
 
-Here's a small, static inline SVG preview to help reviewers quickly see the app layout without opening a browser.
+Here's a small animated preview to help reviewers quickly see the app layout without opening a browser.
 
-<div style="max-width:420px;">
-  <svg width="420" height="220" viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Slider app preview">
-    <defs>
-      <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#0f172a" />
-        <stop offset="100%" stop-color="#1e293b" />
-      </linearGradient>
-      <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color="#01B4E1" />
-        <stop offset="100%" stop-color="#64FFFC" />
-      </linearGradient>
-    </defs>
-    <rect x="0" y="0" width="420" height="220" rx="12" fill="url(#g1)" />
-    <rect x="16" y="16" width="152" height="188" rx="8" fill="#0b1220" opacity="0.6" />
-    <rect x="176" y="16" width="228" height="188" rx="12" fill="#0f1723" opacity="0.8" />
-    <rect x="186" y="26" width="208" height="36" rx="6" fill="url(#g2)" />
-    <text x="196" y="50" font-family="Inter, sans-serif" font-size="14" fill="#fff">SlideApp</text>
-    <text x="24" y="36" font-family="Inter, sans-serif" font-size="12" fill="#fff">Slides</text>
-    <g transform="translate(196,72)" fill="#fff" font-family="Inter, sans-serif">
-      <text x="0" y="0" font-size="18" font-weight="700">Hello SlideApp</text>
-      <text x="0" y="24" font-size="12" fill="#cbd5e1">Use arrow keys to navigate</text>
-    </g>
-    <circle cx="386" cy="36" r="10" fill="#fff" opacity="0.08" />
-  </svg>
+<div style="max-width:480px;">
+  <img src="assets/preview.svg" alt="Slider preview" style="width:100%;height:auto;border-radius:8px;border:1px solid rgba(255,255,255,0.04)" />
 </div>
 
 What to try

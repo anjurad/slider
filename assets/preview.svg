@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="260" viewBox="0 0 480 260" role="img" aria-label="Slider animated preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#01B4E1" />
+      <stop offset="100%" stop-color="#64FFFC" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="480" height="260" rx="12" fill="url(#bg)" />
+  <rect x="20" y="20" width="160" height="220" rx="10" fill="#0b1220" opacity="0.6" />
+  <rect x="196" y="20" width="260" height="220" rx="12" fill="#0f1723" opacity="0.9" />
+  <rect x="208" y="30" width="236" height="40" rx="8" fill="url(#g)" />
+  <text x="224" y="58" font-family="Inter, sans-serif" font-size="16" fill="#fff">SlideApp</text>
+
+  <!-- Animated slide title sliding in -->
+  <g id="slide1" transform="translate(0,0)">
+    <text x="220" y="100" font-family="Inter, sans-serif" font-size="20" font-weight="700" fill="#fff">Hello SlideApp</text>
+    <text x="220" y="130" font-family="Inter, sans-serif" font-size="12" fill="#cbd5e1">Use arrow keys to navigate</text>
+  </g>
+
+  <!-- small indicator dot animating to simulate background particles -->
+  <circle cx="420" cy="40" r="6" fill="#fff" fill-opacity="0.12">
+    <animate attributeName="cx" values="420;440;420" dur="2.6s" repeatCount="indefinite" />
+    <animate attributeName="fill-opacity" values="0.12;0.5;0.12" dur="2.6s" repeatCount="indefinite" />
+  </circle>
+
+  <!-- slide swipe animation: translate group sideways then back -->
+  <animateTransform xlink:href="#slide1" attributeName="transform" type="translate" values="0,0; -20,0; 0,0" dur="3.2s" repeatCount="indefinite" />
+
+</svg>

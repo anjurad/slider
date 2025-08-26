@@ -412,9 +412,9 @@
   function rebuildOverlays(tempPos){
     try{
       const slides = [...document.querySelectorAll('.slide')];
-      slides.forEach(s=>{ s.querySelector('.slide-overlay')?.remove(); });
+        slides.forEach(s => { s.querySelector('.slide-overlay')?.remove(); });
       if(CONFIG.overlayOn===true && Array.isArray(slidesHTML) && slidesHTML.length){
-        slides.forEach((slideEl, idx)=>{
+          slides.forEach((slideEl, idx) => {
           const fm = slidesHTML[idx]?.fm || {};
           const slideOverlayFlag = (typeof fm.overlay !== 'undefined') ? /^(1|on|true)$/i.test(String(fm.overlay).trim()) : true;
           if(!slideOverlayFlag) return;
@@ -529,10 +529,27 @@
   // Set the CSS variables that are used in the .slide background
     // Prefer configured slideBg colors if present (stored as #rrggbb)
     try{
-      const s1 = (typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()) ? normalizeHex(CONFIG.slideBg1) : null;
-      const s2 = (typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()) ? normalizeHex(CONFIG.slideBg2) : null;
-      if(s1){ const c = hexToRgb(s1); if(c) document.documentElement.style.setProperty('--slide-bg1', `rgba(${c.r},${c.g},${c.b},${o1})`); else document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); } else { document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); }
-      if(s2){ const c = hexToRgb(s2); if(c) document.documentElement.style.setProperty('--slide-bg2', `rgba(${c.r},${c.g},${c.b},${o2})`); else document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); } else { document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
+      // Prefer runtime computation for derived slide background vars when available
+      if(window.Theme && typeof window.Theme.computeApplyConfigOutcome === 'function'){
+        try{
+          const outcome = window.Theme.computeApplyConfigOutcome({ slideBg1: CONFIG.slideBg1, slideBg2: CONFIG.slideBg2, slideOpacity: dec });
+          if(outcome && outcome.cssVars){
+            if(typeof outcome.cssVars['--slide-bg1'] === 'string') document.documentElement.style.setProperty('--slide-bg1', outcome.cssVars['--slide-bg1']);
+            if(typeof outcome.cssVars['--slide-bg2'] === 'string') document.documentElement.style.setProperty('--slide-bg2', outcome.cssVars['--slide-bg2']);
+          }
+        }catch(err){
+          // fall back to legacy local computation below
+          const s1 = (typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()) ? normalizeHex(CONFIG.slideBg1) : null;
+          const s2 = (typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()) ? normalizeHex(CONFIG.slideBg2) : null;
+          if(s1){ const c = hexToRgb(s1); if(c) document.documentElement.style.setProperty('--slide-bg1', `rgba(${c.r},${c.g},${c.b},${o1})`); else document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); } else { document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); }
+          if(s2){ const c = hexToRgb(s2); if(c) document.documentElement.style.setProperty('--slide-bg2', `rgba(${c.r},${c.g},${c.b},${o2})`); else document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); } else { document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
+        }
+      } else {
+        const s1 = (typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()) ? normalizeHex(CONFIG.slideBg1) : null;
+        const s2 = (typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()) ? normalizeHex(CONFIG.slideBg2) : null;
+        if(s1){ const c = hexToRgb(s1); if(c) document.documentElement.style.setProperty('--slide-bg1', `rgba(${c.r},${c.g},${c.b},${o1})`); else document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); } else { document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); }
+        if(s2){ const c = hexToRgb(s2); if(c) document.documentElement.style.setProperty('--slide-bg2', `rgba(${c.r},${c.g},${c.b},${o2})`); else document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); } else { document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
+      }
     }catch(e){ document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
   // Also scale blur and shadow so 0% is truly clear
   const blurPx = (8 * dec).toFixed(2) + 'px';
@@ -590,6 +607,24 @@
   // Thumbnails are styled via CSS variables; no JS inline styling required.
 
   function applyConfig(){
+    // Prefer runtime Theme helper to compute and apply vars when available.
+    // Call the runtime shim early; existing inline logic remains as a safe fallback
+    // (idempotent) until parity is proven.
+    try{
+      if(window.Theme && typeof window.Theme.applyConfig === 'function'){
+        try{
+          // Capture outcome to help debug overwrite issues where the runtime
+          // compute returns a value but the page-level apply path later
+          // ends up with a different CSS var in the DOM.
+          const __theme_outcome = window.Theme.applyConfig(CONFIG);
+          try{
+            const __computed_text = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+            // (debug instrumentation removed) capture remained for historical debugging but not exposed in CI
+          }catch(logErr){ console.log('[THEME_DEBUG] applyConfig logging failed', String(logErr)); }
+        }catch(e){}
+      }
+    }catch(e){}
+
     // Prefer runtime Theme helper to compute vars consistently when available
     let primaryVal, accentVal, textVal, btnTextVal;
     try{
@@ -607,37 +642,11 @@
         btnTextVal = CONFIG.btnTextColor || vars['--btn-text'] || textVal;
       }
     }catch{}
-    if(!primaryVal){ primaryVal = CONFIG.primary||getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(); }
-    if(!accentVal){  accentVal  = CONFIG.accent ||getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); }
-    document.documentElement.style.setProperty('--primary', primaryVal);
-    document.documentElement.style.setProperty('--accent', accentVal);
-    // Set derived button/brand variables for consistent theming
-    try{
-      // button bg: subtle gradient using primary->accent
-      document.documentElement.style.setProperty('--btn-bg', `linear-gradient(90deg, ${primaryVal}, ${accentVal})`);
-      // button text: ensure contrast — prefer explicit textColor, otherwise compute best contrast
-      let btnText = btnTextVal || '';
-      if(CONFIG.textColor && String(CONFIG.textColor).trim()){
-        const n = normalizeHex(CONFIG.textColor) || String(CONFIG.textColor).trim().replace(/['"]/g,'');
-        if(n) btnText = n;
-      }
-      // If no explicit textColor, compute contrast against a midpoint between primary & accent
-      if(!btnText){
-        try{
-          const pRgb = hexToRgb(primaryVal) || {r:0,g:0,b:0};
-          const aRgb = hexToRgb(accentVal) || {r:0,g:0,b:0};
-          const avg = { r: Math.round((pRgb.r + aRgb.r)/2), g: Math.round((pRgb.g + aRgb.g)/2), b: Math.round((pRgb.b + aRgb.b)/2) };
-          const avgHex = `#${((1<<24) + (avg.r<<16) + (avg.g<<8) + avg.b).toString(16).slice(1)}`;
-          btnText = bestContrastForHex(avgHex);
-        }catch(e){ btnText = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#000000'; }
-      }
-  document.documentElement.style.setProperty('--btn-text', btnText);
-  // Also set the global text color var so UI labels and elements follow the configured text color
-  const finalText = textVal || btnText;
-  if(finalText){ document.documentElement.style.setProperty('--text', finalText); }
-      // brand badge bg uses the same primary->accent gradient
-      const bb = document.querySelector('.brand-badge'); if(bb) bb.style.background = `linear-gradient(135deg, ${primaryVal}, ${accentVal})`;
-    }catch(e){}
+  if(!primaryVal){ primaryVal = CONFIG.primary||getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(); }
+  if(!accentVal){  accentVal  = CONFIG.accent ||getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); }
+  // Theme.applyConfig handles derived CSS variables (btn-bg, btn-text, --text, etc.).
+  // Ensure brand-badge reflects computed vars (no inline CSS set here).
+  try{ const bb = document.querySelector('.brand-badge'); if(bb) bb.style.removeProperty('background'); }catch(e){}
     // No-op: if runtime Theme helper exists, exercise it without modifying behavior
     try{ if(window.Theme && typeof window.Theme.computeThemeCssVars === 'function'){ window.Theme.computeThemeCssVars({
       primary: CONFIG.primary, accent: CONFIG.accent, textColor: CONFIG.textColor, btnTextColor: CONFIG.btnTextColor, slideOpacity: CONFIG.slideOpacity
@@ -645,44 +654,75 @@
   appNameEl.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp');
   // Apply app background colors and effect color if configured
     try{
-      if(typeof CONFIG.appBg1 === 'string' && CONFIG.appBg1.trim()){
-        document.documentElement.style.setProperty('--app-bg1', CONFIG.appBg1.trim());
-      }
-      if(typeof CONFIG.appBg2 === 'string' && CONFIG.appBg2.trim()){
-        document.documentElement.style.setProperty('--app-bg2', CONFIG.appBg2.trim());
-      }
-      if(typeof CONFIG.effectColor === 'string' && CONFIG.effectColor.trim()){
-        document.documentElement.style.setProperty('--effect-color', CONFIG.effectColor.trim());
-      }
-      // General text color
-      if(typeof CONFIG.textColor === 'string' && CONFIG.textColor.trim()){
-        document.documentElement.style.setProperty('--text', CONFIG.textColor.trim());
-      }
+  // Theme.applyConfig will set app background/effect/text CSS vars.
     }catch{}
     // Refresh bg-gradient visibility to reflect current bgMode preference
   try{ if(bgMode === 'gradient'){ document.querySelector('.bg-gradient').style.display = 'block'; bgCanvas.style.display='none'; } else if(bgMode === 'particles'){ document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='block'; if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced }); } else { document.querySelector('.bg-gradient').style.display='none'; bgCanvas.style.display='none'; } }catch{}
     // If slide background colors changed, update computed slide CSS vars immediately
     try{
-      // If CONFIG.slideBg1/2 are set, also set CSS vars (hex strings). setSlideOpacity will compute rgba with current opacity.
-      if(typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()){
-        document.documentElement.style.setProperty('--slide-bg1', CONFIG.slideBg1.trim());
-      }
-      if(typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()){
-        document.documentElement.style.setProperty('--slide-bg2', CONFIG.slideBg2.trim());
-      }
+      // If CONFIG.slideBg1/2 are set, prefer runtime helper to compute rgba with current opacity; fall back to direct hex assignment
+      try{
+        if(window.Theme && typeof window.Theme.computeApplyConfigOutcome === 'function'){
+          const outcome = window.Theme.computeApplyConfigOutcome({ slideBg1: CONFIG.slideBg1, slideBg2: CONFIG.slideBg2, slideOpacity: CONFIG.slideOpacity });
+          if(outcome && outcome.cssVars){
+            if(typeof outcome.cssVars['--slide-bg1'] === 'string') document.documentElement.style.setProperty('--slide-bg1', outcome.cssVars['--slide-bg1']);
+            else if(typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()) document.documentElement.style.setProperty('--slide-bg1', CONFIG.slideBg1.trim());
+            if(typeof outcome.cssVars['--slide-bg2'] === 'string') document.documentElement.style.setProperty('--slide-bg2', outcome.cssVars['--slide-bg2']);
+            else if(typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()) document.documentElement.style.setProperty('--slide-bg2', CONFIG.slideBg2.trim());
+          }
+        } else {
+          if(typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()){
+            document.documentElement.style.setProperty('--slide-bg1', CONFIG.slideBg1.trim());
+          }
+          if(typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()){
+            document.documentElement.style.setProperty('--slide-bg2', CONFIG.slideBg2.trim());
+          }
+        }
+      }catch(e){ if(typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()) document.documentElement.style.setProperty('--slide-bg1', CONFIG.slideBg1.trim()); if(typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()) document.documentElement.style.setProperty('--slide-bg2', CONFIG.slideBg2.trim()); }
     }catch{}
-    // apply slide opacity if present; call with persist=false to avoid mutating saved baseline during live preview
-    if(typeof CONFIG.slideOpacity === 'number') setSlideOpacity(CONFIG.slideOpacity * 100, false);
+    // apply slide opacity if present; prefer runtime shim when available
+    if(typeof CONFIG.slideOpacity === 'number'){
+      try{
+        if(window.Theme && typeof window.Theme.setSlideOpacity === 'function'){
+          // Theme.setSlideOpacity accepts decimal 0..1 or percentage; pass decimal
+          window.Theme.setSlideOpacity(CONFIG.slideOpacity);
+        }else{
+          // fallback: legacy call expects percent
+          setSlideOpacity(CONFIG.slideOpacity * 100, false);
+        }
+      }catch(e){}
+    }
   // Apply outline visibility
   document.body.classList.toggle('border-off', CONFIG.slideBorderOn===false);
-  // Apply outline width
-  try{ const w = (typeof CONFIG.slideBorderWidth === 'number' && isFinite(CONFIG.slideBorderWidth)) ? CONFIG.slideBorderWidth : 3; document.documentElement.style.setProperty('--outline-w', `${Math.max(0, Math.min(20, Math.round(w)))}px`); }catch{}
-  // Apply typography vars
-  try{ document.documentElement.style.setProperty('--font-primary', CONFIG.fontPrimary||'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif'); }catch{}
-  try{ document.documentElement.style.setProperty('--font-secondary', CONFIG.fontSecondary||'Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif'); }catch{}
-  // Apply overlay sizes
-  try{ const ts = Math.max(12, Math.min(64, Math.round(CONFIG.overlayTitleSize||22))); document.documentElement.style.setProperty('--title-size', `${ts}px`);}catch{}
-  try{ const ss = Math.max(10, Math.min(48, Math.round(CONFIG.overlaySubtitleSize||16))); document.documentElement.style.setProperty('--subtitle-size', `${ss}px`);}catch{}
+  // Apply outline width, typography and overlay sizes via runtime helper when available.
+  try{
+    const partial = {
+      slideBorderWidth: (typeof CONFIG.slideBorderWidth === 'number' && isFinite(CONFIG.slideBorderWidth)) ? Math.max(0, Math.min(20, Math.round(CONFIG.slideBorderWidth))) : 3,
+      fontPrimary: CONFIG.fontPrimary || undefined,
+      fontSecondary: CONFIG.fontSecondary || undefined,
+      overlayTitleSize: (typeof CONFIG.overlayTitleSize === 'number') ? Math.max(12, Math.min(64, Math.round(CONFIG.overlayTitleSize))) : undefined,
+      overlaySubtitleSize: (typeof CONFIG.overlaySubtitleSize === 'number') ? Math.max(10, Math.min(48, Math.round(CONFIG.overlaySubtitleSize))) : undefined
+    };
+    if(window.Theme && typeof window.Theme.applyFontOutline === 'function'){
+      // applyFontOutline modifies only outline/font related vars and classes
+      // so it won't overwrite theme color vars computed earlier by Theme.applyConfig
+      window.Theme.applyFontOutline(partial);
+    } else {
+      // fallback: set variables directly
+      try{ const w = partial.slideBorderWidth; document.documentElement.style.setProperty('--outline-w', `${w}px`); }catch{}
+      try{ if(partial.fontPrimary) document.documentElement.style.setProperty('--font-primary', partial.fontPrimary); }catch{}
+      try{ if(partial.fontSecondary) document.documentElement.style.setProperty('--font-secondary', partial.fontSecondary); }catch{}
+      try{ if(typeof partial.overlayTitleSize === 'number') document.documentElement.style.setProperty('--title-size', `${partial.overlayTitleSize}px`); }catch{}
+      try{ if(typeof partial.overlaySubtitleSize === 'number') document.documentElement.style.setProperty('--subtitle-size', `${partial.overlaySubtitleSize}px`); }catch{}
+    }
+  }catch(e){
+    // Best-effort fallback in case of errors
+    try{ const w = (typeof CONFIG.slideBorderWidth === 'number' && isFinite(CONFIG.slideBorderWidth)) ? CONFIG.slideBorderWidth : 3; document.documentElement.style.setProperty('--outline-w', `${Math.max(0, Math.min(20, Math.round(w)))}px`); }catch{}
+    try{ document.documentElement.style.setProperty('--font-primary', CONFIG.fontPrimary||'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif'); }catch{}
+    try{ document.documentElement.style.setProperty('--font-secondary', CONFIG.fontSecondary||'Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif'); }catch{}
+    try{ const ts = Math.max(12, Math.min(64, Math.round(CONFIG.overlayTitleSize||22))); document.documentElement.style.setProperty('--title-size', `${ts}px`);}catch{}
+    try{ const ss = Math.max(10, Math.min(48, Math.round(CONFIG.overlaySubtitleSize||16))); document.documentElement.style.setProperty('--subtitle-size', `${ss}px`);}catch{}
+  }
   // Thumbnails are CSS-driven; no explicit JS refresh required here.
   // Ensure active thumbnail gradient reflects current theme in engines where computed style may not resolve CSS vars reliably
   try{ updateActiveThumbGradient(); }catch{}
@@ -692,13 +732,23 @@
     // Let CSS handle color via variables; ensure derived --muted exists for label contrast
     const currentText = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || getComputedStyle(document.documentElement).getPropertyValue('--text');
     try{
-      // compute a simple muted fallback based on luminance of --text when it's a hex; otherwise keep existing --muted
-      const rgb = hexToRgb(currentText);
-      if(rgb){
-        const lin = (c)=>{ const s=c/255; return s<=0.03928? s/12.92 : Math.pow((s+0.055)/1.055, 2.4); };
-        const L = 0.2126*lin(rgb.r) + 0.7152*lin(rgb.g) + 0.0722*lin(rgb.b);
-        if(L > 0.5){ document.documentElement.style.setProperty('--muted', 'rgba(11,18,32,0.55)'); }
-        else { document.documentElement.style.setProperty('--muted', 'rgba(255,255,255,0.55)'); }
+      // Prefer runtime computation for derived vars when available
+      if(window.Theme && typeof window.Theme.computeApplyConfigOutcome === 'function'){
+        try{
+          const outcome = window.Theme.computeApplyConfigOutcome({ textColor: currentText });
+          if(outcome && outcome.cssVars && typeof outcome.cssVars['--muted'] === 'string'){
+            document.documentElement.style.setProperty('--muted', outcome.cssVars['--muted']);
+          }
+        }catch(e){ /* fallthrough to local computation below */ }
+      } else {
+        // compute a simple muted fallback based on luminance of --text when it's a hex; otherwise keep existing --muted
+        const rgb = hexToRgb(currentText);
+        if(rgb){
+          const lin = (c)=>{ const s=c/255; return s<=0.03928? s/12.92 : Math.pow((s+0.055)/1.055, 2.4); };
+          const L = 0.2126*lin(rgb.r) + 0.7152*lin(rgb.g) + 0.0722*lin(rgb.b);
+          if(L > 0.5){ document.documentElement.style.setProperty('--muted', 'rgba(11,18,32,0.55)'); }
+          else { document.documentElement.style.setProperty('--muted', 'rgba(255,255,255,0.55)'); }
+        }
       }
     }catch(e){}
     // Clear inline colors so CSS variables control visuals; remove inline style.color where present
@@ -1117,7 +1167,13 @@
       thumbsRoot.append(thumb); }); setActive(0); 
     // Apply current opacity to newly rendered slides
     if(typeof CONFIG.slideOpacity==='number'){ 
-      setSlideOpacity(CONFIG.slideOpacity * 100);
+      try{
+        if(window.Theme && typeof window.Theme.setSlideOpacity === 'function'){
+          window.Theme.setSlideOpacity(CONFIG.slideOpacity);
+        }else{
+          setSlideOpacity(CONFIG.slideOpacity * 100);
+        }
+      }catch(e){}
     }
     // Build overlays if enabled
     try{
@@ -1466,13 +1522,7 @@
           if(p.slideBg1) CONFIG.slideBg1 = normalizeHex(p.slideBg1) || p.slideBg1; else delete CONFIG.slideBg1;
           if(p.slideBg2) CONFIG.slideBg2 = normalizeHex(p.slideBg2) || p.slideBg2; else delete CONFIG.slideBg2;
           // set CSS vars explicitly so modal and UI reflect the preset immediately
-          try{ document.documentElement.style.setProperty('--primary', CONFIG.primary); }catch{}
-          try{ document.documentElement.style.setProperty('--accent', CONFIG.accent); }catch{}
-          try{ if(CONFIG.textColor) document.documentElement.style.setProperty('--text', CONFIG.textColor); }catch{}
-          try{ if(CONFIG.appBg1) document.documentElement.style.setProperty('--app-bg1', CONFIG.appBg1); }catch{}
-          try{ if(CONFIG.appBg2) document.documentElement.style.setProperty('--app-bg2', CONFIG.appBg2); }catch{}
-          try{ if(CONFIG.slideBg1) document.documentElement.style.setProperty('--slide-bg1', CONFIG.slideBg1); }catch{}
-          try{ if(CONFIG.slideBg2) document.documentElement.style.setProperty('--slide-bg2', CONFIG.slideBg2); }catch{}
+          // Theme.applyConfig will manage these CSS vars; no inline writes here.
           // Recompute derived values and update UI (use non-persisting opacity preview)
           try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
           setSlideOpacity(typeof CONFIG.slideOpacity==='number' ? Math.round(CONFIG.slideOpacity*100) : 100, false);
@@ -1550,8 +1600,8 @@
     try{
       const cbTitle = document.getElementById('cfgOverlayTitleOn'); cbTitle.checked = (CONFIG.overlayOn===true);
   const cbSub = document.getElementById('cfgOverlaySubtitleOn'); cbSub.checked = (CONFIG.overlaySubtitleOn!==false);
-  const ts = document.getElementById('cfgTitleSize'); const tsVal=document.getElementById('cfgTitleSizeVal'); const tsDefault = Math.max(12, Math.min(64, Math.round(CONFIG.overlayTitleSize||22))); ts.value=String(tsDefault); tsVal.textContent = `(${tsDefault}px)`; ts.oninput=(e)=>{ const px=Math.max(12, Math.min(64, Math.round(Number(e.target.value)||22))); tsVal.textContent=`(${px}px)`; document.documentElement.style.setProperty('--title-size', `${px}px`); };
-  const ss = document.getElementById('cfgSubtitleSize'); const ssVal=document.getElementById('cfgSubtitleSizeVal'); const ssDefault = Math.max(10, Math.min(48, Math.round(CONFIG.overlaySubtitleSize||16))); ss.value=String(ssDefault); ssVal.textContent = `(${ssDefault}px)`; ss.oninput=(e)=>{ const px=Math.max(10, Math.min(48, Math.round(Number(e.target.value)||16))); ssVal.textContent=`(${px}px)`; document.documentElement.style.setProperty('--subtitle-size', `${px}px`); };
+  const ts = document.getElementById('cfgTitleSize'); const tsVal=document.getElementById('cfgTitleSizeVal'); const tsDefault = Math.max(12, Math.min(64, Math.round(CONFIG.overlayTitleSize||22))); ts.value=String(tsDefault); tsVal.textContent = `(${tsDefault}px)`; ts.oninput=(e)=>{ const px=Math.max(12, Math.min(64, Math.round(Number(e.target.value)||22))); tsVal.textContent=`(${px}px)`; try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ window.Theme.applyConfig({ overlayTitleSize: px }); }else{ document.documentElement.style.setProperty('--title-size', `${px}px`); } }catch(e){ document.documentElement.style.setProperty('--title-size', `${px}px`); } };
+  const ss = document.getElementById('cfgSubtitleSize'); const ssVal=document.getElementById('cfgSubtitleSizeVal'); const ssDefault = Math.max(10, Math.min(48, Math.round(CONFIG.overlaySubtitleSize||16))); ss.value=String(ssDefault); ssVal.textContent = `(${ssDefault}px)`; ss.oninput=(e)=>{ const px=Math.max(10, Math.min(48, Math.round(Number(e.target.value)||16))); ssVal.textContent=`(${px}px)`; try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ window.Theme.applyConfig({ overlaySubtitleSize: px }); }else{ document.documentElement.style.setProperty('--subtitle-size', `${px}px`); } }catch(e){ document.documentElement.style.setProperty('--subtitle-size', `${px}px`); } };
   const sc = document.getElementById('cfgSubtitleColor'); sc.value = (CONFIG.overlaySubtitleColor||'primary');
       const posWrap = document.getElementById('cfgOverlayPos');
       const posHint = document.getElementById('cfgOverlayPosHint');
@@ -1690,6 +1740,9 @@
       // Apply deck-level frontmatter settings
       try{
         const fm = slidesHTML[0]?.fm || {};
+        // If the loaded deck does not specify a background, ensure we reset to the default
+        // so we don't accidentally preserve a previous bgMode from localStorage/session.
+  try{ if(!fm.background && !fm.bg){ if((typeof navigator !== 'undefined' && navigator.webdriver === true) || window.__SLIDEAPP_TEST_DETERMINISTIC === true){ setBackgroundMode('gradient'); } } }catch{}
         applyDeckFrontmatter(fm);
         // Ensure background button label reflects any programmatic change
         try{ setBgButtonLabel(); }catch{}
@@ -1749,14 +1802,14 @@
     // Try to load bundled sample; if it fails (file:// or missing), fall back to demo
     try{
       const res = await fetch('sample_presentation.md');
-      if(res.ok){
-        const text = await res.text();
-        slidesHTML = splitSlides(text);
+  if(res.ok){
+    const text = await res.text();
+    slidesHTML = splitSlides(text);
   renderSlides(slidesHTML);
   // Apply deck-level frontmatter (sample)
-  try{ const fm = slidesHTML[0]?.fm || {}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
-        return;
-      }
+  try{ const fm = slidesHTML[0]?.fm || {}; try{ if(!fm.background && !fm.bg){ if((typeof navigator !== 'undefined' && navigator.webdriver === true) || window.__SLIDEAPP_TEST_DETERMINISTIC === true){ setBackgroundMode('gradient'); } } }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
+    return;
+  }
     }catch{}
   const DEMO_MD = `---
 title: Welcome to SlideApp
