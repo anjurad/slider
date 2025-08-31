@@ -317,11 +317,11 @@
       </div>
       <div class="row" style="margin-top:6px; gap:12px; align-items:flex-end;">
         <div style="flex:1">
-          <label for="cfgTextColor">General text color</label>
+          <label for="cfgTextColor">App text color</label>
           <input id="cfgTextColor" type="color" />
         </div>
         <div style="flex:1">
-          <label>Buttons</label>
+          <label>App text & buttons</label>
           <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap;">
             <label style="font-size:12px;">Text</label>
             <select id="cfgBtnTextMode" class="btn" style="padding:6px 8px; min-width:96px;">
@@ -1814,17 +1814,19 @@
     try{
       const modeSel = document.getElementById('cfgBtnTextMode');
       const btnClr = document.getElementById('cfgBtnTextColor');
+      const appClr = document.getElementById('cfgTextColor');
       const vRaw = (CONFIG.btnTextColor||'auto');
       const v = typeof vRaw==='string' ? vRaw.trim().toLowerCase() : '';
       const isAuto = (v === 'auto' || !v);
       modeSel.value = isAuto ? 'auto' : 'custom';
-      if(!isAuto){ const n = normalizeHex(String(CONFIG.btnTextColor)); btnClr.value = n || '#ffffff'; }
-      btnClr.disabled = isAuto;
+      if(!isAuto){ const n = normalizeHex(String(CONFIG.btnTextColor)); btnClr.value = n || '#ffffff'; if(appClr) appClr.value = n || appClr.value; }
+      btnClr.disabled = isAuto; if(appClr) appClr.disabled = isAuto;
       const applyModeChange = ()=>{
         const isAuto = (modeSel.value==='auto');
         btnClr.disabled = isAuto;
         if(isAuto){
           CONFIG.btnTextColor = 'auto';
+          try{ if(appClr){ appClr.disabled = true; } delete CONFIG.textColor; }catch{}
         } else {
           // Set a sensible starting color when switching to custom
           let start = normalizeHex(String(btnClr.value||''));
@@ -1836,7 +1838,9 @@
             }
           }catch{}
           btnClr.value = start || '#ffffff';
+          if(appClr){ appClr.disabled = false; appClr.value = start || '#ffffff'; }
           CONFIG.btnTextColor = start || '#ffffff';
+          CONFIG.textColor = start || '#ffffff';
         }
         try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{}
       };
@@ -2757,6 +2761,15 @@ Everything else in front matter is ignored by the app.`;
         await boot();
       }
     }catch(e){ console.warn('Static mode bootstrap failed, falling back', e); await boot(); }
+    // Failsafe: if no slides were rendered, load a minimal embedded demo deck
+    try{
+      if(!Array.isArray(slidesHTML) || slidesHTML.length===0){
+        const DEMO_MD_FALLBACK = `---\napp-name: SlideApp\nbackground: gradient\n---\n\n# SlideApp\n\nUse Style (🎨) to configure theme.\n`;
+        slidesHTML = splitSlides(DEMO_MD_FALLBACK);
+        renderSlides(slidesHTML);
+        try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); applyDeckFrontmatter(fm); }catch{}
+      }
+    }catch(err){ console.warn('Demo fallback failed', err); }
     dlog('SlideApp initialization complete.');
   })();
 

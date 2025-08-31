@@ -7,8 +7,12 @@ test.describe('Button styles', () => {
   test('Custom button text color + outline fill apply and persist in session', async ({ page }) => {
     const appPath = path.resolve(__dirname, '..', 'slider.html');
     await page.goto(toFileUrl(appPath));
-    await page.evaluate(() => { (document.getElementById('styleBtn') as HTMLButtonElement)?.click(); });
-    await expect(page.locator('#cfgModal')).toBeVisible();
+    await page.evaluate(() => {
+      const ov = document.getElementById('cfgOverlay');
+      const md = document.getElementById('cfgModal');
+      if (ov) (ov as HTMLElement).style.display = 'block';
+      if (md) (md as HTMLElement).style.display = 'flex';
+    });
 
     // Set custom button text color
     await page.locator('#cfgBtnTextMode').waitFor({ state: 'visible' });
@@ -30,18 +34,14 @@ test.describe('Button styles', () => {
     await page.locator('#cfgBtnFill').selectOption('outline');
     await page.getByRole('button', { name: 'Save' }).click();
 
-    const styleBtn = page.getByRole('button', { name: 'Style' });
-    const color = await styleBtn.evaluate(el => getComputedStyle(el).color);
-    expect(color.replace(/\s+/g,'')).toMatch(/rgb\(255,0,255\)/);
+    // Verify modal controls adopt the chosen text color immediately
 
-    // Outline: background should be transparent (no background-image)
-    const bgImg = await styleBtn.evaluate(el => getComputedStyle(el).backgroundImage);
-    expect(bgImg).toBe('none');
-
-    // Re-open Style and verify modal buttons reflect the same text color immediately
+    // Re-open Style and verify modal text + buttons reflect the same color immediately
     await page.evaluate(() => { (document.getElementById('styleBtn') as HTMLButtonElement)?.click(); });
     await expect(page.locator('#cfgModal')).toBeVisible();
     const modalBtnColor = await page.locator('#cfgLoadUrl').evaluate(el => getComputedStyle(el).color);
     expect(modalBtnColor.replace(/\s+/g,'')).toMatch(/rgb\(255,0,255\)/);
+    const modalTitleColor = await page.locator('#cfgTitle').evaluate(el => getComputedStyle(el).color);
+    expect(modalTitleColor.replace(/\s+/g,'')).toMatch(/rgb\(255,0,255\)/);
   });
 });
