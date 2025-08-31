@@ -181,6 +181,8 @@ More details: `docs/external-config.md`.
 - Set via Style (🎨) → Content position, deck frontmatter (`content-pos: mm`), per-slide frontmatter, or external config (`contentPos`).
 - Precedence: per-slide > deck > config > default (TL).
 
+Tip: Open the app without a deck to see the updated in‑app demo (cover + content‑position slides) showcasing TL/MR/BR variations and overlay examples.
+
 Troubleshooting & tips
 - If Playwright browser installs fail due to network restrictions, run `npm run lint` and `npm run test:unit` locally and manually validate core UI scenarios in a browser.
 - E2E failures can be timing-related; tests include defensive waits and guards. If you see flakiness, the test output and `test-results/` (screenshots/videos/error-context) are useful for diagnosis.
