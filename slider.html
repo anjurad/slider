@@ -66,10 +66,12 @@
   :root{ --btn-bg: linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04)); --btn-text: var(--text); }
   .btn{ background: var(--btn-bg); color: var(--btn-text); }
 
-    .slides{position:absolute;inset:0;display:grid;place-items:center;padding:64px 72px 80px 72px}
-  .slide{position:absolute;inset:72px;display:grid;place-items:center;background:linear-gradient(180deg,var(--slide-bg1, rgba(17,24,39,.75)),var(--slide-bg2, rgba(17,24,39,.55)));border-radius:var(--radius);box-shadow:var(--slide-shadow, var(--shadow));opacity:0;transform:translate3d(60px,0,0) scale(.98);transition:all 0.6s cubic-bezier(0.4, 0, 0.2, 1);backdrop-filter:blur(var(--slide-blur, 8px));padding:48px;overflow:auto;outline:none}
+    .slides{position:absolute;inset:0;display:block;padding:64px 72px 80px 72px}
+  /* A single framed slide that fills the padded area and scrolls internally */
+  .slide{position:relative;inset:auto;width:100%;height:100%;display:block;background:linear-gradient(180deg,var(--slide-bg1, rgba(17,24,39,.75)),var(--slide-bg2, rgba(17,24,39,.55)));border-radius:var(--radius);box-shadow:var(--slide-shadow, var(--shadow));opacity:0;transform:translate3d(60px,0,0) scale(.98);transition:all 0.6s cubic-bezier(0.4, 0, 0.2, 1);backdrop-filter:blur(var(--slide-blur, 8px));padding:0;overflow:hidden;outline:none}
+  .slide .content-scroll{position:relative;height:100%;overflow:auto;padding:56px 48px 96px 48px}
   /* Slide title/subtitle overlay */
-  .slide .slide-overlay{position:absolute;pointer-events:none;z-index:3;max-width:70%;display:flex;flex-direction:column;gap:4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+  .slide .slide-overlay{position:absolute;pointer-events:none;z-index:50;max-width:70%;display:flex;flex-direction:column;gap:4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
   .slide .slide-overlay.pos-tl{top:18px;left:24px;text-align:left}
   .slide .slide-overlay.pos-tr{top:18px;right:24px;text-align:right}
   .slide .slide-overlay.pos-bl{bottom:18px;left:24px;text-align:left}
@@ -1272,6 +1274,14 @@
   }
     }catch{}
   node.innerHTML=sanitizeHTML(obj.html);
+  // Wrap content in a scroll container so overlay and outline are not clipped
+  try{
+    const wrap = document.createElement('div');
+    wrap.className = 'content-scroll';
+    // Move all current children into the wrapper (e.g., .md)
+    while(node.firstChild){ wrap.appendChild(node.firstChild); }
+    node.appendChild(wrap);
+  }catch{}
   // Enhance headings with anchor links
   try{
     const hs = node.querySelectorAll('h1[id],h2[id],h3[id]');
