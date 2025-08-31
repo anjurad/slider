@@ -131,6 +131,41 @@ Examples
 
 Notes
 - Headings include `id`s; sanitizer allows `id` and hash links (`href="#slug"`). External links retain `target`/`rel`.
+- Use the in‑app “📑 TOC” to jump to any heading (h1–h3) across slides.
+
+## Authoring Quick Examples
+
+- Strikethrough
+
+  `We are ~~deprecated~~ moving forward.`
+
+- Task list
+
+  - [ ] Collect feedback
+  - [x] Ship 1.0.1
+
+- Admonitions
+
+  ::: note
+  Heads up: Slides now support admonitions.
+  :::
+
+  ::: tip
+  Pro tip: Use the TOC (📑) to jump between sections.
+  :::
+
+  ::: warning
+  Warning: Don’t overuse effects; clarity wins.
+  :::
+
+- Autolink literals
+
+  Visit https://example.com for more.
+
+- Anchors
+
+  ## Getting Started
+  Click the “#” icon on hover to copy a direct link to this heading.
 
 ## Sanitization and Safety
 
@@ -173,6 +208,15 @@ Notes
 - Slide overlays are marked `aria-hidden="true"` to avoid duplicating text for assistive tech.
 
 ## Non‑Goals and Known Behavior
+## What’s New (Authoring Highlights)
+
+- Strikethrough: `~~deprecated~~` → ~deprecated~
+- Task lists: `- [ ] item`, `- [x] item` with clear visual check marks
+- Admonitions: `::: note|tip|warning … :::` with title and body
+- Autolink literals: bare `http(s)://…` become links
+- Linkable headings: h1–h3 get stable `id`s; click the “#” on hover to copy a link
+- In‑app TOC: click “📑 TOC” to browse h1–h3 and jump to slides
+
 
 - Markdown subset: intentionally lightweight; no full CommonMark; feature set is driven by tests and core app needs.
 - Math/diagrams/footnotes/admonitions are not built-in (candidates for future additions).
