@@ -243,6 +243,7 @@
         <button class="btn" id="uiBtn" title="Toggle UI visibility" aria-label="Toggle UI">👁️ UI</button>
         <input type="file" id="fileInput" class="btn" accept=".md,.markdown,.txt" title="Load Markdown" aria-label="Load Markdown" />
         <button class="btn" id="styleBtn" title="Style settings" aria-label="Style">🎨 Style</button>
+        <button class="btn" id="validateBtn" title="Validate deck frontmatter" aria-label="Validate">🔎 Validate</button>
   <button class="btn" id="overlayBtn" title="Toggle title/subtitle overlay" aria-label="Overlay">🏷️ Title</button>
         <button class="btn" id="bgBtn" title="Toggle Background" aria-label="Background">🌌 Background</button>
         <button class="btn" id="notesBtn" aria-label="Notes">📝 Notes</button>
@@ -400,6 +401,18 @@
     <footer>
       <button class="btn" id="cfgReset" title="Reset to defaults">↺ Reset</button>
       <button class="btn" id="cfgSave">Save</button>
+    </footer>
+  </div>
+  <!-- Validation modal -->
+  <div id="valOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:30"></div>
+  <div id="valModal" role="dialog" aria-modal="true" aria-labelledby="valTitle" style="position:fixed;top:40px;bottom:40px;left:40px;right:40px;width:auto;max-width:none;background:linear-gradient(135deg,var(--app-bg1, #0b1220),var(--app-bg2, #0f172a));color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column">
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex:0 0 auto">
+      <h3 id="valTitle" style="margin:0;font-weight:600">Deck Validation</h3>
+      <button class="btn" id="valClose">Close</button>
+    </header>
+    <main id="valBody" style="padding:14px;overflow:auto;flex:1 1 auto;font-size:14px;line-height:1.4"></main>
+    <footer style="display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12));backdrop-filter:blur(4px)">
+      <button class="btn" id="valOk">OK</button>
     </footer>
   </div>
 
@@ -1194,11 +1207,15 @@
         slides.forEach((slideEl, idx)=>{
           const fm = list[idx]?.fm || {};
           // per-slide overrides
-          const slideOverlayFlag = (typeof fm.overlay !== 'undefined') ? /^(1|on|true)$/i.test(String(fm.overlay).trim()) : true;
+          const slideOverlayFlagVal = (typeof fm.overlay !== 'undefined') ? String(fm.overlay).trim()
+            : (typeof fm['overlay-pos'] !== 'undefined' || typeof fm['title-size'] !== 'undefined' || typeof fm['subtitle-size'] !== 'undefined') ? 'on' : undefined;
+          const slideOverlayFlag = (typeof slideOverlayFlagVal !== 'undefined') ? /^(1|on|true)$/i.test(slideOverlayFlagVal) : true;
           if(!slideOverlayFlag) return;
-          const pos = (fm.overlaypos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
-          const tSize = isFinite(Number(fm.titlesize)) ? Math.max(12, Math.min(64, Math.round(Number(fm.titlesize)))) : CONFIG.overlayTitleSize;
-          const sSize = isFinite(Number(fm.subtitlesize)) ? Math.max(10, Math.min(48, Math.round(Number(fm.subtitlesize)))) : CONFIG.overlaySubtitleSize;
+          const pos = (fm['overlay-pos'] || fm.overlaypos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
+          const tSizeRaw = (typeof fm['title-size'] !== 'undefined') ? fm['title-size'] : fm.titlesize;
+          const sSizeRaw = (typeof fm['subtitle-size'] !== 'undefined') ? fm['subtitle-size'] : fm.subtitlesize;
+          const tSize = isFinite(Number(tSizeRaw)) ? Math.max(12, Math.min(64, Math.round(Number(tSizeRaw)))) : CONFIG.overlayTitleSize;
+          const sSize = isFinite(Number(sSizeRaw)) ? Math.max(10, Math.min(48, Math.round(Number(sSizeRaw)))) : CONFIG.overlaySubtitleSize;
           const titleTxt = (fm.title||'').toString().trim() || `Slide ${idx+1}`;
           const subtitleTxt = (fm.subtitle||'').toString().trim();
           const wrap = document.createElement('div');
@@ -2253,7 +2270,88 @@ Everything else in front matter is ignored by the app.`;
           if(sc) sc.disabled = disable;
         }
       }catch{}
+  });
+
+  // ===== In-app Deck Validator =====
+  (function initValidator(){
+    const valOverlay = document.getElementById('valOverlay');
+    const valModal = document.getElementById('valModal');
+    const valBody = document.getElementById('valBody');
+    const open = () => { valOverlay.style.display='block'; valModal.style.display='flex'; };
+    const close = () => { valOverlay.style.display='none'; valModal.style.display='none'; };
+    document.getElementById('valClose').addEventListener('click', close);
+    document.getElementById('valOk').addEventListener('click', close);
+    document.getElementById('validateBtn').addEventListener('click', ()=>{
+      const warnings = (()=>{
+        const allowedDeck = new Set(['app-name','appname','brand','theme-primary','theme-accent','theme-text','primary','accent','textcolor','text-color','text','background','effect-color','effectcolor','effect','ui','font-primary','font-secondary','primaryfont','secondaryfont','defaults-overlay','defaults-overlay-pos','defaults-title-size','defaults-subtitle-size','defaults-slide-opacity','defaults-slide-bg1','defaults-slide-bg2','appbg1','appbg2','app-bg1','app-bg2','app-bg-1','app-bg-2','opacity','slideopacity']);
+        const allowedSlide = new Set(['title','subtitle','notes','overlay','overlay-pos','overlaypos','title-size','titlesize','subtitle-size','subtitlesize','slide-bg1','slide-bg2','slidebg1','slidebg2']);
+        const migrate = new Map(Object.entries({
+          primary:'theme-primary', accent:'theme-accent', textcolor:'theme-text', 'text-color':'theme-text', text:'theme-text', effectcolor:'effect-color', effect:'effect-color', appname:'app-name', brand:'app-name', appbg1:'defaults-slide-bg1', 'app-bg1':'defaults-slide-bg1', 'app-bg-1':'defaults-slide-bg1', appbg2:'defaults-slide-bg2', 'app-bg2':'defaults-slide-bg2', 'app-bg-2':'defaults-slide-bg2', slideopacity:'defaults-slide-opacity', opacity:'defaults-slide-opacity', primaryfont:'font-primary', secondaryfont:'font-secondary', overlaypos:'overlay-pos', titlesize:'title-size', subtitlesize:'subtitle-size', slidebg1:'slide-bg1', slidebg2:'slide-bg2'
+        }));
+        const isHex=(s)=>/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test((s||'').toString().trim().replace(/^['"]|['"]$/g,''));
+        const isBg=(s)=>['gradient','particles','off'].includes((s||'').toString().trim().toLowerCase());
+        const isBool=(s)=>/^(on|off|show|hide|true|false|1|0)$/i.test((s||'').toString().trim());
+        const isPos=(s)=>['tl','tr','bl','br'].includes((s||'').toString().trim().toLowerCase());
+        const clamp=(n,lo,hi)=>{ n=Number(n); if(!isFinite(n)) return null; return Math.max(lo, Math.min(hi, n)); };
+        const parseOpacity=(raw)=>{ const s=(raw||'').toString().trim(); if(!s) return null; if(/%$/.test(s)) return clamp(parseFloat(s),0,100); const num=parseFloat(s); if(!isFinite(num)) return null; if(num<=1) return clamp(num*100,0,100); return clamp(num,0,100); };
+        const out=[];
+        try{
+          const deckFM = (Array.isArray(slidesHTML) && slidesHTML.length) ? (slidesHTML[0]?.fm || {}) : {};
+          for(const [kRaw,v] of Object.entries(deckFM)){
+            const k = String(kRaw).trim().toLowerCase();
+            if(!allowedDeck.has(k)){
+              const sug = migrate.get(k);
+              out.push(`Deck: unknown key '${kRaw}'${sug? ` (did you mean '${sug}'?)`: ''}`);
+            }
+            if(migrate.has(k)) out.push(`Deck: legacy key '${kRaw}' — prefer '${migrate.get(k)}'`);
+            switch(k){
+              case 'theme-primary': case 'theme-accent': case 'theme-text':
+              case 'primary': case 'accent': case 'textcolor': case 'text-color': case 'text':
+              case 'effect-color': case 'effectcolor': case 'effect':
+              case 'defaults-slide-bg1': case 'defaults-slide-bg2':
+              case 'appbg1': case 'appbg2': case 'app-bg1': case 'app-bg2': case 'app-bg-1': case 'app-bg-2':
+                if(!isHex(v)) out.push(`Deck: '${kRaw}' expects hex color, got '${v}'`);
+                break;
+              case 'background': if(!isBg(v)) out.push(`Deck: 'background' must be gradient|particles|off, got '${v}'`); break;
+              case 'ui': if(!isBool(v)) out.push(`Deck: 'ui' must be on|off|show|hide|true|false|1|0, got '${v}'`); break;
+              case 'defaults-overlay': if(!isBool(v)) out.push(`Deck: 'defaults-overlay' must be true|false|on|off|1|0, got '${v}'`); break;
+              case 'defaults-overlay-pos': if(!isPos(v)) out.push(`Deck: 'defaults-overlay-pos' must be tl|tr|bl|br, got '${v}'`); break;
+              case 'defaults-title-size': if(clamp(v,12,64)===null) out.push(`Deck: 'defaults-title-size' must be 12..64, got '${v}'`); break;
+              case 'defaults-subtitle-size': if(clamp(v,10,48)===null) out.push(`Deck: 'defaults-subtitle-size' must be 10..48, got '${v}'`); break;
+              case 'defaults-slide-opacity': case 'opacity': case 'slideopacity': if(parseOpacity(v)===null) out.push(`Deck: '${kRaw}' must be 0..100, 0..1, or a percent string, got '${v}'`); break;
+            }
+          }
+          // Per-slide
+          (slidesHTML||[]).slice(1).forEach((s,idx)=>{
+            const fm = s?.fm || {}; const n=idx+1;
+            for(const [kRaw,v] of Object.entries(fm)){
+              const k = String(kRaw).trim().toLowerCase();
+              if(!allowedSlide.has(k)){
+                const sug = migrate.get(k);
+                out.push(`Slide ${n}: unknown key '${kRaw}'${sug? ` (did you mean '${sug}'?)`: ''}`);
+              }
+              if(migrate.has(k)) out.push(`Slide ${n}: legacy key '${kRaw}' — prefer '${migrate.get(k)}'`);
+              switch(k){
+                case 'slide-bg1': case 'slide-bg2': case 'slidebg1': case 'slidebg2': if(!isHex(v)) out.push(`Slide ${n}: '${kRaw}' expects hex color, got '${v}'`); break;
+                case 'overlay': if(!isBool(v)) out.push(`Slide ${n}: 'overlay' must be true|false|on|off|1|0, got '${v}'`); break;
+                case 'overlay-pos': case 'overlaypos': if(!isPos(v)) out.push(`Slide ${n}: '${kRaw}' must be tl|tr|bl|br, got '${v}'`); break;
+                case 'title-size': case 'titlesize': if(clamp(v,12,64)===null) out.push(`Slide ${n}: '${kRaw}' must be 12..64, got '${v}'`); break;
+                case 'subtitle-size': case 'subtitlesize': if(clamp(v,10,48)===null) out.push(`Slide ${n}: '${kRaw}' must be 10..48, got '${v}'`); break;
+              }
+            }
+          });
+        }catch(e){ out.push('Validator error: '+(e&&e.message)); }
+        return out;
+      })();
+      // Render
+      if(!warnings.length){ valBody.innerHTML='<p style="margin:0">✅ No issues found.</p>'; }
+      else {
+        const list = warnings.map(w=>`<li>${w.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</li>`).join('');
+        valBody.innerHTML = `<p style="margin-top:0">⚠ Found ${warnings.length} warning(s):</p><ul style="margin:8px 0 0 18px;">${list}</ul>`;
+      }
+      open();
     });
+  })();
   })();
 
   // ===== Deck-level frontmatter application =====
@@ -2275,15 +2373,21 @@ Everything else in front matter is ignored by the app.`;
     const hexRe = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
       const strip = s=> (s||'').toString().trim().replace(/^['"]|['"]$/g,'');
       try{
-        const pRaw = strip(fm.primary||fm.color||'');
+        const pRaw = strip(fm.primary||fm.color|| fm['theme-primary'] || '');
         const p = normalizeHex(pRaw);
         if(p) CONFIG.primary = p;
       }catch{}
       try{
-        const aRaw = strip(fm.accent||'');
+        const aRaw = strip(fm.accent|| fm['theme-accent'] || '');
         const a = normalizeHex(aRaw);
         if(a) CONFIG.accent = a;
       }catch{}
+    // Theme text color
+    try{
+      const tRaw = strip(fm['theme-text'] || '');
+      const t = normalizeHex(tRaw);
+      if(t) CONFIG.textColor = t;
+    }catch{}
     // App background colors (hex)
     try{
       const ab1Raw = strip(fm.appbg1 || fm['app-bg1'] || fm['app-bg-1'] || '');
@@ -2295,13 +2399,24 @@ Everything else in front matter is ignored by the app.`;
       const ab2 = normalizeHex(ab2Raw);
       if(ab2) CONFIG.appBg2 = ab2;
     }catch{}
+    // Defaults slide background (deck-level defaults for slides)
+    try{
+      const sb1Raw = strip(fm['defaults-slide-bg1'] || '');
+      const sb1 = normalizeHex(sb1Raw);
+      if(sb1) CONFIG.slideBg1 = sb1;
+    }catch{}
+    try{
+      const sb2Raw = strip(fm['defaults-slide-bg2'] || '');
+      const sb2 = normalizeHex(sb2Raw);
+      if(sb2) CONFIG.slideBg2 = sb2;
+    }catch{}
     // Effect color (hex) used by particles/gradients
     try{
       const ecRaw = strip(fm.effectcolor || fm['effect-color'] || fm.effect || '');
       const ec = normalizeHex(ecRaw);
       if(ec) CONFIG.effectColor = ec;
     }catch{}
-    // Text color
+    // Text color (legacy)
     try{
       const tcRaw = strip(fm.textcolor || fm['text-color'] || fm.text || '');
       const tc = normalizeHex(tcRaw);
@@ -2310,7 +2425,7 @@ Everything else in front matter is ignored by the app.`;
     // Opacity (percent 0-100 or decimal 0-1 or with %)
     let hasOpacity=false; let decOpacity=null;
     try{
-      const raw = strip(fm.opacity || fm.slideopacity || '');
+      const raw = strip(fm.opacity || fm.slideopacity || fm['defaults-slide-opacity'] || '');
       if(raw){
         hasOpacity = true;
         let pct;
@@ -2334,14 +2449,16 @@ Everything else in front matter is ignored by the app.`;
     }
   // Typography and overlays
   try{ if(typeof fm.primaryfont==='string' && fm.primaryfont.trim()) CONFIG.fontPrimary = fm.primaryfont.trim(); }catch{}
+  try{ if(typeof fm['font-primary']==='string' && fm['font-primary'].trim()) CONFIG.fontPrimary = fm['font-primary'].trim(); }catch{}
   try{ if(typeof fm.secondaryfont==='string' && fm.secondaryfont.trim()) CONFIG.fontSecondary = fm.secondaryfont.trim(); }catch{}
-  // overlay (new) and legacy
-  try{ if(typeof fm.overlay!=='undefined'){ const v=String(fm.overlay).trim().toLowerCase(); CONFIG.overlayOn = (v==='true'||v==='1'||v==='on'); } else if(typeof fm.titleoverlay!=='undefined'){ const v=String(fm.titleoverlay).trim().toLowerCase(); CONFIG.overlayOn = (v==='true'||v==='1'||v==='on'); } }catch{}
-  try{ const p=(fm.overlaypos||fm.titleposition||'').toString().toLowerCase(); if(['tl','tr','bl','br'].includes(p)) CONFIG.overlayPos=p; }catch{}
-  try{ if(typeof fm.titlesize!=='undefined'){ const n=Math.round(Number(fm.titlesize)); if(isFinite(n)) CONFIG.overlayTitleSize = Math.max(12, Math.min(64, n)); } }catch{}
-  try{ if(typeof fm.overlaysubtitle!=='undefined'){ const v=String(fm.overlaysubtitle).trim().toLowerCase(); CONFIG.overlaySubtitleOn = !(v==='false'||v==='0'||v==='off'); } else if(typeof fm.subtitleenabled!=='undefined'){ const v=String(fm.subtitleenabled).trim().toLowerCase(); CONFIG.overlaySubtitleOn = !(v==='false'||v==='0'||v==='off'); } }catch{}
-  try{ const n = (typeof fm.overlaysubtitlesize!=='undefined') ? Math.round(Number(fm.overlaysubtitlesize)) : (typeof fm.subtitlesize!=='undefined' ? Math.round(Number(fm.subtitlesize)) : NaN); if(isFinite(n)) CONFIG.overlaySubtitleSize = Math.max(10, Math.min(48, n)); }catch{}
-  try{ const c=(fm.overlaysubtitlecolor||'').toString().toLowerCase(); if(c==='accent'||c==='primary') CONFIG.overlaySubtitleColor=c; }catch{}
+  try{ if(typeof fm['font-secondary']==='string' && fm['font-secondary'].trim()) CONFIG.fontSecondary = fm['font-secondary'].trim(); }catch{}
+  // overlay (new) and legacy + namespaced defaults-
+  try{ if(typeof fm.overlay!=='undefined'){ const v=String(fm.overlay).trim().toLowerCase(); CONFIG.overlayOn = (v==='true'||v==='1'||v==='on'); } else if(typeof fm.titleoverlay!=='undefined'){ const v=String(fm.titleoverlay).trim().toLowerCase(); CONFIG.overlayOn = (v==='true'||v==='1'||v==='on'); } else if(typeof fm['defaults-overlay']!=='undefined'){ const v=String(fm['defaults-overlay']).trim().toLowerCase(); CONFIG.overlayOn = (v==='true'||v==='1'||v==='on'); } }catch{}
+  try{ const p=(fm['overlay-pos']||fm.overlaypos||fm.titleposition||fm['defaults-overlay-pos']||'').toString().toLowerCase(); if(['tl','tr','bl','br'].includes(p)) CONFIG.overlayPos=p; }catch{}
+  try{ const tRaw = (typeof fm['title-size']!=='undefined') ? fm['title-size'] : (typeof fm.titlesize!=='undefined' ? fm.titlesize : fm['defaults-title-size']); const n=Math.round(Number(tRaw)); if(isFinite(n)) CONFIG.overlayTitleSize = Math.max(12, Math.min(64, n)); }catch{}
+  try{ if(typeof fm.overlaysubtitle!=='undefined'){ const v=String(fm.overlaysubtitle).trim().toLowerCase(); CONFIG.overlaySubtitleOn = !(v==='false'||v==='0'||v==='off'); } else if(typeof fm.subtitleenabled!=='undefined'){ const v=String(fm.subtitleenabled).trim().toLowerCase(); CONFIG.overlaySubtitleOn = !(v==='false'||v==='0'||v==='off'); } else if(typeof fm['defaults-overlay']!=='undefined'){ /* already handled by overlayOn */ } }catch{}
+  try{ const sRaw = (typeof fm['overlay-subtitle-size']!=='undefined') ? fm['overlay-subtitle-size'] : (typeof fm.subtitlesize!=='undefined' ? fm.subtitlesize : fm['defaults-subtitle-size']); const n=Math.round(Number(sRaw)); if(isFinite(n)) CONFIG.overlaySubtitleSize = Math.max(10, Math.min(48, n)); }catch{}
+  try{ const c=((fm.overlaysubtitlecolor||'') || (fm['overlay-subtitle-color']||'') ).toString().toLowerCase(); if(c==='accent'||c==='primary') CONFIG.overlaySubtitleColor=c; }catch{}
     applyConfig();
   // Rebuild overlays for current slides
     try{

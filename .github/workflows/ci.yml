@@ -19,6 +19,23 @@ jobs:
         run: npm install
       - name: Run linter
         run: npm run lint
+      - name: Validate changed Markdown decks (non-blocking)
+        run: |
+          set -e
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$BASE_SHA" ]; then BASE_SHA="${{ github.sha }}~1"; fi
+          CHANGED=$(git diff --name-only "$BASE_SHA"...HEAD | grep -E '\\.(md|markdown)$' || true)
+          if [ -z "$CHANGED" ]; then echo "No changed markdown files"; exit 0; fi
+          echo "Validating:\n$CHANGED"
+          OK=0
+          for f in $CHANGED; do
+            if [ -f "$f" ]; then
+              echo "-- $f"
+              # Do not fail CI for warnings yet; print and continue
+              node dev-tools/validate-deck.js "$f" || OK=1
+            fi
+          done
+          exit 0
 
   unit:
     runs-on: ubuntu-latest

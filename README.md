@@ -53,6 +53,7 @@ What to try
 - The app loads `sample_presentation.md` automatically on first run.
 - Click the top toolbar "Load Markdown" button (📁) and choose a Markdown file to load your slides.
 - Navigate with ← / → keys or on-screen arrows; thumbnails appear in the left drawer.
+- Validate your deck: Click “Validate” in the header to check frontmatter keys and values. Or run `npm run validate:deck -- path/to/deck.md` locally to lint Markdown decks in CI or pre-commit.
 - Useful keys:
   - B — cycle background modes (Particles → Gradient → Off)
   - T — toggle slide transparency (0% ↔ baseline)
@@ -89,6 +90,13 @@ Then run E2E:
 npm run test:e2e
 # or run all tests
 npm run test:all
+
+- Validate decks (authoring aid):
+
+```bash
+npm run validate:deck -- sample_presentation.md
+```
+Shows warnings for unknown frontmatter keys and invalid values, with suggestions for the new namespaced schema.
 ```
 
 Notes about E2E and CI
@@ -140,4 +148,3 @@ Next steps I can take for you
 - Remove the lightweight debug instrumentation that was temporarily added to `slider.html` during troubleshooting.
 - Make the README shorter or add visuals (screenshots/GIF).
 - Open a PR with these README changes.
-
