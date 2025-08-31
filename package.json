@@ -8,7 +8,8 @@
     "test:all": "playwright test",
     "test:unit": "vitest run unit --reporter verbose",
     "lint": "eslint \"**/*.{js,ts}\" --max-warnings=0",
-    "test:e2e": "playwright test tests"
+    "test:e2e": "playwright test tests",
+    "validate:deck": "node dev-tools/validate-deck.js"
   },
   "keywords": [],
   "author": "",
