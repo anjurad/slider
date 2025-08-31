@@ -160,7 +160,7 @@
     #cfgModal .row{display:flex;gap:10px;align-items:center}
   #cfgModal footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12));backdrop-filter:blur(4px)}
   /* Active state for overlay position buttons */
-  #cfgOverlayPos .btn{ min-width: 40px; text-align:center; padding:8px 10px; line-height:1; }
+  #cfgOverlayPos .btn{ min-width:44px; height:32px; box-sizing:border-box; text-align:center; padding:8px 10px; line-height:1; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; font-weight:600; }
   #cfgOverlayPos .btn.active,
   #cfgOverlayPos .btn[aria-pressed="true"]{
     border-color: var(--accent);
@@ -194,6 +194,7 @@
     opacity: .5;
     cursor: not-allowed;
     filter: grayscale(30%);
+    height:32px; min-width:44px; /* keep dimensions stable when disabled */
   }
   /* Disabled style for range sliders within modal */
   #cfgModal input[type="range"][disabled]{
