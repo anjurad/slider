@@ -1,18 +1,30 @@
-Title: Remove debug instrumentation and add README preview
+Title: Externalize config (URL/File/API) + compact UI + docs
 
-This PR removes temporary debug assignments that exposed internal frontmatter during E2E diagnosis and adds a small inline SVG preview to the README for reviewers.
+Summary
+Adds external configuration support to `slider.html` with a compact inline UI in the Style modal, optional persistence, and developer‑friendly APIs.
 
-Checklist:
-- [x] Remove debug lines from slider.html
-- [x] Add inline SVG preview to README.md
-- [ ] Confirm lint and unit tests pass locally
+What’s included
+- Load config via URL parameter `?config=<url>` during initialization.
+- Import/Export JSON from the Style modal.
+- Programmatic updates via `window.postMessage({ type: 'slider.config', action: 'merge|replace', config })`.
+- Persist toggle to control saving to `localStorage` (`slideapp.config`).
+- UI layout improvements: shorter URL field, proper Import button, inline row.
+- Documentation: README External Config section + `docs/external-config.md` with schema and examples.
+- Changelog entry `1.1.0`.
 
-Verification summary (local run @ 2025-08-26):
-- ESLint: PASS (exit 0)
-- Unit tests (Vitest): PASS
-- Playwright full E2E matrix: PASS — 177 passed, 3 skipped (Chromium/Firefox/WebKit; ~1.2m run)
+Usage examples
+- URL param: `slider.html?config=https://example.com/slideapp-config.json`
+- Programmatic:
+```
+window.postMessage({ type: 'slider.config', action: 'merge', config: { primary: '#01B4E1', accent: '#64FFFC' } }, '*');
+```
 
-Notes:
-- Migration prefers `src/runtime/theme.js` helpers and falls back to deterministic legacy formatting when helpers are unavailable.
-- Temporary debug instrumentation and triage-only Playwright specs were removed.
+Notes
+- Incoming values are validated and sanitized: hex colors → `#rrggbb`, numeric ranges clamped, enums checked.
+- Unknown keys are ignored.
 
+Checklist
+- [x] Feature implementation
+- [x] UI adjustments
+- [x] Docs updated
+- [ ] Lint/tests (to run in CI)

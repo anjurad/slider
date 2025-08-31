@@ -148,6 +148,34 @@ Project structure (important files)
 - `dev-tools/` — helper scripts (e.g., `run-playwright-only.sh`).
 - `package.json`, `playwright.config.ts`, `tsconfig.json` — project scripts and config.
 
+## External Config
+
+You can now load and update theme/config externally without editing code.
+
+- URL param: append `?config=<url>` to `slider.html` to fetch a JSON config.
+  - Example: `slider.html?config=https://example.com/slideapp-config.json`
+  - Requires CORS on the remote origin.
+- Style modal (🎨):
+  - Load from URL, Import JSON (file), Export current config.
+  - Persist toggle: “Persist config to this browser” controls saving to `localStorage`.
+- Programmatic API:
+  - Post a message to the window:
+
+```
+window.postMessage({
+  type: 'slider.config',
+  action: 'merge', // 'merge' (default) | 'replace'
+  config: { primary: '#01B4E1', accent: '#64FFFC' }
+}, '*');
+```
+
+Notes
+- Storage key: `localStorage['slideapp.config']` holds the config when persist is enabled.
+- Persist preference is stored separately under `localStorage['slideapp.config.persist']`.
+- Unknown keys are ignored; values are validated and sanitized (colors → `#rrggbb`, ranges for numbers, allowed enums).
+
+More details: `docs/external-config.md`.
+
 Troubleshooting & tips
 - If Playwright browser installs fail due to network restrictions, run `npm run lint` and `npm run test:unit` locally and manually validate core UI scenarios in a browser.
 - E2E failures can be timing-related; tests include defensive waits and guards. If you see flakiness, the test output and `test-results/` (screenshots/videos/error-context) are useful for diagnosis.

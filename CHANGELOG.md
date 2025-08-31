@@ -22,3 +22,15 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Replaced a brittle absolute path in `tests/thumb-refresh.spec.ts` with a repo‑relative file URL.
 - Resolved a persistence edge case where restoring visual state via runtime helpers didn't update in-memory `CONFIG.slideOpacity`; the in-memory config now stays consistent after helper-based restores.
+
+## [1.1.0] - 2025-08-31
+### Added
+- Externalized config support:
+  - Load via URL param `?config=<url>` (CORS required for cross‑origin).
+  - Import/Export config from the Style modal.
+  - Programmatic updates via `window.postMessage({ type: 'slider.config', action: 'merge|replace', config })`.
+  - Persist toggle to control saving to `localStorage` (`slideapp.config`).
+- Documentation: `README.md` External Config section and `docs/external-config.md` with schema and examples.
+
+### UI
+- Compact inline layout for external config controls in the Style modal (shorter URL field, proper Import button).

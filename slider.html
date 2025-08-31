@@ -344,6 +344,30 @@
         </div>
       </div>
 
+      <label style="margin-top:10px">Config (external)</label>
+      <div class="row" style="gap:8px; align-items:center; flex-wrap:nowrap; overflow-x:auto;">
+        <div style="flex:0 0 auto;">
+          <label for="cfgConfigUrl" style="display:block; font-size:12px;">Load from URL</label>
+          <input id="cfgConfigUrl" type="text" placeholder="https://example.com/slideapp-config.json" style="width:360px; max-width:60vw;" />
+        </div>
+        <div style="flex:0 0 auto;">
+          <button class="btn" id="cfgLoadUrl">Load</button>
+        </div>
+        <div style="flex:0 0 auto;">
+          <button class="btn" id="cfgImportBtn">Import JSON</button>
+          <input id="cfgImportFile" type="file" accept="application/json,.json" style="display:none" />
+        </div>
+        <div style="flex:0 0 auto;">
+          <button class="btn" id="cfgExport">Export</button>
+        </div>
+      </div>
+      <div class="row" style="gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
+          <input id="cfgPersistConfig" type="checkbox" /> Persist config to this browser
+        </label>
+        <span style="font-size:12px; opacity:.85;">When off, changes apply for this session only.</span>
+      </div>
+
       <div class="row" style="margin-top:8px; gap: 12px; align-items:center; flex-wrap: wrap;">
     <label style="margin:0; font-size:12px;">UI visibility when OFF</label>
         <div style="display:flex; gap:10px; align-items:center;">
@@ -523,6 +547,8 @@
 
   // ===== Config & Theme =====
   const CONFIG = JSON.parse(localStorage.getItem('slideapp.config')||'{}');
+  // Whether to persist config changes to localStorage (default: false)
+  let PERSIST_CONFIG = (()=>{ try{ const v = localStorage.getItem('slideapp.config.persist'); if(v===null) return false; return v==='1' || String(v).toLowerCase()==='true'; }catch{} return false; })();
   // Baseline opacity for T-key toggle: use last saved value from persisted config; fallback to 1 (100%).
   let BASE_OPACITY = (()=>{ try{ const saved=JSON.parse(localStorage.getItem('slideapp.config')||'{}'); const v=saved && typeof saved.slideOpacity==='number' ? saved.slideOpacity : undefined; if(typeof v==='number' && isFinite(v)) return Math.max(0, Math.min(1, v)); }catch{} return 1; })();
   // Back-compat: migrate legacy brand -> appName if needed (do not delete brand to avoid breaking older versions)
@@ -573,6 +599,81 @@
   // Clean legacy keys
   delete CONFIG.overlayTitleOn; delete CONFIG.overlayTitlePos;
   if(typeof CONFIG.fontPrimary !== 'string') CONFIG.fontPrimary = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+
+  // ---- External config: schema, validation, merge, persistence ----
+  const CONFIG_KEYS = new Set([
+    'appName','brand','primary','accent','textColor','btnTextColor',
+    'appBg1','appBg2','slideBg1','slideBg2','slideOpacity',
+    'slideBorderOn','slideBorderWidth',
+    'overlayOn','overlayPos','overlayTitleSize','overlaySubtitleOn','overlaySubtitleSize','overlaySubtitleColor',
+    'fontPrimary','fontSecondary',
+    'rememberLastDeck','hideSlidesWithUi','hideProgressWithUi'
+  ]);
+
+  function sanitizeConfig(input){
+    const out={}; if(!input || typeof input!=='object') return out;
+    const assignHex=(k)=>{ const n=normalizeHex(input[k]); if(n) out[k]=n; };
+    const assignBool=(k)=>{ const v=input[k]; if(typeof v==='boolean') out[k]=v; };
+    const assignNum=(k,{min,max}={})=>{ const v=Number(input[k]); if(isFinite(v)){ let n=v; if(typeof min==='number') n=Math.max(min,n); if(typeof max==='number') n=Math.min(max,n); out[k]=n; }};
+    const assignStr=(k)=>{ const v=input[k]; if(typeof v==='string' && v.trim()!=='') out[k]=v.trim(); };
+    // strings
+    ['appName','brand','overlayPos','fontPrimary','fontSecondary'].forEach(assignStr);
+    // hex colors
+    ['primary','accent','textColor','btnTextColor','appBg1','appBg2','slideBg1','slideBg2'].forEach(assignHex);
+    // numbers
+    assignNum('slideOpacity',{min:0,max:1});
+    assignNum('slideBorderWidth',{min:0,max:8});
+    assignNum('overlayTitleSize',{min:12,max:64});
+    assignNum('overlaySubtitleSize',{min:10,max:48});
+    // booleans
+    ['slideBorderOn','overlayOn','overlaySubtitleOn','rememberLastDeck','hideSlidesWithUi','hideProgressWithUi'].forEach(assignBool);
+    // enum
+    if(typeof input.overlaySubtitleColor==='string' && /^(primary|accent)$/i.test(input.overlaySubtitleColor)) out.overlaySubtitleColor = input.overlaySubtitleColor.toLowerCase();
+    return out;
+  }
+
+  function mergeConfig(incoming, mode){
+    const safe = sanitizeConfig(incoming);
+    if(mode==='replace'){
+      for(const k of Array.from(CONFIG_KEYS)) delete CONFIG[k];
+    }
+    Object.assign(CONFIG, safe);
+    try{ if(window.Theme && typeof window.Theme.applyConfig==='function'){ window.Theme.applyConfig(CONFIG); } else { applyConfig(); } }catch{}
+    return safe;
+  }
+
+  async function loadConfigFromUrl(url){
+    try{
+      const res = await fetch(url, { credentials: 'omit' });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const applied = mergeConfig(data, 'merge');
+      if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} }
+      try{ showToast('Config loaded'); }catch{}
+      return applied;
+    }catch(err){ try{ showToast('Failed to load config'); }catch{} console.error('Config load failed', err); return {}; }
+  }
+
+  function exportConfigBlob(){
+    const data = sanitizeConfig(CONFIG);
+    const blob = new Blob([JSON.stringify(data,null,2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='slideapp-config.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 250);
+  }
+
+  // postMessage API: { type:'slider.config', action:'set|merge|replace', config:{...} }
+  window.addEventListener('message', (ev)=>{
+    try{
+      const msg = ev.data || {};
+      if(!msg || msg.type!=='slider.config') return;
+      const action = (msg.action||'merge').toLowerCase();
+      const cfg = msg.config || {};
+      const mode = (action==='replace' || (action==='set' && msg.mode==='replace')) ? 'replace' : 'merge';
+      const applied = mergeConfig(cfg, mode);
+      if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} }
+      ev.source && ev.source.postMessage && ev.source.postMessage({ type:'slider.config.result', ok:true, applied }, '*');
+    }catch(e){ try{ ev.source && ev.source.postMessage && ev.source.postMessage({ type:'slider.config.result', ok:false, error:String(e&&e.message||e) }, '*'); }catch{} }
+  });
   if(typeof CONFIG.fontSecondary !== 'string') CONFIG.fontSecondary = 'Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
   // Opacity control: 100 equals default look (0.75/0.55); 0 is fully transparent
   function setSlideOpacity(val, persist = true){
@@ -1809,6 +1910,19 @@
       });
       const fp = document.getElementById('cfgFontPrimary'); const fs = document.getElementById('cfgFontSecondary'); fp.value = CONFIG.fontPrimary||''; fs.value = CONFIG.fontSecondary||'';
     }catch{}
+
+    // External config controls
+    try{
+      const persistChk = document.getElementById('cfgPersistConfig'); if(persistChk){ persistChk.checked = !!PERSIST_CONFIG; persistChk.onchange = ()=>{ PERSIST_CONFIG = !!persistChk.checked; try{ localStorage.setItem('slideapp.config.persist', PERSIST_CONFIG ? '1':'0'); showToast(PERSIST_CONFIG? 'Persist: on':'Persist: off'); }catch{} }; }
+      const urlInput = document.getElementById('cfgConfigUrl');
+      const btnLoad = document.getElementById('cfgLoadUrl'); if(btnLoad){ btnLoad.onclick = async ()=>{ const u=(urlInput?.value||'').trim(); if(!u){ try{ showToast('Enter a URL'); }catch{} return; } await loadConfigFromUrl(u); } }
+      const fileInput = document.getElementById('cfgImportFile');
+      const importBtn = document.getElementById('cfgImportBtn');
+      if(importBtn && fileInput){ importBtn.onclick = ()=>{ try{ fileInput.click(); }catch{} }; }
+      if(fileInput){ fileInput.onchange = async (e)=>{ try{ const f=e.target.files && e.target.files[0]; if(!f) return; if(f.size > 2*1024*1024){ alert('File too large (max 2MB)'); e.target.value=''; return; } const text = await f.text(); const data = JSON.parse(text); mergeConfig(data, 'merge'); if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} } try{ showToast('Config imported'); }catch{} e.target.value=''; }catch(err){ console.error('Import failed',err); alert('Import failed: '+(err?.message||err)); e.target.value=''; } } }
+      const btnExport = document.getElementById('cfgExport'); if(btnExport){ btnExport.onclick = ()=>{ try{ exportConfigBlob(); }catch(e){ alert('Export failed: '+(e?.message||e)); } } }
+    }catch(e){ console.error('External config controls failed', e); }
+
     // Ensure Save button is in view for small viewports/tests
     try{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }catch{}
   }); document.getElementById('cfgClose').addEventListener('click',()=>{ cfgOverlay.style.display=cfgModal.style.display='none'; try{ delete window.__tempOverlayPos; }catch{} try{ rebuildOverlays(); }catch{} }); document.getElementById('cfgSave').addEventListener('click',()=>{ CONFIG.brand=document.getElementById('cfgName').value.trim(); CONFIG.primary=document.getElementById('cfgPrimary').value; CONFIG.accent=document.getElementById('cfgAccent').value; // persist slide opacity
@@ -1850,7 +1964,8 @@
   const fp = document.getElementById('cfgFontPrimary').value.trim(); const fs = document.getElementById('cfgFontSecondary').value.trim(); if(fp) CONFIG.fontPrimary = fp; if(fs) CONFIG.fontSecondary = fs;
   // Persist a temporary overlay position preview if present
   try{ if(window.__tempOverlayPos){ CONFIG.overlayPos = window.__tempOverlayPos; delete window.__tempOverlayPos; } }catch{}
-  localStorage.setItem('slideapp.config', JSON.stringify(CONFIG));
+  // Persist only if enabled
+  if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} } else { try{ localStorage.removeItem('slideapp.config'); }catch{} }
   try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
   try{ updateActiveThumbGradient(); }catch{}
   cfgOverlay.style.display=cfgModal.style.display='none';
@@ -1886,8 +2001,10 @@
     }
   }catch{}
   }); document.getElementById('cfgReset').addEventListener('click',()=>{ 
-    // Clear saved style config
-    localStorage.removeItem('slideapp.config'); 
+    // Clear saved style config and persist flag
+    try{ localStorage.removeItem('slideapp.config'); }catch{}
+    try{ localStorage.removeItem('slideapp.config.persist'); }catch{}
+    PERSIST_CONFIG = false; 
     // Also forget any remembered decks (session + persistent)
     try{ sessionStorage.removeItem('slideapp.session.deck'); }catch{}
     try{ localStorage.removeItem('slideapp.persist.deck'); }catch{}
@@ -2256,11 +2373,22 @@ Everything else in front matter is ignored by the app.`;
   // Announce fullscreen changes
   document.addEventListener('fullscreenchange',()=>{ showToast(document.fullscreenElement?'Entered fullscreen':'Exited fullscreen'); });
 
+  async function maybeLoadConfigFromQuery(){
+    try{
+      const sp = new URLSearchParams(location.search);
+      const url = sp.get('config');
+      if(url && url.trim()){
+        await loadConfigFromUrl(url.trim());
+      }
+    }catch(e){ console.warn('Query config load failed', e); }
+  }
+
   (async function init() {
     dlog('SlideApp v0.91 initializing...');
     setDrawerUI(); 
   applyUiMode();
     setBgFromPrefs(); 
+    await maybeLoadConfigFromQuery();
     applyConfig(); 
     await boot();
     dlog('SlideApp initialization complete.');
