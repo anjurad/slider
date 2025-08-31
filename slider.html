@@ -835,13 +835,16 @@
 
       // Handle inline code (safe now that code fences are placeholders)
       md = md.replace(/`([^`]+)`/g, (m, code) => `<code>${escapeHtml(code)}</code>`);
+      // Strikethrough
+      md = md.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
       
-      // Custom columns shortcode
+      // Custom shortcodes (columns, admonitions)
       if(opts.allowColumns){
         const lines = md.split('\n');
         const out = [];
         for(let i = 0; i < lines.length; i++){
-          if(/^:::\s*columns\b/i.test(lines[i].trim())){
+          const cur = lines[i].trim();
+          if(/^:::\s*columns\b/i.test(cur)){
             const block = [];
             i++; // skip the :::columns line
             while(i < lines.length && lines[i].trim() !== ':::'){
@@ -863,14 +866,29 @@
             const htmlCols = cols.map(c => `<div class="col">${parseMarkdown(c.trim(), {allowColumns:false})}</div>`).join('');
             out.push(`<div class="cols">${htmlCols}</div>`);
             continue;
+          } else if(/^:::\s*(note|tip|warning)\b/i.test(cur)){
+            const kind = cur.split(/\s+/)[1].toLowerCase();
+            const block = [];
+            i++;
+            while(i < lines.length && lines[i].trim() !== ':::'){
+              block.push(lines[i]);
+              i++;
+            }
+            const inner = parseMarkdown(block.join('\n').trim(), {allowColumns:false});
+            const title = kind.charAt(0).toUpperCase() + kind.slice(1);
+            out.push(`<div class="admonition ${kind}"><div class="admonition-title">${title}</div><div class="admonition-body">${inner}</div></div>`);
+            continue;
           }
           out.push(lines[i]);
         }
         md = out.join('\n');
       }
       
-      // Handle headings
-      md=md.replace(/^# (.*)$/gm,'<h1>$1</h1>').replace(/^## (.*)$/gm,'<h2>$1</h2>').replace(/^### (.*)$/gm,'<h3>$1</h3>');
+      // Handle headings with ids for anchors
+      const slug = (s)=>s.toLowerCase().trim().replace(/<[^>]+>/g,'').replace(/[^a-z0-9\s_-]/g,'').replace(/\s+/g,'-');
+      md=md.replace(/^# (.*)$/gm,(m,t)=>`<h1 id="${slug(t)}">${t}</h1>`)
+           .replace(/^## (.*)$/gm,(m,t)=>`<h2 id="${slug(t)}">${t}</h2>`)
+           .replace(/^### (.*)$/gm,(m,t)=>`<h3 id="${slug(t)}">${t}</h3>`);
       
       // Handle blockquotes
       md = md.replace(/^> (.*)$/gm, '<blockquote>$1</blockquote>');
@@ -971,7 +989,14 @@
             close();
             open('ul');
           }
-          result.push(`<li>${ulMatch[1]}</li>`);
+          const task = ulMatch[1].match(/^\[( |x|X)\]\s+(.*)$/);
+          if(task){
+            const checked = /x/i.test(task[1]);
+            const txt = task[2];
+            result.push(`<li class="task">${checked? '☑' : '☐'} ${txt}</li>`);
+          } else {
+            result.push(`<li>${ulMatch[1]}</li>`);
+          }
           continue;
         }
         
@@ -1024,6 +1049,41 @@
       // Normalize newlines and strip BOM
       md = md.replace(/\r\n?/g,'\n');
       if(md.startsWith('\uFEFF')) md = md.slice(1);
+      // Extract deck-level frontmatter at file start and remove it from md
+      let __deckFM = {};
+      try{
+        const lead = md.trimStart();
+        if(lead.startsWith('---\n')){
+          const m = lead.match(/^---\n([\s\S]*?)\n(---|\.\.\.)\s*(\n|$)/);
+          if(m){
+            const block = m[1] || '';
+            const fm = {};
+            let key=null, val=[];
+            for(const raw of block.split('\n')){
+              const mm = raw.match(/^\s*([^:\s][^:]*)\s*:\s*(.*)$/);
+              if(mm){ if(key){ fm[key.toLowerCase()] = val.join(' ').trim(); } key=mm[1].trim(); val=[(mm[2]||'').trim()]; }
+              else if(key){ val.push(raw.trim()); }
+            }
+            if(key){ fm[key.toLowerCase()] = val.join(' ').trim(); }
+            // Only treat as deck-level FM if it includes known deck keys; otherwise
+            // leave content intact (e.g., when the leading block is just slide text like title/notes).
+            const keys = Object.keys(fm).map(k=>k.toLowerCase());
+            const hasKnown = keys.some(k => (
+              k==='app-name' || k==='appname' || k==='brand' ||
+              k==='primary' || k==='accent' || k==='textcolor' || k==='text-color' || k==='text' ||
+              k==='theme-primary' || k==='theme-accent' || k==='theme-text' ||
+              k==='background' || k==='effect-color' || k==='ui' ||
+              k==='font-primary' || k==='font-secondary' ||
+              k==='opacity' || k==='slideopacity' || k==='appbg1' || k==='app-bg1' || k==='appbg2' || k==='app-bg2' ||
+              k.startsWith('defaults-')
+            ));
+            if(hasKnown){
+              __deckFM = fm;
+              md = lead.slice(m[0].length);
+            }
+          }
+        }
+      }catch{}
       const lines = md.split('\n');
       const slides=[];
       let buf=[];
@@ -1133,7 +1193,7 @@
 
       dlog(`splitSlides: found ${slides.length} slides`);
       // Map to renderable objects
-      return slides.map((slideContent)=>{
+      const __mapped = slides.map((slideContent)=>{
         const { fm, body } = parseFrontmatter(slideContent);
         // Extract notes fenced as ```notes
         let processedBody = body;
@@ -1141,14 +1201,21 @@
         for(const m of noteMatches){ fm.notes = (fm.notes? fm.notes+'\n\n' : '') + m[1].trim(); processedBody = processedBody.replace(m[0],''); }
         return { html: `<div class="md">${parseMarkdown(processedBody.trim())}</div>`, fm };
       });
+      try{
+        if(__mapped.length > 0 && __deckFM && Object.keys(__deckFM).length){
+          __mapped[0].fm = Object.assign({}, __deckFM, __mapped[0].fm || {});
+        }
+        Object.defineProperty(__mapped, 'deckFM', { value: __deckFM, enumerable: false });
+      }catch{}
+      return __mapped;
     }
 
   // ===== Sanitizer (allow-list + safe href/src) =====
-  function sanitizeHTML(html){ const ALLOWED=new Set(['class','href','src','alt','title','target','rel','style']); const SAFE_STYLE_PROPS=new Set(['display','gap','align-items','justify-content','flex','flex-grow','flex-shrink','flex-basis','min-width','max-width','min-height','max-height','width','height','border-radius','box-shadow','color','background','background-color','margin','margin-left','margin-right','margin-top','margin-bottom','padding','padding-left','padding-right','padding-top','padding-bottom','text-align','font-size','line-height','opacity']); const temp=document.createElement('div'); temp.innerHTML=html; temp.querySelectorAll('script,style,iframe,object,embed').forEach(n=>n.remove()); temp.querySelectorAll('*').forEach(el=>{ [...el.attributes].forEach(a=>{ const n=a.name.toLowerCase(); if(n.startsWith('on') || !ALLOWED.has(n)) { el.removeAttribute(a.name); return; } if(n==='style'){ const cleaned=[]; const parts=(a.value||'').split(';'); for(const part of parts){ const [kRaw,...vParts]=part.split(':'); if(!kRaw) continue; const k=kRaw.trim().toLowerCase(); const v=vParts.join(':').trim(); if(!v) continue; if(SAFE_STYLE_PROPS.has(k)){ cleaned.push(`${k}: ${v}`); } } if(cleaned.length){ el.setAttribute('style', cleaned.join('; ')); } else { el.removeAttribute('style'); } } }); if(el.tagName.toLowerCase()==='img'){ const v=(el.getAttribute('src')||'').trim(); const ok=/^https?:\/\//i.test(v)||/^data:image\//i.test(v); if(!ok) el.removeAttribute('src'); }
+  function sanitizeHTML(html){ const ALLOWED=new Set(['class','href','src','alt','title','target','rel','style','id']); const SAFE_STYLE_PROPS=new Set(['display','gap','align-items','justify-content','flex','flex-grow','flex-shrink','flex-basis','min-width','max-width','min-height','max-height','width','height','border-radius','box-shadow','color','background','background-color','margin','margin-left','margin-right','margin-top','margin-bottom','padding','padding-left','padding-right','padding-top','padding-bottom','text-align','font-size','line-height','opacity']); const temp=document.createElement('div'); temp.innerHTML=html; temp.querySelectorAll('script,style,iframe,object,embed').forEach(n=>n.remove()); temp.querySelectorAll('*').forEach(el=>{ [...el.attributes].forEach(a=>{ const n=a.name.toLowerCase(); if(n.startsWith('on') || !ALLOWED.has(n)) { el.removeAttribute(a.name); return; } if(n==='style'){ const cleaned=[]; const parts=(a.value||'').split(';'); for(const part of parts){ const [kRaw,...vParts]=part.split(':'); if(!kRaw) continue; const k=kRaw.trim().toLowerCase(); const v=vParts.join(':').trim(); if(!v) continue; if(SAFE_STYLE_PROPS.has(k)){ cleaned.push(`${k}: ${v}`); } } if(cleaned.length){ el.setAttribute('style', cleaned.join('; ')); } else { el.removeAttribute('style'); } } }); if(el.tagName.toLowerCase()==='img'){ const v=(el.getAttribute('src')||'').trim(); const ok=/^https?:\/\//i.test(v)||/^data:image\//i.test(v); if(!ok) el.removeAttribute('src'); }
     if(el.tagName.toLowerCase()==='a'){ let href=(el.getAttribute('href')||'').trim(); // normalize bare links
       if(/^www\./i.test(href)) href='https://'+href; if(/^\/\//.test(href)) href='https:'+href; // update attribute
       if(href) el.setAttribute('href', href);
-      const safe=/^(https?:|mailto:|tel:)/i.test(href); if(!safe) el.removeAttribute('href'); el.setAttribute('target','_blank'); el.setAttribute('rel','noopener'); } }); return temp.innerHTML; }
+      const safe=/^(https?:|mailto:|tel:|#)/i.test(href); if(!safe) el.removeAttribute('href'); if(!href.startsWith('#')){ el.setAttribute('target','_blank'); el.setAttribute('rel','noopener'); } } }); return temp.innerHTML; }
 
   // ===== Render & Navigation =====
   let current=0, slidesHTML=[];
@@ -1771,7 +1838,7 @@
     if(f.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; } const valid=['text/markdown','text/plain','application/octet-stream']; if(!valid.includes(f.type) && !/\.(md|markdown|txt)$/i.test(f.name)){ alert('Please select a Markdown file (.md/.markdown/.txt)'); return; } const text=await f.text(); if(!text.trim()){ alert('File appears empty.'); return; } slidesHTML=splitSlides(text); if(!slidesHTML.length){ alert('No slides found. Separate slides with a line containing only ---'); return; } renderSlides(slidesHTML);
     // Apply deck-level frontmatter settings
     try{
-  const fm = slidesHTML[0]?.fm || {};
+  const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {}));
   // Expose parsed frontmatter for debug/tests
   // debug hook removed
   // If the loaded deck does not specify a background, ensure we reset to the default
@@ -1811,7 +1878,7 @@
         if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
           slidesHTML = splitSlides(data.deckContent);
           renderSlides(slidesHTML);
-          try{ const fm = slidesHTML[0]?.fm || {}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
+          try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
           try{ showToast('Restored last deck (session)'); }catch{}
           return;
         }
@@ -1826,7 +1893,7 @@
           if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
             slidesHTML = splitSlides(data.deckContent);
             renderSlides(slidesHTML);
-            try{ const fm = slidesHTML[0]?.fm || {}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
+            try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
             try{ showToast('Restored last deck'); }catch{}
             return;
           }
@@ -1841,7 +1908,7 @@
     slidesHTML = splitSlides(text);
   renderSlides(slidesHTML);
   // Apply deck-level frontmatter (sample)
-  try{ const fm = slidesHTML[0]?.fm || {}; try{ if(!fm.background && !fm.bg){ if(typeof __isDeterministicTestMode === 'function' && __isDeterministicTestMode()){ setBackgroundMode('gradient'); } } }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
+  try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); try{ if(!fm.background && !fm.bg){ if(typeof __isDeterministicTestMode === 'function' && __isDeterministicTestMode()){ setBackgroundMode('gradient'); } } }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
     return;
   }
     }catch{}
