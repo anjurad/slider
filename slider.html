@@ -3049,6 +3049,18 @@ Everything else in front matter is ignored by the app.`;
       const tc = normalizeHex(tcRaw);
       if(tc) CONFIG.textColor = tc;
     }catch{}
+    // Button text color and fill
+    try{
+      const btcRaw = (fm['button-text-color'] || fm['btn-text-color'] || '').toString().trim();
+      if(btcRaw){
+        if(/^auto$/i.test(btcRaw)) CONFIG.btnTextColor = 'auto';
+        else { const n = normalizeHex(btcRaw); if(n) CONFIG.btnTextColor = n; }
+      }
+    }catch{}
+    try{
+      const bfRaw = (fm['button-fill'] || '').toString().trim().toLowerCase();
+      if(bfRaw && /^(solid|outline)$/.test(bfRaw)) CONFIG.btnFill = bfRaw;
+    }catch{}
     // Opacity (percent 0-100 or decimal 0-1 or with %)
     let hasOpacity=false; let decOpacity=null;
     try{
@@ -3158,12 +3170,3 @@ Everything else in front matter is ignored by the app.`;
   </script>
 </body>
 </html>
-    // Button text color and fill
-    try{
-      const btcRaw = (fm['button-text-color'] || fm['btn-text-color'] || '').toString().trim();
-      if(btcRaw){ if(/^auto$/i.test(btcRaw)) CONFIG.btnTextColor = 'auto'; else { const n=normalizeHex(btcRaw); if(n) CONFIG.btnTextColor = n; } }
-    }catch{}
-    try{
-      const bfRaw = (fm['button-fill'] || '').toString().trim().toLowerCase();
-      if(bfRaw && /^(solid|outline)$/.test(bfRaw)) CONFIG.btnFill = bfRaw;
-    }catch{}
