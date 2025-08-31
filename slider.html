@@ -1639,6 +1639,19 @@
     }catch{}
   }
 
+  // Ensure the CSS var used by .thumb.active reflects current CONFIG immediately
+  function setThumbActiveBgFromConfig(){
+    try{
+      const cs = getComputedStyle(document.documentElement);
+      const primaryRaw = (CONFIG.primary && String(CONFIG.primary).trim()) || (cs.getPropertyValue('--primary')||'').trim();
+      const accentRaw  = (CONFIG.accent  && String(CONFIG.accent ).trim()) || (cs.getPropertyValue('--accent') ||'').trim();
+      if(primaryRaw && accentRaw){
+        const grad = `linear-gradient(135deg, ${primaryRaw}, ${accentRaw})`;
+        document.documentElement.style.setProperty('--thumb-active-bg', grad);
+      }
+    }catch{}
+  }
+
   document.getElementById('btnPrev').addEventListener('click',prev);
   document.getElementById('btnNext').addEventListener('click',next);
   function toggleNotes(){ const now = notesEl.classList.toggle('show'); try{ showToast(now ? 'Notes: shown' : 'Notes: hidden'); }catch{} }
@@ -2560,8 +2573,17 @@ Everything else in front matter is ignored by the app.`;
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
       slidesHTML = splitSlides(text);
+      // Apply deck-level frontmatter BEFORE rendering so initial UI + active thumb use correct theme
+      try{
+        const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {}));
+        applyDeckFrontmatter(fm);
+        // Pre-set the active thumb gradient var from CONFIG to avoid first-frame mismatch
+        try{ setThumbActiveBgFromConfig(); }catch{}
+        try{ setBgButtonLabel(); }catch{}
+      }catch{}
       renderSlides(slidesHTML);
-      try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
+      // Ensure active thumbnail gradient matches theme immediately after first render
+      try{ setThumbActiveBgFromConfig(); updateActiveThumbGradient(true); }catch{}
       // Update URL param without reload
       try{
         const url = new URL(location.href);
@@ -2607,25 +2629,32 @@ Everything else in front matter is ignored by the app.`;
     setBgFromPrefs(); 
     await maybeLoadConfigFromQuery();
     applyConfig(); 
-    // Try Static Site Mode via query or manifest; fall back to normal boot
+    // Try Static Site Mode (opt-in) via query (?static=1 or ?deck=...) or GitHub Pages host; otherwise fall back
     try{
       const sp = new URLSearchParams(location.search);
       const deckParam = (sp.get('deck')||'').trim();
-      if(deckParam){
-        await loadDeckFromPath(deckParam);
-      } else {
-        __manifest = await loadManifest();
-        if(__manifest && Array.isArray(__manifest.decks) && __manifest.decks.length){
-          // Show Decks button
-          try{ const b=document.getElementById('decksBtn'); if(b){ b.style.display='inline-block'; b.onclick=()=>showDeckPicker(); } }catch{}
-          if(__manifest.decks.length===1){
-            await loadDeckFromPath(__manifest.decks[0].path);
-          } else {
-            showDeckPicker();
-          }
+      const staticParam = (sp.get('static')||'').trim();
+      const onPages = /\.github\.io$/i.test(location.hostname);
+      const enableStatic = !!deckParam || staticParam === '1' || onPages;
+      if(enableStatic){
+        if(deckParam){
+          await loadDeckFromPath(deckParam);
         } else {
-          await boot();
+          __manifest = await loadManifest();
+          if(__manifest && Array.isArray(__manifest.decks) && __manifest.decks.length){
+            // Show Decks button
+            try{ const b=document.getElementById('decksBtn'); if(b){ b.style.display='inline-block'; b.onclick=()=>showDeckPicker(); } }catch{}
+            if(__manifest.decks.length===1){
+              await loadDeckFromPath(__manifest.decks[0].path);
+            } else {
+              showDeckPicker();
+            }
+          } else {
+            await boot();
+          }
         }
+      } else {
+        await boot();
       }
     }catch(e){ console.warn('Static mode bootstrap failed, falling back', e); await boot(); }
     dlog('SlideApp initialization complete.');
