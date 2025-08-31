@@ -15,6 +15,7 @@ Key features
 - Keyboard shortcuts for navigation and quick toggles (Background, UI, Opacity, Outline, Notes, Slides drawer).
 - Theming system and a small Style modal for colors, overlay, and outline settings.
 - Export / print (use browser print to PDF) and fullscreen support.
+ - Enhanced Markdown: strikethrough, task lists, admonitions, autolinked URLs, linkable headings + in‑app TOC.
 
 Quick start (local)
 1. Clone the repo and change to the project folder:
@@ -53,6 +54,7 @@ What to try
 - The app loads `sample_presentation.md` automatically on first run.
 - Click the top toolbar "Load Markdown" button (📁) and choose a Markdown file to load your slides.
 - Navigate with ← / → keys or on-screen arrows; thumbnails appear in the left drawer.
+- Try “Validate” (🔎) to lint your deck’s frontmatter. Use the “📑 TOC” to browse headings and jump around.
 - Validate your deck: Click “Validate” in the header to check frontmatter keys and values. Or run `npm run validate:deck -- path/to/deck.md` locally to lint Markdown decks in CI or pre-commit.
 - Useful keys:
   - B — cycle background modes (Particles → Gradient → Off)
@@ -97,6 +99,20 @@ npm run test:all
 npm run validate:deck -- sample_presentation.md
 ```
 Shows warnings for unknown frontmatter keys and invalid values, with suggestions for the new namespaced schema.
+
+Authoring quick guide
+- Strikethrough: `~~deprecated~~` → ~deprecated~
+- Task list:
+  - [ ] Collect feedback
+  - [x] Ship 1.0.1
+- Admonitions:
+  ::: tip
+  Pro tip: Use the TOC (📑) to jump between sections.
+  :::
+- Autolink literal: paste `https://example.com` — it becomes a link
+- Anchors: h1–h3 get stable ids; click the “#” to copy a link to a heading
+
+See docs/markdown-spec.md for complete details and examples.
 ```
 
 Notes about E2E and CI
