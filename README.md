@@ -1,5 +1,8 @@
 # Slider
 
+<<<<<<< HEAD
+Single‑file HTML slide app that renders Markdown into interactive slides — no build step required. The application ships as `slider.html` and includes a small runtime, tests, and docs.
+=======
 This repo contains a single-file HTML-based slide application and a Playwright test suite.
 
  
@@ -7,18 +10,24 @@ This repo contains a single-file HTML-based slide application and a Playwright t
 Slider — HTML5 Slide Presentation Application
 
 Slider is a single-file HTML5 slide presentation application that renders Markdown content as interactive slides. The application is delivered as a single-file app at `slider.html` and includes styling, JavaScript runtime, and sample content so you can run it directly in a browser.
+>>>>>>> origin/main
 
 Key features
 - Markdown-based slides (split with a line containing only `---`).
 - Background modes: ✨ Particles, 🌌 Gradient, ⛔ Off (respects prefers-reduced-motion).
 - Per-deck frontmatter support (colors, background, app name, overlay, opacity and more).
+- Button styling: Auto/Custom button text color and Solid/Outline fills.
 - Keyboard shortcuts for navigation and quick toggles (Background, UI, Opacity, Outline, Notes, Slides drawer).
 - Theming system and a small Style modal for colors, overlay, and outline settings.
 - Export / print (use browser print to PDF) and fullscreen support.
 - Enhanced Markdown: strikethrough, task lists, admonitions, autolinked URLs, linkable headings + in‑app TOC.
  - Overlay behaviour: Reserved (default, non‑overlapping), Float (no padding), Auto (fade + adaptive padding on overlap; see docs).
 
+<<<<<<< HEAD
+## Static Site Mode
+=======
 ## Static Site Mode (new)
+>>>>>>> origin/main
 
 Render decks directly from the repository without uploading files.
 
@@ -37,7 +46,11 @@ Render decks directly from the repository without uploading files.
 
 Usage
 - Open `slider.html` (locally or on GitHub Pages). If multiple decks are listed, a 📚 Decks button appears to choose a deck. If a single deck is listed, it loads automatically.
+<<<<<<< HEAD
+- Deep‑link to a specific deck with `?deck=PATH`:
+=======
 - Deep-link to a specific deck with `?deck=PATH`:
+>>>>>>> origin/main
   - Example: `slider.html?deck=content/welcome.md`
 - The existing upload button remains available for ad‑hoc files.
 
@@ -51,6 +64,11 @@ GitHub Pages (from this feature branch)
 Notes
 - Static Site Mode is additive; theming, overlays, navigation, and validation all remain intact.
 - `slides.json` is optional; without it, Slider behaves as before (restores last deck or loads `sample_presentation.md`).
+<<<<<<< HEAD
+- Title precedence: the browser tab uses deck `app-name` when present; otherwise it uses the Style UI app name.
+ - Button styling: configure `btnTextColor` (`auto` or `#rrggbb`) and `btnFill` (`solid`/`outline`) via Style UI, external config, or deck frontmatter.
+=======
+>>>>>>> origin/main
 
 Quick start (local)
 1. Clone the repo and change to the project folder:
@@ -86,9 +104,14 @@ Here's a small animated preview to help reviewers quickly see the app layout wit
 </div>
 
 What to try
+<<<<<<< HEAD
+- Static mode: open the 📚 Decks picker and load a deck from `slides.json`.
+- Or click the top toolbar "Load Markdown" (📁) and choose a Markdown file.
+=======
 - The app loads `sample_presentation.md` automatically on first run.
  - Static mode: open the 📚 Decks picker and load a deck from `slides.json`.
 - Click the top toolbar "Load Markdown" button (📁) and choose a Markdown file to load your slides.
+>>>>>>> origin/main
 - Navigate with ← / → keys or on-screen arrows; thumbnails appear in the left drawer.
 - Try “Validate” (🔎) to lint your deck’s frontmatter. Use the “📑 TOC” to browse headings and jump around.
  - Overlay: choose Reserved (no overlap), Float, or Auto fade (adaptive). Reserved is the default.
@@ -174,12 +197,23 @@ Manual validation checklist (recommended after changes)
 - Interactive features
   - Notes, background switching, transparency toggle, and thumbnails should behave as expected.
 
+<<<<<<< HEAD
+Project structure
+- `slider.html` — single‑file application (HTML/CSS/JS).
+- `content/` — example decks (Static Site Mode).
+- `slides.json` — manifest for Static Site Mode.
+- `sample_presentation.md` — bundled sample deck for manual testing.
+- `src/` — runtime helpers and TypeScript sources.
+- `docs/` — authoring and configuration docs.
+- `tests/` — Playwright E2E tests; `unit/` — Vitest unit tests.
+=======
 Project structure (important files)
 - `slider.html` — the single-file application (HTML/CSS/JS).
 - `sample_presentation.md` — bundled sample deck used for manual testing.
 - `src/` — runtime helpers and TypeScript sources.
 - `tests/` — Playwright E2E tests.
 - `unit/` — Vitest unit tests for utilities.
+>>>>>>> origin/main
 - `dev-tools/` — helper scripts (e.g., `run-playwright-only.sh`).
 - `package.json`, `playwright.config.ts`, `tsconfig.json` — project scripts and config.
 
@@ -211,6 +245,10 @@ Notes
 
 More details: `docs/external-config.md`.
 
+## Authoring & Validation
+- Authoring guide with frontmatter keys (deck/slides), content position, overlays, and validator usage: `docs/authoring.md`.
+- Implementation details and behavior notes: `docs/markdown-spec.md`.
+
 ### Content Position
 - Control where the Markdown block sits inside the slide: TL/TM/TR, ML/MM/MR, BL/BM/BR.
 - Set via Style (🎨) → Content position, deck frontmatter (`content-pos: mm`), per-slide frontmatter, or external config (`contentPos`).
@@ -231,8 +269,3 @@ License & credits
 
 Contact / support
 - Use the GitHub issue tracker for bugs and feature requests.
-
-Next steps I can take for you
-- Remove the lightweight debug instrumentation that was temporarily added to `slider.html` during troubleshooting.
-- Make the README shorter or add visuals (screenshots/GIF).
-- Open a PR with these README changes.
