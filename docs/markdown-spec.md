@@ -98,17 +98,39 @@ Per-slide frontmatter (applies to individual slides)
   - Fences ``` or ~~~ with optional language → `<pre><code class="lang-...">…</code></pre>`; contents HTML-escaped.
   - Preserved with placeholders during parsing to avoid interference.
 - Inline code: `` `code` `` → `<code>`.
+- Strikethrough: `~~text~~` → `<del>text</del>`.
 - Columns shortcode:
   - `::: columns` … `:::col` … `:::` → `<div class="cols"><div class="col">…</div>…</div>`.
   - Nested content parsed recursively with columns disabled to prevent recursion.
 - Headings: `#`, `##`, `###` at line start → `<h1>`, `<h2>`, `<h3>`.
+- Linkable headings: The same headings receive `id` attributes based on a slug of their text (lowercased, punctuation stripped, spaces to dashes), e.g. `## Feature Comparison` → `<h2 id="feature-comparison">…</h2>`.
 - Blockquotes: `> ` prefix → `<blockquote>`.
 - Images: `![alt](url)` → `<img ...>` with safe, inline presentation styles.
 - Links: `[text](url)` → `<a target="_blank" rel="noopener">`.
+- Autolink literals: bare `http(s)://…` URLs in text become links with `target="_blank"` and `rel="noopener"`.
 - Tables (GFM): header row, separator row (`---` with optional `:` for alignment), and body rows; per-column alignment supported.
 - Lists: `-`/`*` unordered, `1.` ordered; opens/closes `<ul>/<ol>` appropriately.
+- Task lists: `- [ ] item`, `- [x] item` render as list items with a visual indicator `☐`/`☑` and class `task`.
 - Emphasis: `**bold**`, `*italic*`.
 - Paragraphs: split on double newlines; avoids wrapping block-level elements and code placeholders; single `\n` becomes `<br>` inside paragraphs.
+
+### Admonitions
+
+- Syntax: `::: note|tip|warning` … content … `:::`
+- Output: wraps content as
+
+  `<div class="admonition kind">`
+  `<div class="admonition-title">Kind</div>`
+  `<div class="admonition-body">…rendered markdown…</div>`
+  `</div>`
+
+Examples
+- `::: note` … `:::` → `<div class="admonition note">…</div>`
+- `::: tip` … `:::` → `<div class="admonition tip">…</div>`
+- `::: warning` … `:::` → `<div class="admonition warning">…</div>`
+
+Notes
+- Headings include `id`s; sanitizer allows `id` and hash links (`href="#slug"`). External links retain `target`/`rel`.
 
 ## Sanitization and Safety
 
