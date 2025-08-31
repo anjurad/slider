@@ -61,7 +61,9 @@
     .brand-name{font-weight:700}
     .deck-tools{display:flex;gap:8px;align-items:center}
   /* Buttons use a subtle translucent overlay so text remains readable on light and dark app backgrounds */
-  .btn{cursor:pointer;padding:6px 10px;border-radius:8px;color:var(--text);background:linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04));border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);font-size:12px}
+  .btn{cursor:pointer;padding:6px 10px;border-radius:12px;color:var(--text);background:linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04));border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);font-size:12px;line-height:1;display:inline-flex;align-items:center;min-height:32px}
+  /* Keep header buttons stable regardless of drawer state */
+  .deck-header .btn{ border-radius:12px; padding:8px 12px; min-height:32px; }
   /* Use CSS variables for button background so themes can update them consistently */
   :root{ --btn-bg: linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04)); --btn-text: var(--text); }
   .btn{ background: var(--btn-bg); color: var(--btn-text); }
@@ -264,6 +266,7 @@
   <div class="brand"><div class="brand-badge"></div><div class="brand-name" id="appName">SlideApp</div></div>
       <div class="deck-tools">
         <button class="btn" id="uiBtn" title="Toggle UI visibility" aria-label="Toggle UI">👁️ UI</button>
+        <button class="btn" id="decksBtn" style="display:none" title="Open Decks" aria-label="Open Decks">📚 Decks</button>
         <input type="file" id="fileInput" class="btn" accept=".md,.markdown,.txt" title="Load Markdown" aria-label="Load Markdown" />
         <button class="btn" id="styleBtn" title="Style settings" aria-label="Style">🎨 Style</button>
         <button class="btn" id="validateBtn" title="Validate deck frontmatter" aria-label="Validate">🔎 Validate</button>
@@ -835,6 +838,12 @@
       primary: CONFIG.primary, accent: CONFIG.accent, textColor: CONFIG.textColor, btnTextColor: CONFIG.btnTextColor, slideOpacity: CONFIG.slideOpacity
     }); } }catch{}
   appNameEl.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp');
+  // Keep document.title in sync; deck name takes precedence when present
+  try{
+    const deckNm = (window.__deckAppName && String(window.__deckAppName).trim()) || '';
+    const cfgNm = (CONFIG.appName||CONFIG.brand||'SlideApp');
+    document.title = (deckNm || cfgNm || 'SlideApp').toString();
+  }catch{}
   // Apply app background colors and effect color if configured
     try{
   // Theme.applyConfig will set app background/effect/text CSS vars.
@@ -1638,6 +1647,19 @@
     }catch{}
   }
 
+  // Ensure the CSS var used by .thumb.active reflects current CONFIG immediately
+  function setThumbActiveBgFromConfig(){
+    try{
+      const cs = getComputedStyle(document.documentElement);
+      const primaryRaw = (CONFIG.primary && String(CONFIG.primary).trim()) || (cs.getPropertyValue('--primary')||'').trim();
+      const accentRaw  = (CONFIG.accent  && String(CONFIG.accent ).trim()) || (cs.getPropertyValue('--accent') ||'').trim();
+      if(primaryRaw && accentRaw){
+        const grad = `linear-gradient(135deg, ${primaryRaw}, ${accentRaw})`;
+        document.documentElement.style.setProperty('--thumb-active-bg', grad);
+      }
+    }catch{}
+  }
+
   document.getElementById('btnPrev').addEventListener('click',prev);
   document.getElementById('btnNext').addEventListener('click',next);
   function toggleNotes(){ const now = notesEl.classList.toggle('show'); try{ showToast(now ? 'Notes: shown' : 'Notes: hidden'); }catch{} }
@@ -2032,6 +2054,10 @@
   // Persist only if enabled
   if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} } else { try{ localStorage.removeItem('slideapp.config'); }catch{} }
   try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
+  // Ensure brand label reflects saved name immediately even when Theme.applyConfig handled CSS only
+  try{ const el=document.getElementById('appName'); if(el){ el.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp'); } }catch{}
+  // Update tab title only if deck did not provide a name (deck takes precedence)
+  try{ if(!(window.__deckAppName && String(window.__deckAppName).trim())){ const nm=(CONFIG.appName||CONFIG.brand||'SlideApp'); if(nm && nm.trim()) document.title = nm.trim(); } }catch{}
   try{ updateActiveThumbGradient(); }catch{}
   cfgOverlay.style.display=cfgModal.style.display='none';
   // Notify with a summary of settings
@@ -2539,6 +2565,75 @@ Everything else in front matter is ignored by the app.`;
     }catch(e){ console.warn('Query config load failed', e); }
   }
 
+  // Static Site Mode helpers
+  let __manifest = null;
+  async function loadManifest(){
+    try{
+      const tryUrls = ['slides.json','content/slides.json'];
+      for(const u of tryUrls){
+        try{
+          const res = await fetch(u, { credentials: 'omit' });
+          if(res.ok){ const json = await res.json(); if(json && Array.isArray(json.decks)) return json; }
+        }catch{}
+      }
+    }catch{}
+    return null;
+  }
+  async function loadDeckFromPath(path){
+    try{
+      const res = await fetch(path, { credentials: 'omit' });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      slidesHTML = splitSlides(text);
+      // Apply deck-level frontmatter BEFORE rendering so initial UI + active thumb use correct theme
+      try{
+        const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {}));
+        applyDeckFrontmatter(fm);
+        // Pre-set the active thumb gradient var from CONFIG to avoid first-frame mismatch
+        try{ setThumbActiveBgFromConfig(); }catch{}
+        try{ setBgButtonLabel(); }catch{}
+      }catch{}
+      renderSlides(slidesHTML);
+      // Ensure active thumbnail gradient matches theme immediately after first render
+      try{ setThumbActiveBgFromConfig(); updateActiveThumbGradient(true); }catch{}
+      // Update URL param without reload
+      try{
+        const url = new URL(location.href);
+        url.searchParams.set('deck', path);
+        history.replaceState(null,'',url.toString());
+      }catch{}
+      try{ showToast('Deck loaded'); }catch{}
+    }catch(err){ console.error('Deck load failed', err); alert('Failed to load deck: '+(err?.message||err)); }
+  }
+  function showDeckPicker(){
+    try{
+      if(!__manifest || !Array.isArray(__manifest.decks) || __manifest.decks.length===0) return;
+      // Build simple picker modal
+      let overlay = document.getElementById('deckPickerOverlay');
+      let modal = document.getElementById('deckPickerModal');
+      if(!overlay){
+        overlay = document.createElement('div'); overlay.id='deckPickerOverlay'; overlay.style.position='fixed'; overlay.style.inset='0'; overlay.style.background='rgba(0,0,0,0.35)'; overlay.style.zIndex='40'; overlay.style.display='none';
+        document.body.appendChild(overlay);
+      }
+      if(!modal){
+        modal = document.createElement('div'); modal.id='deckPickerModal'; modal.style.position='fixed'; modal.style.top='50%'; modal.style.left='50%'; modal.style.transform='translate(-50%,-50%)'; modal.style.width='min(520px, 92vw)'; modal.style.maxHeight='70vh'; modal.style.overflow='auto'; modal.style.background='var(--card)'; modal.style.border='1px solid rgba(255,255,255,0.12)'; modal.style.borderRadius='12px'; modal.style.boxShadow='var(--shadow)'; modal.style.padding='16px'; modal.style.zIndex='41'; modal.style.display='none';
+        const h = document.createElement('div'); h.style.fontWeight='700'; h.style.margin='0 0 10px 0'; h.textContent='Select a Deck'; modal.appendChild(h);
+        const list = document.createElement('div'); list.id='deckPickerList'; list.style.display='flex'; list.style.flexDirection='column'; list.style.gap='8px'; modal.appendChild(list);
+        const close = document.createElement('button'); close.className='btn'; close.textContent='Close'; close.style.marginTop='12px'; close.onclick=()=>{ overlay.style.display='none'; modal.style.display='none'; };
+        modal.appendChild(close);
+        document.body.appendChild(modal);
+        overlay.onclick=()=>{ overlay.style.display='none'; modal.style.display='none'; };
+      }
+      const list = modal.querySelector('#deckPickerList');
+      list.innerHTML='';
+      __manifest.decks.forEach(it=>{
+        const btn=document.createElement('button'); btn.className='btn'; btn.textContent=(it.title||it.path||'Deck'); btn.onclick=()=>{ overlay.style.display='none'; modal.style.display='none'; loadDeckFromPath(it.path); };
+        list.appendChild(btn);
+      });
+      overlay.style.display='block'; modal.style.display='flex'; modal.style.flexDirection='column';
+    }catch(e){ console.warn('Deck picker failed', e); }
+  }
+
   (async function init() {
     dlog('SlideApp v0.91 initializing...');
     setDrawerUI(); 
@@ -2546,7 +2641,34 @@ Everything else in front matter is ignored by the app.`;
     setBgFromPrefs(); 
     await maybeLoadConfigFromQuery();
     applyConfig(); 
-    await boot();
+    // Try Static Site Mode (opt-in) via query (?static=1 or ?deck=...) or GitHub Pages host; otherwise fall back
+    try{
+      const sp = new URLSearchParams(location.search);
+      const deckParam = (sp.get('deck')||'').trim();
+      const staticParam = (sp.get('static')||'').trim();
+      const onPages = /\.github\.io$/i.test(location.hostname);
+      const enableStatic = !!deckParam || staticParam === '1' || onPages;
+      if(enableStatic){
+        if(deckParam){
+          await loadDeckFromPath(deckParam);
+        } else {
+          __manifest = await loadManifest();
+          if(__manifest && Array.isArray(__manifest.decks) && __manifest.decks.length){
+            // Show Decks button
+            try{ const b=document.getElementById('decksBtn'); if(b){ b.style.display='inline-block'; b.onclick=()=>showDeckPicker(); } }catch{}
+            if(__manifest.decks.length===1){
+              await loadDeckFromPath(__manifest.decks[0].path);
+            } else {
+              showDeckPicker();
+            }
+          } else {
+            await boot();
+          }
+        }
+      } else {
+        await boot();
+      }
+    }catch(e){ console.warn('Static mode bootstrap failed, falling back', e); await boot(); }
     dlog('SlideApp initialization complete.');
   })();
 
@@ -2648,8 +2770,20 @@ Everything else in front matter is ignored by the app.`;
     document.getElementById('valOk').addEventListener('click', close);
     document.getElementById('validateBtn').addEventListener('click', ()=>{
       const warnings = (()=>{
-        const allowedDeck = new Set(['app-name','appname','brand','theme-primary','theme-accent','theme-text','primary','accent','textcolor','text-color','text','background','effect-color','effectcolor','effect','ui','font-primary','font-secondary','primaryfont','secondaryfont','defaults-overlay','defaults-overlay-pos','defaults-title-size','defaults-subtitle-size','defaults-slide-opacity','defaults-slide-bg1','defaults-slide-bg2','appbg1','appbg2','app-bg1','app-bg2','app-bg-1','app-bg-2','opacity','slideopacity']);
-        const allowedSlide = new Set(['title','subtitle','notes','overlay','overlay-pos','overlaypos','title-size','titlesize','subtitle-size','subtitlesize','slide-bg1','slide-bg2','slidebg1','slidebg2']);
+        const allowedDeck = new Set([
+          'app-name','appname','brand',
+          'theme-primary','theme-accent','theme-text','primary','accent','textcolor','text-color','text',
+          'background','effect-color','effectcolor','effect','ui','font-primary','font-secondary','primaryfont','secondaryfont',
+          'defaults-overlay','defaults-overlay-pos','defaults-title-size','defaults-subtitle-size','defaults-slide-opacity','defaults-slide-bg1','defaults-slide-bg2',
+          'appbg1','appbg2','app-bg1','app-bg2','app-bg-1','app-bg-2','opacity','slideopacity',
+          // Newer deck-level keys
+          'content-pos','overlay-subtitle-size','overlay-subtitle-color','overlaysubtitlecolor','overlaysubtitle','subtitleenabled'
+        ]);
+        const allowedSlide = new Set([
+          'title','subtitle','notes','overlay','overlay-pos','overlaypos','title-size','titlesize','subtitle-size','subtitlesize','slide-bg1','slide-bg2','slidebg1','slidebg2',
+          // New per-slide keys
+          'content-pos','overlay-subtitle','overlay-subtitle-size','overlay-subtitle-color','overlaysubtitle','overlaysubtitlecolor'
+        ]);
         const migrate = new Map(Object.entries({
           primary:'theme-primary', accent:'theme-accent', textcolor:'theme-text', 'text-color':'theme-text', text:'theme-text', effectcolor:'effect-color', effect:'effect-color', appname:'app-name', brand:'app-name', appbg1:'defaults-slide-bg1', 'app-bg1':'defaults-slide-bg1', 'app-bg-1':'defaults-slide-bg1', appbg2:'defaults-slide-bg2', 'app-bg2':'defaults-slide-bg2', 'app-bg-2':'defaults-slide-bg2', slideopacity:'defaults-slide-opacity', opacity:'defaults-slide-opacity', primaryfont:'font-primary', secondaryfont:'font-secondary', overlaypos:'overlay-pos', titlesize:'title-size', subtitlesize:'subtitle-size', slidebg1:'slide-bg1', slidebg2:'slide-bg2'
         }));
@@ -2657,6 +2791,8 @@ Everything else in front matter is ignored by the app.`;
         const isBg=(s)=>['gradient','particles','off'].includes((s||'').toString().trim().toLowerCase());
         const isBool=(s)=>/^(on|off|show|hide|true|false|1|0)$/i.test((s||'').toString().trim());
         const isPos=(s)=>['tl','tr','bl','br'].includes((s||'').toString().trim().toLowerCase());
+        const isContentPos=(s)=>/^[tmb][lmr]$/i.test((s||'').toString().trim());
+        const isSubtitleColor=(s)=>/^(accent|primary)$/i.test((s||'').toString().trim());
         const clamp=(n,lo,hi)=>{ n=Number(n); if(!isFinite(n)) return null; return Math.max(lo, Math.min(hi, n)); };
         const parseOpacity=(raw)=>{ const s=(raw||'').toString().trim(); if(!s) return null; if(/%$/.test(s)) return clamp(parseFloat(s),0,100); const num=parseFloat(s); if(!isFinite(num)) return null; if(num<=1) return clamp(num*100,0,100); return clamp(num,0,100); };
         const out=[];
@@ -2684,6 +2820,10 @@ Everything else in front matter is ignored by the app.`;
               case 'defaults-title-size': if(clamp(v,12,64)===null) out.push(`Deck: 'defaults-title-size' must be 12..64, got '${v}'`); break;
               case 'defaults-subtitle-size': if(clamp(v,10,48)===null) out.push(`Deck: 'defaults-subtitle-size' must be 10..48, got '${v}'`); break;
               case 'defaults-slide-opacity': case 'opacity': case 'slideopacity': if(parseOpacity(v)===null) out.push(`Deck: '${kRaw}' must be 0..100, 0..1, or a percent string, got '${v}'`); break;
+              case 'content-pos': if(!isContentPos(v)) out.push(`Deck: 'content-pos' must be one of tl|tm|tr|ml|mm|mr|bl|bm|br, got '${v}'`); break;
+              case 'overlay-subtitle-size': if(clamp(v,10,48)===null) out.push(`Deck: 'overlay-subtitle-size' must be 10..48, got '${v}'`); break;
+              case 'overlay-subtitle-color': case 'overlaysubtitlecolor': if(!isSubtitleColor(v)) out.push(`Deck: '${kRaw}' must be primary|accent, got '${v}'`); break;
+              case 'overlaysubtitle': case 'subtitleenabled': if(!isBool(v)) out.push(`Deck: '${kRaw}' must be true|false|on|off|1|0, got '${v}'`); break;
             }
           }
           // Per-slide
@@ -2702,6 +2842,10 @@ Everything else in front matter is ignored by the app.`;
                 case 'overlay-pos': case 'overlaypos': if(!isPos(v)) out.push(`Slide ${n}: '${kRaw}' must be tl|tr|bl|br, got '${v}'`); break;
                 case 'title-size': case 'titlesize': if(clamp(v,12,64)===null) out.push(`Slide ${n}: '${kRaw}' must be 12..64, got '${v}'`); break;
                 case 'subtitle-size': case 'subtitlesize': if(clamp(v,10,48)===null) out.push(`Slide ${n}: '${kRaw}' must be 10..48, got '${v}'`); break;
+                case 'content-pos': if(!isContentPos(v)) out.push(`Slide ${n}: 'content-pos' must be tl|tm|tr|ml|mm|mr|bl|bm|br, got '${v}'`); break;
+                case 'overlay-subtitle': if(!isBool(v)) out.push(`Slide ${n}: 'overlay-subtitle' must be true|false|on|off|1|0, got '${v}'`); break;
+                case 'overlay-subtitle-size': if(clamp(v,10,48)===null) out.push(`Slide ${n}: 'overlay-subtitle-size' must be 10..48, got '${v}'`); break;
+                case 'overlay-subtitle-color': case 'overlaysubtitlecolor': if(!isSubtitleColor(v)) out.push(`Slide ${n}: '${kRaw}' must be primary|accent, got '${v}'`); break;
               }
             }
           });
@@ -2769,6 +2913,14 @@ Everything else in front matter is ignored by the app.`;
   // ===== Deck-level frontmatter application =====
   function applyDeckFrontmatter(fm){
     if(!fm || typeof fm !== 'object') return;
+  function setDocumentTitle(){
+    try{
+      const deckNm = (typeof window.__deckAppName === 'string' && window.__deckAppName.trim()) ? window.__deckAppName.trim() : '';
+      const cfgNm = (typeof CONFIG.appName === 'string' && CONFIG.appName.trim()) ? CONFIG.appName.trim() : '';
+      const title = deckNm || cfgNm || 'SlideApp';
+      document.title = title;
+    }catch{}
+  }
   // Reset temporary progress overrides when applying a new deck's settings
   try{ document.body.classList.remove('progress-on','progress-off'); }catch{}
     // Background mode
@@ -2779,7 +2931,7 @@ Everything else in front matter is ignored by the app.`;
     // App name (brand legacy)
     try{
       const nm = (fm.appname || fm['app-name'] || fm.brand || '').toString().trim();
-      if(nm){ CONFIG.appName = nm; CONFIG.brand = CONFIG.brand || nm; }
+      if(nm){ CONFIG.appName = nm; CONFIG.brand = CONFIG.brand || nm; try{ window.__deckAppName = nm; }catch{} }
     }catch{}
     // Colors (hex)
     const hexRe = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -2874,6 +3026,8 @@ Everything else in front matter is ignored by the app.`;
   try{ const sRaw = (typeof fm['overlay-subtitle-size']!=='undefined') ? fm['overlay-subtitle-size'] : (typeof fm.subtitlesize!=='undefined' ? fm.subtitlesize : fm['defaults-subtitle-size']); const n=Math.round(Number(sRaw)); if(isFinite(n)) CONFIG.overlaySubtitleSize = Math.max(10, Math.min(48, n)); }catch{}
   try{ const c=((fm.overlaysubtitlecolor||'') || (fm['overlay-subtitle-color']||'') ).toString().toLowerCase(); if(c==='accent'||c==='primary') CONFIG.overlaySubtitleColor=c; }catch{}
     applyConfig();
+  // Ensure tab title reflects deck/app precedence (deck > style config)
+    try{ setDocumentTitle(); }catch{}
   // Rebuild overlays for current slides
     try{
       if(Array.isArray(slidesHTML) && slidesHTML.length){
