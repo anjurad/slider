@@ -15,7 +15,8 @@ Key features
 - Keyboard shortcuts for navigation and quick toggles (Background, UI, Opacity, Outline, Notes, Slides drawer).
 - Theming system and a small Style modal for colors, overlay, and outline settings.
 - Export / print (use browser print to PDF) and fullscreen support.
- - Enhanced Markdown: strikethrough, task lists, admonitions, autolinked URLs, linkable headings + in‑app TOC.
+- Enhanced Markdown: strikethrough, task lists, admonitions, autolinked URLs, linkable headings + in‑app TOC.
+ - Overlay behaviour: Reserved (default, non‑overlapping), Float (no padding), Auto (fade + adaptive padding on overlap; see docs).
 
 Quick start (local)
 1. Clone the repo and change to the project folder:
@@ -55,6 +56,7 @@ What to try
 - Click the top toolbar "Load Markdown" button (📁) and choose a Markdown file to load your slides.
 - Navigate with ← / → keys or on-screen arrows; thumbnails appear in the left drawer.
 - Try “Validate” (🔎) to lint your deck’s frontmatter. Use the “📑 TOC” to browse headings and jump around.
+ - Overlay: choose Reserved (no overlap), Float, or Auto fade (adaptive). Reserved is the default.
 - Validate your deck: Click “Validate” in the header to check frontmatter keys and values. Or run `npm run validate:deck -- path/to/deck.md` locally to lint Markdown decks in CI or pre-commit.
 - Useful keys:
   - B — cycle background modes (Particles → Gradient → Off)

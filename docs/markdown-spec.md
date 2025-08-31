@@ -166,6 +166,16 @@ Notes
 
   ## Getting Started
   Click the “#” icon on hover to copy a direct link to this heading.
+ 
+## Overlay Behaviour
+
+- Reserved (default): Content is padded so it never sits under the overlay. Predictable and clutter‑free.
+- Float: No padding; overlay floats above content.
+- Auto: Overlay gently fades and increases padding when content overlaps; restores when overlap ends (tracked for enhancement in GH#18).
+
+Implementation notes
+- Slide content scrolls inside a dedicated container, while the frame (outline) remains fixed.
+- The slide frame is positioned clear of the toolbar and progress bar via CSS variables for consistent spacing.
 
 ## Sanitization and Safety
 
