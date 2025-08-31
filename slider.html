@@ -2189,27 +2189,99 @@ background: particles
 ui: on
 ---
 
-## Welcome
+# SlideApp
+Super‑jazzy demos + user guide
 
-- ←/→ or buttons to navigate
-- S = Slides drawer · N = Notes panel
-- B cycles backgrounds (✨ Particles · 🌌 Gradient · ⛔ Off)
-- F enters/leaves fullscreen
+## Quick Controls
 
-Tip: Use “🎨 Style” to set brand, overlay, and opacity.
+- 🎨 Style: colors, overlays, backgrounds, content position (3×3)
+- Keys: B (background) · T (opacity) · U (UI) · O (outline) · S (slides) · N (notes)
+- Presets: fast theme swaps · Reset restores defaults
 
-## What’s New in Markdown
+---
+
+title: Content Position — Deck Default (MM)
+subtitle: Centered by default (deck)
+---
+
+## Centered Content
+The Markdown block is anchored to the middle (MM).
+
+Use frontmatter <code>content-pos: mm</code> (deck) or the Style UI to change.
+
+---
+
+title: Content Position — TL
+content-pos: tl
+---
+
+## Top‑Left (TL)
+Per‑slide override via <code>content-pos: tl</code>.
+
+---
+
+title: Content Position — MR
+content-pos: mr
+---
+
+## Middle‑Right (MR)
+Great for balancing text with visuals.
+
+---
+
+title: Content Position — BR
+content-pos: br
+---
+
+## Bottom‑Right (BR)
+Perfect for quick callouts.
+
+---
+
+title: Overlays — Deck ON
+overlay: on
+overlay-pos: tr
+title-size: 30
+overlay-subtitle: true
+overlay-subtitle-size: 16
+overlay-subtitle-color: accent
+---
+
+## Title & Subtitle Overlay
+Overlay ON by default from here. Subtitle uses accent color.
+
+---
+
+title: Overlays — Per‑Slide BL
+overlay-pos: bl
+title-size: 28
+overlay-subtitle-size: 14
+---
+
+## Bottom‑Left Overlay
+Per‑slide overlay position + sizes.
+
+---
+
+title: Overlay OFF here
+overlay: off
+---
+
+## No Overlay
+Per‑slide override hides the overlay.
+
+---
+
+## Markdown Goodies
 
 - Strikethrough: ~~deprecated~~ → modern
 - Task lists:
   - [ ] Collect feedback
-  - [x] Ship 1.0.1
+  - [x] Ship 1.2.0
 - Autolink: https://example.com
 
-## Admonitions
-
 ::: note
-Heads up: Slides now support admonitions.
+Heads up: Admonitions render with a clean style.
 :::
 
 ::: tip
