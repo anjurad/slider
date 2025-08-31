@@ -547,8 +547,8 @@
 
   // ===== Config & Theme =====
   const CONFIG = JSON.parse(localStorage.getItem('slideapp.config')||'{}');
-  // Whether to persist config changes to localStorage (default: false)
-  let PERSIST_CONFIG = (()=>{ try{ const v = localStorage.getItem('slideapp.config.persist'); if(v===null) return false; return v==='1' || String(v).toLowerCase()==='true'; }catch{} return false; })();
+  // Whether to persist config changes to localStorage (default: true for backward-compat)
+  let PERSIST_CONFIG = (()=>{ try{ const v = localStorage.getItem('slideapp.config.persist'); if(v===null) return true; return v==='1' || String(v).toLowerCase()==='true'; }catch{} return true; })();
   // Baseline opacity for T-key toggle: use last saved value from persisted config; fallback to 1 (100%).
   let BASE_OPACITY = (()=>{ try{ const saved=JSON.parse(localStorage.getItem('slideapp.config')||'{}'); const v=saved && typeof saved.slideOpacity==='number' ? saved.slideOpacity : undefined; if(typeof v==='number' && isFinite(v)) return Math.max(0, Math.min(1, v)); }catch{} return 1; })();
   // Back-compat: migrate legacy brand -> appName if needed (do not delete brand to avoid breaking older versions)
@@ -2001,10 +2001,8 @@
     }
   }catch{}
   }); document.getElementById('cfgReset').addEventListener('click',()=>{ 
-    // Clear saved style config and persist flag
+    // Clear saved style config (keep persist preference for backward compatibility)
     try{ localStorage.removeItem('slideapp.config'); }catch{}
-    try{ localStorage.removeItem('slideapp.config.persist'); }catch{}
-    PERSIST_CONFIG = false; 
     // Also forget any remembered decks (session + persistent)
     try{ sessionStorage.removeItem('slideapp.session.deck'); }catch{}
     try{ localStorage.removeItem('slideapp.persist.deck'); }catch{}

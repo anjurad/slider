@@ -27,4 +27,9 @@ Checklist
 - [x] Feature implementation
 - [x] UI adjustments
 - [x] Docs updated
-- [ ] Lint/tests (to run in CI)
+- [x] Lint/tests (local run)
+
+Local validation (2025-08-31)
+- Lint: PASS (`npm run lint`)
+- Unit tests: PASS — 21 passed (`npm run test:unit`)
+- Playwright (WebKit): PASS — 58 passed, 1 skipped (`npm test`)
