@@ -12,17 +12,13 @@ test.describe('Button styles', () => {
 
     // Set custom button text color
     await page.locator('#cfgBtnTextMode').waitFor({ state: 'visible' });
-    await page.evaluate(() => {
-      const sel = document.getElementById('cfgBtnTextMode') as HTMLSelectElement | null;
-      const clr = document.getElementById('cfgBtnTextColor') as HTMLInputElement | null;
-      if (sel) {
-        sel.value = 'custom';
-        sel.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      if (clr) clr.disabled = false;
-    });
+    await page.locator('#cfgBtnTextMode').selectOption('custom');
     await expect(page.locator('#cfgBtnTextColor')).toBeEnabled();
-    await page.locator('#cfgBtnTextColor').fill('#ff00ff');
+    // Set color value and dispatch input to trigger live preview
+    await page.evaluate(() => {
+      const clr = document.getElementById('cfgBtnTextColor') as HTMLInputElement | null;
+      if (clr){ clr.value = '#ff00ff'; clr.dispatchEvent(new Event('input', { bubbles: true })); }
+    });
     // Switch to outline fill
     await page.locator('#cfgBtnFill').selectOption('outline');
     await page.getByRole('button', { name: 'Save' }).click();

@@ -313,29 +313,26 @@
           <input id="cfgAccent" type="color" />
         </div>
       </div>
-      <div class="row" style="margin-top:6px">
+      <div class="row" style="margin-top:6px; gap:12px; align-items:flex-end;">
         <div style="flex:1">
           <label for="cfgTextColor">General text color</label>
           <input id="cfgTextColor" type="color" />
         </div>
         <div style="flex:1">
-          <label>Button text color</label>
-          <div class="row" style="gap:6px; align-items:center;">
+          <label>Buttons</label>
+          <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap;">
+            <label style="font-size:12px;">Text</label>
             <select id="cfgBtnTextMode" class="btn" style="padding:6px 8px; min-width:96px;">
               <option value="auto">Auto</option>
               <option value="custom">Custom</option>
             </select>
             <input id="cfgBtnTextColor" type="color" />
+            <label style="font-size:12px; margin-left:8px;">Fill</label>
+            <select id="cfgBtnFill" class="btn" style="padding:6px 8px; min-width:120px;">
+              <option value="solid">Solid</option>
+              <option value="outline">Outline</option>
+            </select>
           </div>
-        </div>
-      </div>
-      <div class="row" style="margin-top:6px">
-        <div style="flex:1">
-          <label for="cfgBtnFill">Button fill</label>
-          <select id="cfgBtnFill" class="btn" style="padding:6px 8px; min-width:120px;">
-            <option value="solid">Solid</option>
-            <option value="outline">Outline</option>
-          </select>
         </div>
       </div>
       <div class="row" style="margin-top:8px; gap:8px;">
@@ -1821,7 +1818,16 @@
       modeSel.value = isAuto ? 'auto' : 'custom';
       if(!isAuto){ const n = normalizeHex(String(CONFIG.btnTextColor)); btnClr.value = n || '#ffffff'; }
       btnClr.disabled = isAuto;
-      modeSel.onchange = ()=>{ btnClr.disabled = (modeSel.value==='auto'); };
+      modeSel.onchange = ()=>{ btnClr.disabled = (modeSel.value==='auto'); if(modeSel.value==='auto'){ CONFIG.btnTextColor = 'auto'; } };
+      // If user clicks the color while disabled, switch to custom automatically
+      btnClr.addEventListener('click', ()=>{
+        if(btnClr.disabled){
+          modeSel.value = 'custom'; btnClr.disabled = false;
+          const n = normalizeHex(String(btnClr.value||'')) || '#ffffff';
+          CONFIG.btnTextColor = n;
+          try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{}
+        }
+      });
     }catch{}
     // Button fill
     try{ const bf=document.getElementById('cfgBtnFill'); bf.value = (CONFIG.btnFill==='outline'?'outline':'solid'); }catch{}
