@@ -4,7 +4,7 @@ import path from 'path';
 
 test('style preset updates button and brand-badge styles', async ({ page, browserName: _browserName }) => {
   // @ts-ignore - allow using process in test runtime
-  const htmlPath = path.resolve(process.cwd(), 'slide_app_v_0_91.html');
+  const htmlPath = path.resolve(process.cwd(), 'slider.html');
   const url = `file://${htmlPath}`;
 
   await page.goto(url);

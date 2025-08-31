@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 test('selected preset matches overlay-position selected style', async ({ page }) => {
-  const htmlPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+  const htmlPath = path.resolve(__dirname, '..', 'slider.html');
   const url = `file://${htmlPath}`;
   await page.goto(url);
 

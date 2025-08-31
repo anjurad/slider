@@ -3,7 +3,7 @@ import path from 'path';
 
 function toFileUrl(p: string) { return 'file://' + path.resolve(p); }
 
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 // Helper to count overlays on current active slide
 async function overlayInfo(page) {

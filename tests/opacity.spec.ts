@@ -22,7 +22,7 @@ async function getCssVarAlpha(page, varName: string) {
   return m ? parseFloat(m[1]) : NaN;
 }
 
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 // Clean slate per test to avoid cross-test storage interference
 async function clearConfig(page) {

@@ -3,7 +3,7 @@ import path from 'path';
 
 function toFileUrl(p: string) { return 'file://' + path.resolve(p); }
 
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 test('Position controls disabled when overlay is off, with hint', async ({ page }) => {
   await page.goto(toFileUrl(appPath));

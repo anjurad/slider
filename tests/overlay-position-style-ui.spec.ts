@@ -3,7 +3,7 @@ import path from 'path';
 
 function toFileUrl(p: string) { return 'file://' + path.resolve(p); }
 
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 test.describe('Overlay position Style UI', () => {
   test('active highlight, aria-pressed, live preview and persistence', async ({ page }) => {

@@ -3,7 +3,7 @@ Title: Remove debug instrumentation and add README preview
 This PR removes temporary debug assignments that exposed internal frontmatter during E2E diagnosis and adds a small inline SVG preview to the README for reviewers.
 
 Checklist:
-- [x] Remove debug lines from slide_app_v_0_91.html
+- [x] Remove debug lines from slider.html
 - [x] Add inline SVG preview to README.md
 - [ ] Confirm lint and unit tests pass locally
 

@@ -7,7 +7,7 @@ function fileUrl(path: string) {
 
 test.describe('runtime wiring', () => {
   test('window.Particles exists and is callable', async ({ page }) => {
-    await page.goto(fileUrl('slide_app_v_0_91.html'));
+    await page.goto(fileUrl('slider.html'));
     // Wait for the page JS to register the runtime
     await page.waitForFunction(() => !!(window as any).Particles, null, { timeout: 2000 });
     const hasParticles = await page.evaluate(() => !!(window as any).Particles);

@@ -3,7 +3,7 @@ import path from 'path';
 
 test('front-matter does not persist to slideapp.config until Save', async ({ page }) => {
   // Open the local file
-  const filePath = 'file://' + path.resolve(process.cwd(), 'slide_app_v_0_91.html');
+  const filePath = 'file://' + path.resolve(process.cwd(), 'slider.html');
   await page.goto(filePath);
 
   // Wait for the app to initialize

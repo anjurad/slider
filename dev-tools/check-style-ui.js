@@ -3,7 +3,7 @@ const path = require('path');
 (async ()=>{
   const browser = await webkit.launch();
   const page = await browser.newPage();
-  const file = 'file://' + path.resolve(process.cwd(), 'slide_app_v_0_91.html');
+  const file = 'file://' + path.resolve(process.cwd(), 'slider.html');
   await page.goto(file);
   await page.waitForSelector('#styleBtn');
   await page.click('#styleBtn');

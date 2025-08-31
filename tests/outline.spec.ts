@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 function toFileUrl(p) { return 'file://' + path.resolve(p); }
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 async function getBeforeBoxShadow(page, selector){
   // Read the pseudo-element box-shadow by injecting a tiny script

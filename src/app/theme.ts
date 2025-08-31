@@ -1,6 +1,6 @@
 /**
  * Theme helpers (extracted, not wired yet).
- * NOTE: These functions are copies from inline logic in slide_app_v_0_91.html.
+ * NOTE: These functions are copies from inline logic in slider.html.
  * They are exported for future refactors but currently unused to avoid behavior changes.
  */
 

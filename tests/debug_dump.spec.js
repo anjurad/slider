@@ -4,7 +4,7 @@ const path = require('path');
 function toFileUrl(p){ const abs = path.resolve(p); return 'file://' + abs; }
 
 test('debug dump slides', async ({ page })=>{
-  const app = toFileUrl(path.resolve(__dirname, '..', 'slide_app_v_0_91.html'));
+  const app = toFileUrl(path.resolve(__dirname, '..', 'slider.html'));
   const md = path.resolve(__dirname, '..', 'sample_presentation.md');
   await page.goto(app);
   await page.waitForSelector('.slide.active .md');

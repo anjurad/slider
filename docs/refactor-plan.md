@@ -1,6 +1,6 @@
 # SlideApp Refactor Plan (working)
 
-Goal: Gradual extraction of CSS/JS from `slide_app_v_0_91.html` into a modular structure with tests guarding behavior.
+Goal: Gradual extraction of CSS/JS from `slider.html` into a modular structure with tests guarding behavior.
 
 Status: Iterative. Keep this document updated as we land changes.
 
