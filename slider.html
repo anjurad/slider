@@ -1971,79 +1971,86 @@ background: particles
 ui: on
 ---
 
-## Hello SlideApp
+## Welcome
 
 - ←/→ or buttons to navigate
 - S = Slides drawer · N = Notes panel
 - B cycles backgrounds (✨ Particles · 🌌 Gradient · ⛔ Off)
 - F enters/leaves fullscreen
 
-Tip: “🎨 Style” lets you set brand colors, overlay, and opacity.
+Tip: Use “🎨 Style” to set brand, overlay, and opacity.
 
-## Quick Start
+## What’s New in Markdown
 
-1) Open “🎨 Style”
-- App name, Primary/Accent colors
-- Overlay title/subtitle (position, sizes, color)
-- Opacity slider with live preview + Clear
+- Strikethrough: ~~deprecated~~ → modern
+- Task lists:
+  - [ ] Collect feedback
+  - [x] Ship 1.0.1
+- Autolink: https://example.com
 
-2) Load your deck
-- Click “Load Markdown” and choose a .md file
-- Use --- on its own line to split slides
+## Admonitions
 
-3) Present
-- Use keyboard shortcuts (see cheat sheet)
-- Print to PDF any time
+::: note
+Heads up: Slides now support admonitions.
+:::
 
-## Shortcuts
+::: tip
+Pro tip: Use the TOC (📑) to jump between sections.
+:::
+
+::: warning
+Warning: Don’t overuse effects; clarity wins.
+:::
+
+## Headings & Anchors
+
+### Getting Started
+Click the “#” to copy a direct link to this heading.
+
+## Columns
+
+::: columns
+
+### Column A
+- Alpha
+- Beta
+
+:::col
+
+### Column B
+1. One
+2. Two
+
+:::col
+
+### Column C
+- One
+- Two
+
+:::
+
+## Tables
+
+| Feature        | Basic | Pro |
+|----------------|:-----:|:---:|
+| Bullet Support | ✅    | ✅  |
+| Code Blocks    | ✅    | ✅  |
+| Tables         | ❌    | ✅  |
+
+## Shortcuts (One‑hand friendly)
 
 - Background: B cycles modes; label shows current
-- Slides drawer: S toggles thumbnails (works even with UI off)
+- Slides drawer: S toggles thumbnails (works with UI off)
 - Notes panel: N toggles speaker notes
 - Fullscreen: F on/off
 - UI mode: U hide/show header & footer
-- Progress: P toggles bar/arrows/count (resets on UI toggle/deck load)
-- Opacity: T toggles 0% ⇄ saved baseline (Save sets baseline · Reset → 100%)
-- Outline: O toggles accent outline (default on; Save persists)
+- Progress: P toggles bar/arrows/count
+- Opacity: T toggles 0% ⇄ saved baseline
+- Outline: O toggles accent outline
 - Title overlay: Y toggles title/subtitle overlay
-- Clear preset: One-click 0% background
 
-## Style & Outline
-
-- Brand: set App name + colors (Primary/Accent)
-- Title overlay: position TL/TR/BL/BR · sizes · color
-- Outline: accent-colored, on by default (O toggles)
-- Outline width: dial it subtle → bold
-- Save persists; Reset restores defaults
-
-## Opacity & Clear
-
-- Set baseline: Style → Opacity slider (Save)
-- Live toggle: T for 0% ⇄ baseline
-- Panic button: Clear → instant 0%
-- Reset → 100% baseline
-
-## UI Off + Overrides
-
-- U: hide header/footer for a clean look
-- S: opens slides even when UI is off
-- P: temporary progress bar/arrows/count
-- Overrides reset on UI toggle or deck load
-
-## Remember Last Deck
-
-- Style: enable “Remember last deck (persist)”
-- “Forget deck” removes it immediately
-- Reset clears style config and remembered decks
-
-## Background Modes
-
-- B cycles: ✨ Particles → 🌌 Gradient → ⛔ Off
-- Reduced motion → auto Gradient
-- Background button label shows current mode
-
-## Launch Overview
-<p class="muted-lead">Fast, modern slides with Markdown + a touch of inline HTML when needed.</p>
+## Image + Text (Example)
+<p class="muted-lead">A clean visual + talking points layout.</p>
 
 <div style="display:flex; gap:24px; align-items:center;">
   <div style="flex:1; min-width:0;">
@@ -2052,12 +2059,12 @@ Tip: “🎨 Style” lets you set brand colors, overlay, and opacity.
   <div style="flex:1; min-width:0;">
     <h3>Why this layout works</h3>
     <ul>
-      <li>Attention split between image and copy</li>
-      <li>Perfect for highlights and callouts</li>
+      <li>Even balance between image and copy</li>
+      <li>Great for highlights and callouts</li>
       <li>Responsive: stacks on small screens</li>
     </ul>
   </div>
-  
+
 </div>
 
 ---
