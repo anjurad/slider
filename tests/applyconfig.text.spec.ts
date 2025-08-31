@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 test('applyConfig sets --text from CONFIG.textColor edge cases', async ({ page }) => {
-  const htmlPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+  const htmlPath = path.resolve(__dirname, '..', 'slider.html');
   const url = `file://${htmlPath}`;
   await page.goto(url);
 

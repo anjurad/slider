@@ -6,7 +6,7 @@ Refactor work-in-progress is tracked in `docs/refactor-plan.md`. The goal is to 
 
 Slider — HTML5 Slide Presentation Application
 
-Slider is a single-file HTML5 slide presentation application that renders Markdown content as interactive slides. The application is delivered as a single-file app at `slide_app_v_0_91.html` and includes styling, JavaScript runtime, and sample content so you can run it directly in a browser.
+Slider is a single-file HTML5 slide presentation application that renders Markdown content as interactive slides. The application is delivered as a single-file app at `slider.html` and includes styling, JavaScript runtime, and sample content so you can run it directly in a browser.
 
 Key features
 - Markdown-based slides (split with a line containing only `---`).
@@ -33,12 +33,12 @@ npm ci
 
 3. Open the application in a browser:
 
-- Quick (no server): open the `slide_app_v_0_91.html` file directly in your browser via a `file://` URL.
+- Quick (no server): open the `slider.html` file directly in your browser via a `file://` URL.
 - Recommended: run a small local HTTP server and open the app in a browser:
 
 ```bash
 python3 -m http.server 8000
-# open http://localhost:8000/slide_app_v_0_91.html
+# open http://localhost:8000/slider.html
 ```
 
 ## Visual preview
@@ -114,7 +114,7 @@ Manual validation checklist (recommended after changes)
   - Notes, background switching, transparency toggle, and thumbnails should behave as expected.
 
 Project structure (important files)
-- `slide_app_v_0_91.html` — the single-file application (HTML/CSS/JS).
+- `slider.html` — the single-file application (HTML/CSS/JS).
 - `sample_presentation.md` — bundled sample deck used for manual testing.
 - `src/` — extracted modules and TypeScript sources (refactor-in-progress).
 - `tests/` — Playwright E2E tests.
@@ -137,7 +137,7 @@ Contact / support
 - Use the GitHub issue tracker for bugs and feature requests.
 
 Next steps I can take for you
-- Remove the lightweight debug instrumentation that was temporarily added to `slide_app_v_0_91.html` during troubleshooting.
+- Remove the lightweight debug instrumentation that was temporarily added to `slider.html` during troubleshooting.
 - Make the README shorter or add visuals (screenshots/GIF).
 - Open a PR with these README changes.
 

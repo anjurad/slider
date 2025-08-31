@@ -1,8 +1,12 @@
 import { test, expect } from '@playwright/test';
+import path from 'path';
+
+function toFileUrl(p: string) { return 'file://' + path.resolve(p); }
 
 test.describe('Thumbnail refresh', () => {
   test('thumbnails update immediately after saving a light preset', async ({ page }) => {
-  await page.goto('file:///Users/gerhardgroenewald/Desktop/sandbox/slider/slide_app_v_0_91.html');
+    const appPath = path.resolve(__dirname, '..', 'slider.html');
+    await page.goto(toFileUrl(appPath));
     // Wait for app to initialize and render thumbnails
     await page.waitForSelector('.thumb');
 

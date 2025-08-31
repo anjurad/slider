@@ -10,7 +10,7 @@ function toFileUrl(p: string) {
 
 test.describe('SlideApp markdown rendering (WebKit)', () => {
 
-  const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+  const appPath = path.resolve(__dirname, '..', 'slider.html');
   const mdPath = path.resolve(__dirname, '..', 'sample_presentation.md');
   const mdFences = path.resolve(__dirname, 'markdown-fences.md');
 

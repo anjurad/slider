@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 
 function toFileUrl(p) { return 'file://' + path.resolve(p); }
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 async function setInputFile(page, selector, content, filename='deck.md'){
   const tmp = path.resolve(__dirname, `.__tmp_${Date.now()}_${Math.random().toString(36).slice(2)}_${filename}`);

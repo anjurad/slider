@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 import path from 'path';
 
 function toFileUrl(p){ return 'file://' + path.resolve(p); }
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 const sampleMdPath = path.resolve(__dirname, '..', 'sample_presentation.md');
 
 test('debug inspect slides', async ({ page }) => {

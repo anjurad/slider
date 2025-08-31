@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 function toFileUrl(p) { return 'file://' + path.resolve(p); }
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 test('deck-level frontmatter settings are applied (transient) and honored in UI', async ({ page }) => {
   await page.goto(toFileUrl(appPath));

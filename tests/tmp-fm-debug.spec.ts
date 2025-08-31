@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 import path from 'path';
 
 test('debug frontmatter variable', async ({ page }) => {
-  const app = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+  const app = path.resolve(__dirname, '..', 'slider.html');
   const sample = path.resolve(__dirname, '..', 'sample_presentation.md');
   await page.goto('file://' + app);
   await page.setInputFiles('#fileInput', sample);

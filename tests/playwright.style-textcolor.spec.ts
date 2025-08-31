@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 test('style modal labels follow configured general text color', async ({ page }) => {
-  const htmlPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+  const htmlPath = path.resolve(__dirname, '..', 'slider.html');
   const url = `file://${htmlPath}`;
   await page.goto(url);
 

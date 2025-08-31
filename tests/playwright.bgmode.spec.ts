@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 // helper used across other specs
 function toFileUrl(p){ return 'file://' + path.resolve(p); }
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 test('background mode cycles via button and applies classes', async ({ page }) => {
   await page.goto(toFileUrl(appPath));

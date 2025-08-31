@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 function toFileUrl(p) { return 'file://' + path.resolve(p); }
-const appPath = path.resolve(__dirname, '..', 'slide_app_v_0_91.html');
+const appPath = path.resolve(__dirname, '..', 'slider.html');
 
 async function getComputedBgImage(page, selector){
   return page.$eval(selector, el => getComputedStyle(el).backgroundImage);
