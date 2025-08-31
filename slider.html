@@ -2046,6 +2046,8 @@
   // Persist only if enabled
   if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} } else { try{ localStorage.removeItem('slideapp.config'); }catch{} }
   try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
+  // Ensure brand label reflects saved name immediately even when Theme.applyConfig handled CSS only
+  try{ const el=document.getElementById('appName'); if(el){ el.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp'); } }catch{}
   try{ updateActiveThumbGradient(); }catch{}
   cfgOverlay.style.display=cfgModal.style.display='none';
   // Notify with a summary of settings
