@@ -18,6 +18,40 @@ Key features
 - Enhanced Markdown: strikethrough, task lists, admonitions, autolinked URLs, linkable headings + in‑app TOC.
  - Overlay behaviour: Reserved (default, non‑overlapping), Float (no padding), Auto (fade + adaptive padding on overlap; see docs).
 
+## Static Site Mode (new)
+
+Render decks directly from the repository without uploading files.
+
+- Add your Markdown decks under `content/`
+- List them in `slides.json` at the repo root:
+
+```
+{
+  "decks": [
+    { "title": "Welcome", "path": "content/welcome.md" },
+    { "title": "Demo Deck", "path": "content/demo.md" },
+    { "title": "Sample Presentation", "path": "sample_presentation.md" }
+  ]
+}
+```
+
+Usage
+- Open `slider.html` (locally or on GitHub Pages). If multiple decks are listed, a 📚 Decks button appears to choose a deck. If a single deck is listed, it loads automatically.
+- Deep-link to a specific deck with `?deck=PATH`:
+  - Example: `slider.html?deck=content/welcome.md`
+- The existing upload button remains available for ad‑hoc files.
+
+GitHub Pages (from this feature branch)
+- Push this branch (`feature/static-site-render`) and configure GitHub Pages:
+  - Repo Settings → Pages → Build and deployment → Source: “Deploy from a branch”
+  - Branch: `feature/static-site-render` • Folder: `/root` (or `/docs` if you prefer)
+  - URL will be: `https://<org-or-user>.github.io/<repo>/slider.html`
+- Commit your decks in `content/` and update `slides.json`; Pages will serve them as static assets.
+
+Notes
+- Static Site Mode is additive; theming, overlays, navigation, and validation all remain intact.
+- `slides.json` is optional; without it, Slider behaves as before (restores last deck or loads `sample_presentation.md`).
+
 Quick start (local)
 1. Clone the repo and change to the project folder:
 
@@ -53,6 +87,7 @@ Here's a small animated preview to help reviewers quickly see the app layout wit
 
 What to try
 - The app loads `sample_presentation.md` automatically on first run.
+ - Static mode: open the 📚 Decks picker and load a deck from `slides.json`.
 - Click the top toolbar "Load Markdown" button (📁) and choose a Markdown file to load your slides.
 - Navigate with ← / → keys or on-screen arrows; thumbnails appear in the left drawer.
 - Try “Validate” (🔎) to lint your deck’s frontmatter. Use the “📑 TOC” to browse headings and jump around.
