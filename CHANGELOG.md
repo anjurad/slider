@@ -34,3 +34,14 @@ All notable changes to this project will be documented in this file.
 
 ### UI
 - Compact inline layout for external config controls in the Style modal (shorter URL field, proper Import button).
+
+## [1.2.0] - 2025-08-31
+### Added
+- Content position feature to control Markdown block anchor inside slides:
+  - Frontmatter: deck `content-pos`, per-slide `content-pos` (`tl, tm, tr, ml, mm, mr, bl, bm, br`).
+  - Style UI: new 3×3 Content position control with live preview.
+  - External config: `contentPos` key.
+  - Precedence: per-slide > deck > config > default (TL).
+### Fixed
+- Stabilized Style modal sliders live preview (title/subtitle sizes) to avoid theme re-apply thrash.
+- Locked overlay position button dimensions to prevent size changes when toggling Title.

@@ -78,6 +78,11 @@ Deck-level frontmatter (file start)
   - Sizes: `titleSize` | `defaults-title-size` (12–64 px), `overlaySubtitleSize` | `subtitleSize` | `defaults-subtitle-size` (10–48 px).
   - Subtitle toggle: `overlaySubtitle` | `subtitleEnabled` (false/off/0 disables).
   - Subtitle color: `overlaySubtitleColor` ∈ {`primary`,`accent`}.
+
+- Content position (deck default):
+  - `content-pos` ∈ {`tl`,`tm`,`tr`,`ml`,`mm`,`mr`,`bl`,`bm`,`br`}.
+  - Controls where the Markdown block (`.content-scroll > .md`) is anchored within the slide.
+  - Maps to CSS flex alignment: `--content-x` → `justify-content`, `--content-y` → `align-items`.
 - UI mode:
   - Key: `ui` ∈ {on/show/true/1, off/hide/false/0}.
   - Effect: toggles chrome visibility; persisted to `localStorage['uiMode']`.
@@ -90,6 +95,10 @@ Per-slide frontmatter (applies to individual slides)
 - Overlay per-slide:
   - `overlay` true/on/1 shows, false/off/0 hides (respects deck default when unspecified). If unspecified but `overlay-pos`, `title-size`, or `subtitle-size` are present, overlay is treated as on for that slide.
   - `overlay-pos`, `title-size`, `subtitle-size` override deck defaults (legacy `overlaypos`, `titlesize`, `subtitlesize` also accepted).
+
+- Content position per‑slide:
+  - `content-pos` with same allowed values overrides the deck default for that slide.
+  - Precedence: per‑slide > deck > global `CONFIG.contentPos` > default `tl`.
 - Notes: ` ```notes ... ``` ` sections extracted to `fm.notes`.
 
 ## Markdown Features
@@ -194,7 +203,16 @@ Implementation notes
 - Background mode:
   - `gradient`/`particles`/`off` reflected in classes and the background button label; honors reduced-motion.
 - Overlays:
-  - Built after rendering when `CONFIG.overlayOn` is true; per-slide FM can hide/override position and sizes; subtitle adopts deck color choice.
+- Built after rendering when `CONFIG.overlayOn` is true; per-slide FM can hide/override position and sizes; subtitle adopts deck color choice.
+
+## Content Position Behaviour
+
+- The content container `.content-scroll` is a flex box filling the slide frame with internal scroll enabled. The Markdown block aligns by CSS vars `--content-x` (justify-content) and `--content-y` (align-items).
+- Values are derived from `content-pos` tokens:
+  - Rows: `t` → `flex-start`, `m` → `center`, `b` → `flex-end`.
+  - Cols: `l` → `flex-start`, `m` → `center`, `r` → `flex-end`.
+- Defaults to `tl` (top-left) if unspecified.
+- Changing content position does not alter text alignment; it only moves the block within the viewport. Oversized content still scrolls.
 - Thumbnails:
   - Title text from per-slide `title` (fallback `Slide N`); accessible roles/labels; active thumb shows a primary→accent gradient background.
 - UI mode:
