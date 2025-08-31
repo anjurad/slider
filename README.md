@@ -165,7 +165,7 @@ You can now load and update theme/config externally without editing code.
 window.postMessage({
   type: 'slider.config',
   action: 'merge', // 'merge' (default) | 'replace'
-  config: { primary: '#01B4E1', accent: '#64FFFC' }
+  config: { primary: '#01B4E1', accent: '#64FFFC', contentPos: 'mr' }
 }, '*');
 ```
 
@@ -175,6 +175,11 @@ Notes
 - Unknown keys are ignored; values are validated and sanitized (colors → `#rrggbb`, ranges for numbers, allowed enums).
 
 More details: `docs/external-config.md`.
+
+### Content Position
+- Control where the Markdown block sits inside the slide: TL/TM/TR, ML/MM/MR, BL/BM/BR.
+- Set via Style (🎨) → Content position, deck frontmatter (`content-pos: mm`), per-slide frontmatter, or external config (`contentPos`).
+- Precedence: per-slide > deck > config > default (TL).
 
 Troubleshooting & tips
 - If Playwright browser installs fail due to network restrictions, run `npm run lint` and `npm run test:unit` locally and manually validate core UI scenarios in a browser.

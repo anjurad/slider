@@ -72,7 +72,7 @@
     body.ui-off :root{ --pad-top:24px; --pad-bottom:32px }
   /* A single framed slide that fills the padded area and scrolls internally */
   .slide{position:absolute;top:var(--pad-top);bottom:var(--pad-bottom);left:var(--pad-side);right:var(--pad-side);display:block;background:linear-gradient(180deg,var(--slide-bg1, rgba(17,24,39,.75)),var(--slide-bg2, rgba(17,24,39,.55)));border-radius:var(--radius);box-shadow:var(--slide-shadow, var(--shadow));opacity:0;transform:translate3d(60px,0,0) scale(.98);transition:all 0.6s cubic-bezier(0.4, 0, 0.2, 1);backdrop-filter:blur(var(--slide-blur, 8px));padding:0;overflow:hidden;outline:none}
-  .slide .content-scroll{position:relative;height:100%;overflow:auto;padding:56px 48px 96px 48px}
+  .slide .content-scroll{position:relative;height:100%;width:100%;overflow:auto;padding:56px 48px 96px 48px;display:flex;justify-content:var(--content-x, flex-start);align-items:var(--content-y, flex-start)}
   /* Slide title/subtitle overlay */
   .slide .slide-overlay{position:absolute;pointer-events:none;z-index:50;max-width:70%;display:flex;flex-direction:column;gap:4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
   .slide .slide-overlay.pos-tl{top:18px;left:24px;text-align:left}
@@ -435,6 +435,24 @@
 
       <div class="row" style="margin-top:8px; gap: 12px; align-items:flex-start; flex-wrap: wrap;">
         <div style="flex:1; min-width:210px;">
+          <label style="display:block; font-size:12px;">Content position</label>
+          <div id="cfgContentPos" role="group" aria-label="Content position" style="display:grid; grid-template-columns: repeat(3, auto); gap:6px; width:max-content;">
+            <button type="button" class="btn" data-pos="tl">TL</button>
+            <button type="button" class="btn" data-pos="tm">TM</button>
+            <button type="button" class="btn" data-pos="tr">TR</button>
+            <button type="button" class="btn" data-pos="ml">ML</button>
+            <button type="button" class="btn" data-pos="mm">MM</button>
+            <button type="button" class="btn" data-pos="mr">MR</button>
+            <button type="button" class="btn" data-pos="bl">BL</button>
+            <button type="button" class="btn" data-pos="bm">BM</button>
+            <button type="button" class="btn" data-pos="br">BR</button>
+          </div>
+          <span style="display:block; font-size:12px; opacity:.8; margin-top:4px;">Affects Markdown block position inside the slide.</span>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px; gap: 12px; align-items:flex-start; flex-wrap: wrap;">
+        <div style="flex:1; min-width:210px;">
           <label for="cfgFontPrimary">Primary font (headings/title)</label>
           <input id="cfgFontPrimary" type="text" placeholder="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" />
         </div>
@@ -599,6 +617,8 @@
   // Clean legacy keys
   delete CONFIG.overlayTitleOn; delete CONFIG.overlayTitlePos;
   if(typeof CONFIG.fontPrimary !== 'string') CONFIG.fontPrimary = 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+  // Content position default
+  if(typeof CONFIG.contentPos !== 'string') CONFIG.contentPos = 'tl';
 
   // ---- External config: schema, validation, merge, persistence ----
   const CONFIG_KEYS = new Set([
@@ -607,7 +627,7 @@
     'slideBorderOn','slideBorderWidth',
     'overlayOn','overlayPos','overlayTitleSize','overlaySubtitleOn','overlaySubtitleSize','overlaySubtitleColor',
     'fontPrimary','fontSecondary',
-    'rememberLastDeck','hideSlidesWithUi','hideProgressWithUi'
+    'rememberLastDeck','hideSlidesWithUi','hideProgressWithUi','contentPos'
   ]);
 
   function sanitizeConfig(input){
@@ -629,6 +649,7 @@
     ['slideBorderOn','overlayOn','overlaySubtitleOn','rememberLastDeck','hideSlidesWithUi','hideProgressWithUi'].forEach(assignBool);
     // enum
     if(typeof input.overlaySubtitleColor==='string' && /^(primary|accent)$/i.test(input.overlaySubtitleColor)) out.overlaySubtitleColor = input.overlaySubtitleColor.toLowerCase();
+    if(typeof input.contentPos==='string' && /^(t[mlr]|m[mlr]|b[mlr])$/i.test(input.contentPos)) out.contentPos = input.contentPos.toLowerCase();
     return out;
   }
 
@@ -1385,6 +1406,21 @@
     // Move all current children into the wrapper (e.g., .md)
     while(node.firstChild){ wrap.appendChild(node.firstChild); }
     node.appendChild(wrap);
+    // Apply content position: per-slide FM > deck FM (merged into first slide fm) > CONFIG > default (tl)
+    try{
+      const fm = obj?.fm || {};
+      const raw = String(fm['content-pos'] || fm.contentpos || (slidesHTML?.deckFM?.['content-pos']) || CONFIG.contentPos || 'tl').toLowerCase();
+      const map = { t:{y:'flex-start'}, m:{y:'center'}, b:{y:'flex-end'} };
+      const mapx = { l:'flex-start', m:'center', r:'flex-end' };
+      let y='flex-start', x='flex-start';
+      if(/^[tmb][lmr]$/.test(raw)){
+        const row = raw[0]; const col = raw[1];
+        y = (map[row]?.y) || 'flex-start';
+        x = mapx[col] || 'flex-start';
+      }
+      wrap.style.setProperty('--content-x', x);
+      wrap.style.setProperty('--content-y', y);
+    }catch{}
   }catch{}
   // Enhance headings with anchor links
   try{
@@ -1911,6 +1947,31 @@
       const fp = document.getElementById('cfgFontPrimary'); const fs = document.getElementById('cfgFontSecondary'); fp.value = CONFIG.fontPrimary||''; fs.value = CONFIG.fontSecondary||'';
     }catch{}
 
+    // Content position controls
+    try{
+      const group = document.getElementById('cfgContentPos');
+      if(group){
+        const setActive=(p)=>{ [...group.querySelectorAll('button')].forEach(b=>{ const on=(b.dataset.pos===p); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); }); };
+        const current = (CONFIG.contentPos || 'tl').toLowerCase(); setActive(current);
+        const applyPreview=(p)=>{
+          const sc = document.querySelector('.slide.active .content-scroll');
+          if(!sc) return;
+          const mapRow = { t:'flex-start', m:'center', b:'flex-end' };
+          const mapCol = { l:'flex-start', m:'center', r:'flex-end' };
+          if(/^[tmb][lmr]$/.test(p)){
+            sc.style.setProperty('--content-y', mapRow[p[0]]);
+            sc.style.setProperty('--content-x', mapCol[p[1]]);
+          }
+        };
+        group.querySelectorAll('button').forEach(btn=>{
+          btn.onclick=()=>{ const pos=(btn.dataset.pos||'tl').toLowerCase(); setActive(pos); try{ window.__tempContentPos = pos; }catch{} applyPreview(pos); };
+          btn.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); btn.click(); }});
+        });
+        // Initial preview
+        applyPreview(current);
+      }
+    }catch{}
+
     // External config controls
     try{
       const persistChk = document.getElementById('cfgPersistConfig'); if(persistChk){ persistChk.checked = !!PERSIST_CONFIG; persistChk.onchange = ()=>{ PERSIST_CONFIG = !!persistChk.checked; try{ localStorage.setItem('slideapp.config.persist', PERSIST_CONFIG ? '1':'0'); showToast(PERSIST_CONFIG? 'Persist: on':'Persist: off'); }catch{} }; }
@@ -1964,6 +2025,8 @@
   const fp = document.getElementById('cfgFontPrimary').value.trim(); const fs = document.getElementById('cfgFontSecondary').value.trim(); if(fp) CONFIG.fontPrimary = fp; if(fs) CONFIG.fontSecondary = fs;
   // Persist a temporary overlay position preview if present
   try{ if(window.__tempOverlayPos){ CONFIG.overlayPos = window.__tempOverlayPos; delete window.__tempOverlayPos; } }catch{}
+  // Persist content position selection if previewed
+  try{ if(window.__tempContentPos){ CONFIG.contentPos = window.__tempContentPos; delete window.__tempContentPos; } }catch{}
   // Persist only if enabled
   if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} } else { try{ localStorage.removeItem('slideapp.config'); }catch{} }
   try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
@@ -1998,6 +2061,27 @@
           slideEl.appendChild(wrap);
         });
       }
+    }
+  }catch{}
+  // Update content position across slides using per-slide FM or new CONFIG default
+  try{
+    if(Array.isArray(slidesHTML) && slidesHTML.length){
+      const slides = [...document.querySelectorAll('.slide')];
+      slides.forEach((slideEl, idx)=>{
+        const sc = slideEl.querySelector('.content-scroll');
+        if(!sc) return;
+        const fm = slidesHTML[idx]?.fm || {};
+        const raw = String(fm['content-pos'] || fm.contentpos || CONFIG.contentPos || 'tl').toLowerCase();
+        const mapRow = { t:'flex-start', m:'center', b:'flex-end' };
+        const mapCol = { l:'flex-start', m:'center', r:'flex-end' };
+        if(/^[tmb][lmr]$/.test(raw)){
+          sc.style.setProperty('--content-y', mapRow[raw[0]]);
+          sc.style.setProperty('--content-x', mapCol[raw[1]]);
+        } else {
+          sc.style.setProperty('--content-y', 'flex-start');
+          sc.style.setProperty('--content-x', 'flex-start');
+        }
+      });
     }
   }catch{}
   }); document.getElementById('cfgReset').addEventListener('click',()=>{ 
@@ -2709,6 +2793,8 @@ Everything else in front matter is ignored by the app.`;
   // overlay (new) and legacy + namespaced defaults-
   try{ if(typeof fm.overlay!=='undefined'){ const v=String(fm.overlay).trim().toLowerCase(); CONFIG.overlayOn = (v==='true'||v==='1'||v==='on'); } else if(typeof fm.titleoverlay!=='undefined'){ const v=String(fm.titleoverlay).trim().toLowerCase(); CONFIG.overlayOn = (v==='true'||v==='1'||v==='on'); } else if(typeof fm['defaults-overlay']!=='undefined'){ const v=String(fm['defaults-overlay']).trim().toLowerCase(); CONFIG.overlayOn = (v==='true'||v==='1'||v==='on'); } }catch{}
   try{ const p=(fm['overlay-pos']||fm.overlaypos||fm.titleposition||fm['defaults-overlay-pos']||'').toString().toLowerCase(); if(['tl','tr','bl','br'].includes(p)) CONFIG.overlayPos=p; }catch{}
+  // Content position default for deck
+  try{ const c=(fm['content-pos']||fm.contentpos||'').toString().toLowerCase(); if(/^[tmb][lmr]$/.test(c)) CONFIG.contentPos = c; }catch{}
   try{ const tRaw = (typeof fm['title-size']!=='undefined') ? fm['title-size'] : (typeof fm.titlesize!=='undefined' ? fm.titlesize : fm['defaults-title-size']); const n=Math.round(Number(tRaw)); if(isFinite(n)) CONFIG.overlayTitleSize = Math.max(12, Math.min(64, n)); }catch{}
   try{ if(typeof fm.overlaysubtitle!=='undefined'){ const v=String(fm.overlaysubtitle).trim().toLowerCase(); CONFIG.overlaySubtitleOn = !(v==='false'||v==='0'||v==='off'); } else if(typeof fm.subtitleenabled!=='undefined'){ const v=String(fm.subtitleenabled).trim().toLowerCase(); CONFIG.overlaySubtitleOn = !(v==='false'||v==='0'||v==='off'); } else if(typeof fm['defaults-overlay']!=='undefined'){ /* already handled by overlayOn */ } }catch{}
   try{ const sRaw = (typeof fm['overlay-subtitle-size']!=='undefined') ? fm['overlay-subtitle-size'] : (typeof fm.subtitlesize!=='undefined' ? fm.subtitlesize : fm['defaults-subtitle-size']); const n=Math.round(Number(sRaw)); if(isFinite(n)) CONFIG.overlaySubtitleSize = Math.max(10, Math.min(48, n)); }catch{}

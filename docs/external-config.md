@@ -32,7 +32,8 @@ Schema (accepted keys)
   "fontSecondary": "Arial, Helvetica, ...",
   "rememberLastDeck": false,
   "hideSlidesWithUi": true,
-  "hideProgressWithUi": true
+  "hideProgressWithUi": true,
+  "contentPos": "tl" // tl, tm, tr, ml, mm, mr, bl, bm, br
 }
 ```
 Unknown keys are ignored. Colors are normalized to `#rrggbb`. Numeric values are clamped.
@@ -46,11 +47,10 @@ Examples
 window.postMessage({
   type: 'slider.config',
   action: 'merge', // or 'replace'
-  config: { primary: '#01B4E1', accent: '#64FFFC' }
+  config: { primary: '#01B4E1', accent: '#64FFFC', contentPos: 'mm' }
 }, '*');
 ```
 
 Notes
 - Presets remain available; external config simply overrides the active theme values.
 - If persistence is off, changes apply for the current session only.
-
