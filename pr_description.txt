@@ -35,3 +35,13 @@ Local validation (2025-08-31)
 - Playwright (WebKit quick): PASS — 58 passed, 1 skipped (`npm test`)
 - Playwright (All browsers): 173 passed, 3 skipped, 1 flaky (1 re-run PASS)
   - Flaky: `opacity-toggle-baseline.spec.ts: Reset sets baseline to 100%` on WebKit failed with a transient navigation timing; re-ran targeted spec and it passed.
+Title: Docs: in‑app demo tip + content‑position
+
+Summary
+Adds a short tip in README pointing users to the refreshed in‑app demo that showcases Content Position (TL/MR/BR) and overlay examples. This PR serves as a tracking PR for the recent internal demo/user‑guide refresh and content positioning feature.
+
+Included
+- README tip under “Content Position” linking users to the in‑app demo.
+
+Validation
+- Lint/tests previously green on main for feature + docs update.
