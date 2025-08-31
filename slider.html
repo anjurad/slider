@@ -132,6 +132,22 @@
   #cfgModal, #cfgModal *{ color: inherit; }
   #cfgModal { color: var(--text); }
   #cfgModal label{ color: var(--text); }
+  :root { --admon-note:#60a5fa; --admon-tip:#34d399; --admon-warning:#fbbf24; }
+  /* Admonitions */
+  .admonition{border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin:12px 0;overflow:hidden;background:rgba(255,255,255,0.02)}
+  .admonition .admonition-title{font-weight:600;padding:8px 12px;font-size:13px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06)}
+  .admonition .admonition-body{padding:10px 12px}
+  .admonition.note .admonition-title{color:var(--admon-note)}
+  .admonition.tip .admonition-title{color:var(--admon-tip)}
+  .admonition.warning .admonition-title{color:var(--admon-warning)}
+  /* Task lists */
+  li.task{list-style:none}
+  li.task::marker{content:''}
+  li.task{padding-left:2px}
+  /* Heading anchor hint area */
+  h1[id], h2[id], h3[id]{scroll-margin-top: 80px}
+  .anchor-link{margin-left:8px;opacity:.0;transition:opacity .15s ease;color:var(--muted);text-decoration:none}
+  h1[id]:hover .anchor-link, h2[id]:hover .anchor-link, h3[id]:hover .anchor-link{opacity:1}
   /* Small helper for muted lead text in demo content */
   .muted-lead{color:var(--muted);margin:-6px 0 12px 0}
   #cfgModal input[type="text"]{width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,0.03);color:var(--text)}
@@ -244,6 +260,7 @@
         <input type="file" id="fileInput" class="btn" accept=".md,.markdown,.txt" title="Load Markdown" aria-label="Load Markdown" />
         <button class="btn" id="styleBtn" title="Style settings" aria-label="Style">🎨 Style</button>
         <button class="btn" id="validateBtn" title="Validate deck frontmatter" aria-label="Validate">🔎 Validate</button>
+        <button class="btn" id="tocBtn" title="Table of contents" aria-label="Table of contents">📑 TOC</button>
   <button class="btn" id="overlayBtn" title="Toggle title/subtitle overlay" aria-label="Overlay">🏷️ Title</button>
         <button class="btn" id="bgBtn" title="Toggle Background" aria-label="Background">🌌 Background</button>
         <button class="btn" id="notesBtn" aria-label="Notes">📝 Notes</button>
@@ -413,6 +430,17 @@
     <main id="valBody" style="padding:14px;overflow:auto;flex:1 1 auto;font-size:14px;line-height:1.4"></main>
     <footer style="display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12));backdrop-filter:blur(4px)">
       <button class="btn" id="valOk">OK</button>
+    </footer>
+  </div>
+  <div id="tocOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:30"></div>
+  <div id="tocModal" role="dialog" aria-modal="true" aria-labelledby="tocTitle" style="position:fixed;top:40px;bottom:40px;left:40px;right:40px;width:auto;max-width:none;background:linear-gradient(135deg,var(--app-bg1, #0b1220),var(--app-bg2, #0f172a));color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column">
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex:0 0 auto">
+      <h3 id="tocTitle" style="margin:0;font-weight:600">Table of Contents</h3>
+      <button class="btn" id="tocClose">Close</button>
+    </header>
+    <main id="tocBody" style="padding:14px;overflow:auto;flex:1 1 auto;font-size:14px;line-height:1.4"></main>
+    <footer style="display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12));backdrop-filter:blur(4px)">
+      <button class="btn" id="tocOk">OK</button>
     </footer>
   </div>
 
@@ -1243,7 +1271,29 @@
         }catch{}
   }
     }catch{}
-  node.innerHTML=sanitizeHTML(obj.html); slidesRoot.append(node);
+  node.innerHTML=sanitizeHTML(obj.html);
+  // Enhance headings with anchor links
+  try{
+    const hs = node.querySelectorAll('h1[id],h2[id],h3[id]');
+    hs.forEach(h=>{
+      if(h.querySelector('.anchor-link')) return;
+      const id = h.getAttribute('id');
+      if(!id) return;
+      const a = document.createElement('a');
+      a.className='anchor-link'; a.href = '#'+id; a.title = 'Copy link'; a.textContent = '#';
+      a.addEventListener('click', (e)=>{
+        try{
+          e.preventDefault();
+          const base = location.href.split('#')[0];
+          const url = base + '#' + id;
+          if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url); showToast && showToast('Link copied'); }
+          else { location.hash = id; }
+        }catch{}
+      });
+      h.appendChild(a);
+    });
+  }catch{}
+  slidesRoot.append(node);
   const thumb=document.createElement('div');
   thumb.className='thumb';
   const t=(obj.fm.title||'').toString().trim();
@@ -2358,6 +2408,53 @@ Everything else in front matter is ignored by the app.`;
       }
       open();
     });
+  })();
+
+  // ===== In-app TOC =====
+  (function initToc(){
+    const tocOverlay = document.getElementById('tocOverlay');
+    const tocModal = document.getElementById('tocModal');
+    const tocBody = document.getElementById('tocBody');
+    function layoutPanel(){
+      const wide = innerWidth >= 1280;
+      if(wide){
+        tocOverlay.style.display='none';
+        tocModal.style.display='flex';
+        tocModal.style.top='60px'; tocModal.style.bottom='20px'; tocModal.style.left='auto'; tocModal.style.right='20px'; tocModal.style.width='320px';
+      } else {
+        tocModal.style.top='40px'; tocModal.style.bottom='40px'; tocModal.style.left='40px'; tocModal.style.right='40px'; tocModal.style.width='auto';
+      }
+      return wide;
+    }
+    const open = () => { const wide=layoutPanel(); tocOverlay.style.display= wide ? 'none':'block'; tocModal.style.display='flex'; };
+    const close = () => { tocOverlay.style.display='none'; tocModal.style.display='none'; };
+    document.getElementById('tocClose').addEventListener('click', close);
+    document.getElementById('tocOk').addEventListener('click', close);
+    const build = ()=>{
+      const items = [];
+      try{
+        const slides = Array.from(document.querySelectorAll('.slide'));
+        slides.forEach((s, idx)=>{
+          const hs = Array.from(s.querySelectorAll('h1, h2, h3'));
+          hs.forEach(h=>{
+            const level = h.tagName.toLowerCase();
+            const text = (h.textContent||'').trim();
+            items.push({ idx, level, text });
+          });
+        });
+      }catch{}
+      if(!items.length){ tocBody.innerHTML = '<p style="margin:0">No headings found.</p>'; return; }
+      const rows = items.map(it=>{
+        const pad = it.level==='h1'? '' : it.level==='h2'? '&nbsp;&nbsp;' : '&nbsp;&nbsp;&nbsp;&nbsp;';
+        return `<div style=\"padding:4px 0; cursor:pointer;\" data-idx=\"${it.idx}\">${pad}${it.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`;
+      }).join('');
+      tocBody.innerHTML = rows;
+      Array.from(tocBody.children).forEach((el)=>{
+        el.addEventListener('click', ()=>{ const i = Number(el.getAttribute('data-idx')); if(Number.isFinite(i)){ try{ setActive(i); }catch{} close(); }});
+      });
+    };
+    document.getElementById('tocBtn').addEventListener('click', ()=>{ build(); open(); });
+    window.addEventListener('resize', ()=>{ if(tocModal.style.display!=='none'){ open(); } });
   })();
   })();
 
