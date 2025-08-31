@@ -139,6 +139,8 @@
   #cfgModal, #cfgModal *{ color: inherit; }
   #cfgModal { color: var(--text); }
   #cfgModal label{ color: var(--text); }
+  /* Ensure modal buttons reflect the same button styling as the app */
+  #cfgModal .btn{ color: var(--btn-text) !important; background: var(--btn-bg); }
   :root { --admon-note:#60a5fa; --admon-tip:#34d399; --admon-warning:#fbbf24; }
   /* Admonitions */
   .admonition{border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin:12px 0;overflow:hidden;background:rgba(255,255,255,0.02)}
@@ -1818,7 +1820,28 @@
       modeSel.value = isAuto ? 'auto' : 'custom';
       if(!isAuto){ const n = normalizeHex(String(CONFIG.btnTextColor)); btnClr.value = n || '#ffffff'; }
       btnClr.disabled = isAuto;
-      modeSel.onchange = ()=>{ btnClr.disabled = (modeSel.value==='auto'); if(modeSel.value==='auto'){ CONFIG.btnTextColor = 'auto'; } };
+      const applyModeChange = ()=>{
+        const isAuto = (modeSel.value==='auto');
+        btnClr.disabled = isAuto;
+        if(isAuto){
+          CONFIG.btnTextColor = 'auto';
+        } else {
+          // Set a sensible starting color when switching to custom
+          let start = normalizeHex(String(btnClr.value||''));
+          try{
+            if(!start){
+              const cs = getComputedStyle(document.documentElement);
+              const cur = (cs.getPropertyValue('--btn-text')||'').trim();
+              start = normalizeHex(cur) || '#ffffff';
+            }
+          }catch{}
+          btnClr.value = start || '#ffffff';
+          CONFIG.btnTextColor = start || '#ffffff';
+        }
+        try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{}
+      };
+      modeSel.onchange = applyModeChange;
+      modeSel.oninput = applyModeChange;
       // If user clicks the color while disabled, switch to custom automatically
       btnClr.addEventListener('click', ()=>{
         if(btnClr.disabled){

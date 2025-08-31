@@ -12,7 +12,14 @@ test.describe('Button styles', () => {
 
     // Set custom button text color
     await page.locator('#cfgBtnTextMode').waitFor({ state: 'visible' });
-    await page.locator('#cfgBtnTextMode').selectOption('custom');
+    await page.evaluate(() => {
+      const sel = document.getElementById('cfgBtnTextMode') as HTMLSelectElement | null;
+      if (sel) {
+        sel.value = 'custom';
+        sel.dispatchEvent(new Event('input', { bubbles: true }));
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
     await expect(page.locator('#cfgBtnTextColor')).toBeEnabled();
     // Set color value and dispatch input to trigger live preview
     await page.evaluate(() => {
@@ -30,5 +37,11 @@ test.describe('Button styles', () => {
     // Outline: background should be transparent (no background-image)
     const bgImg = await styleBtn.evaluate(el => getComputedStyle(el).backgroundImage);
     expect(bgImg).toBe('none');
+
+    // Re-open Style and verify modal buttons reflect the same text color immediately
+    await page.evaluate(() => { (document.getElementById('styleBtn') as HTMLButtonElement)?.click(); });
+    await expect(page.locator('#cfgModal')).toBeVisible();
+    const modalBtnColor = await page.locator('#cfgLoadUrl').evaluate(el => getComputedStyle(el).color);
+    expect(modalBtnColor.replace(/\s+/g,'')).toMatch(/rgb\(255,0,255\)/);
   });
 });
