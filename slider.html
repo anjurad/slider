@@ -2758,8 +2758,20 @@ Everything else in front matter is ignored by the app.`;
     document.getElementById('valOk').addEventListener('click', close);
     document.getElementById('validateBtn').addEventListener('click', ()=>{
       const warnings = (()=>{
-        const allowedDeck = new Set(['app-name','appname','brand','theme-primary','theme-accent','theme-text','primary','accent','textcolor','text-color','text','background','effect-color','effectcolor','effect','ui','font-primary','font-secondary','primaryfont','secondaryfont','defaults-overlay','defaults-overlay-pos','defaults-title-size','defaults-subtitle-size','defaults-slide-opacity','defaults-slide-bg1','defaults-slide-bg2','appbg1','appbg2','app-bg1','app-bg2','app-bg-1','app-bg-2','opacity','slideopacity']);
-        const allowedSlide = new Set(['title','subtitle','notes','overlay','overlay-pos','overlaypos','title-size','titlesize','subtitle-size','subtitlesize','slide-bg1','slide-bg2','slidebg1','slidebg2']);
+        const allowedDeck = new Set([
+          'app-name','appname','brand',
+          'theme-primary','theme-accent','theme-text','primary','accent','textcolor','text-color','text',
+          'background','effect-color','effectcolor','effect','ui','font-primary','font-secondary','primaryfont','secondaryfont',
+          'defaults-overlay','defaults-overlay-pos','defaults-title-size','defaults-subtitle-size','defaults-slide-opacity','defaults-slide-bg1','defaults-slide-bg2',
+          'appbg1','appbg2','app-bg1','app-bg2','app-bg-1','app-bg-2','opacity','slideopacity',
+          // Newer deck-level keys
+          'content-pos','overlay-subtitle-size','overlay-subtitle-color','overlaysubtitlecolor','overlaysubtitle','subtitleenabled'
+        ]);
+        const allowedSlide = new Set([
+          'title','subtitle','notes','overlay','overlay-pos','overlaypos','title-size','titlesize','subtitle-size','subtitlesize','slide-bg1','slide-bg2','slidebg1','slidebg2',
+          // New per-slide keys
+          'content-pos','overlay-subtitle','overlay-subtitle-size','overlay-subtitle-color','overlaysubtitle','overlaysubtitlecolor'
+        ]);
         const migrate = new Map(Object.entries({
           primary:'theme-primary', accent:'theme-accent', textcolor:'theme-text', 'text-color':'theme-text', text:'theme-text', effectcolor:'effect-color', effect:'effect-color', appname:'app-name', brand:'app-name', appbg1:'defaults-slide-bg1', 'app-bg1':'defaults-slide-bg1', 'app-bg-1':'defaults-slide-bg1', appbg2:'defaults-slide-bg2', 'app-bg2':'defaults-slide-bg2', 'app-bg-2':'defaults-slide-bg2', slideopacity:'defaults-slide-opacity', opacity:'defaults-slide-opacity', primaryfont:'font-primary', secondaryfont:'font-secondary', overlaypos:'overlay-pos', titlesize:'title-size', subtitlesize:'subtitle-size', slidebg1:'slide-bg1', slidebg2:'slide-bg2'
         }));
@@ -2767,6 +2779,8 @@ Everything else in front matter is ignored by the app.`;
         const isBg=(s)=>['gradient','particles','off'].includes((s||'').toString().trim().toLowerCase());
         const isBool=(s)=>/^(on|off|show|hide|true|false|1|0)$/i.test((s||'').toString().trim());
         const isPos=(s)=>['tl','tr','bl','br'].includes((s||'').toString().trim().toLowerCase());
+        const isContentPos=(s)=>/^[tmb][lmr]$/i.test((s||'').toString().trim());
+        const isSubtitleColor=(s)=>/^(accent|primary)$/i.test((s||'').toString().trim());
         const clamp=(n,lo,hi)=>{ n=Number(n); if(!isFinite(n)) return null; return Math.max(lo, Math.min(hi, n)); };
         const parseOpacity=(raw)=>{ const s=(raw||'').toString().trim(); if(!s) return null; if(/%$/.test(s)) return clamp(parseFloat(s),0,100); const num=parseFloat(s); if(!isFinite(num)) return null; if(num<=1) return clamp(num*100,0,100); return clamp(num,0,100); };
         const out=[];
@@ -2794,6 +2808,10 @@ Everything else in front matter is ignored by the app.`;
               case 'defaults-title-size': if(clamp(v,12,64)===null) out.push(`Deck: 'defaults-title-size' must be 12..64, got '${v}'`); break;
               case 'defaults-subtitle-size': if(clamp(v,10,48)===null) out.push(`Deck: 'defaults-subtitle-size' must be 10..48, got '${v}'`); break;
               case 'defaults-slide-opacity': case 'opacity': case 'slideopacity': if(parseOpacity(v)===null) out.push(`Deck: '${kRaw}' must be 0..100, 0..1, or a percent string, got '${v}'`); break;
+              case 'content-pos': if(!isContentPos(v)) out.push(`Deck: 'content-pos' must be one of tl|tm|tr|ml|mm|mr|bl|bm|br, got '${v}'`); break;
+              case 'overlay-subtitle-size': if(clamp(v,10,48)===null) out.push(`Deck: 'overlay-subtitle-size' must be 10..48, got '${v}'`); break;
+              case 'overlay-subtitle-color': case 'overlaysubtitlecolor': if(!isSubtitleColor(v)) out.push(`Deck: '${kRaw}' must be primary|accent, got '${v}'`); break;
+              case 'overlaysubtitle': case 'subtitleenabled': if(!isBool(v)) out.push(`Deck: '${kRaw}' must be true|false|on|off|1|0, got '${v}'`); break;
             }
           }
           // Per-slide
@@ -2812,6 +2830,10 @@ Everything else in front matter is ignored by the app.`;
                 case 'overlay-pos': case 'overlaypos': if(!isPos(v)) out.push(`Slide ${n}: '${kRaw}' must be tl|tr|bl|br, got '${v}'`); break;
                 case 'title-size': case 'titlesize': if(clamp(v,12,64)===null) out.push(`Slide ${n}: '${kRaw}' must be 12..64, got '${v}'`); break;
                 case 'subtitle-size': case 'subtitlesize': if(clamp(v,10,48)===null) out.push(`Slide ${n}: '${kRaw}' must be 10..48, got '${v}'`); break;
+                case 'content-pos': if(!isContentPos(v)) out.push(`Slide ${n}: 'content-pos' must be tl|tm|tr|ml|mm|mr|bl|bm|br, got '${v}'`); break;
+                case 'overlay-subtitle': if(!isBool(v)) out.push(`Slide ${n}: 'overlay-subtitle' must be true|false|on|off|1|0, got '${v}'`); break;
+                case 'overlay-subtitle-size': if(clamp(v,10,48)===null) out.push(`Slide ${n}: 'overlay-subtitle-size' must be 10..48, got '${v}'`); break;
+                case 'overlay-subtitle-color': case 'overlaysubtitlecolor': if(!isSubtitleColor(v)) out.push(`Slide ${n}: '${kRaw}' must be primary|accent, got '${v}'`); break;
               }
             }
           });

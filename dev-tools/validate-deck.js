@@ -51,6 +51,9 @@ const migrationMap = new Map([
   ['subtitlesize', 'subtitle-size'],
   ['slidebg1', 'slide-bg1'],
   ['slidebg2', 'slide-bg2'],
+  // New aliases
+  ['overlaysubtitle', 'overlay-subtitle'],
+  ['overlaysubtitlecolor', 'overlay-subtitle-color'],
 ]);
 
 const allowedDeck = new Set([
@@ -68,6 +71,8 @@ const allowedDeck = new Set([
   'appBg1', 'appBg2', 'app-bg1', 'app-bg2', 'app-bg-1', 'app-bg-2',
   // Legacy opacity
   'opacity', 'slideOpacity',
+  // Newer deck-level keys
+  'content-pos', 'overlay-subtitle-size', 'overlay-subtitle-color', 'overlaysubtitle', 'subtitleEnabled', 'overlaysubtitlecolor',
 ]);
 
 const allowedSlide = new Set([
@@ -76,12 +81,16 @@ const allowedSlide = new Set([
   'title-size', 'titlesize',
   'subtitle-size', 'subtitlesize',
   'slide-bg1', 'slide-bg2', 'slidebg1', 'slidebg2',
+  // New per-slide keys
+  'content-pos', 'overlay-subtitle', 'overlay-subtitle-size', 'overlay-subtitle-color', 'overlaysubtitle', 'overlaysubtitlecolor',
 ]);
 
 function isHex(s){ const x = unquote(s); return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(x); }
 function isBgMode(s){ return ['gradient','particles','off'].includes(String(s).trim().toLowerCase()); }
 function isBoolLike(s){ return /^(on|off|show|hide|true|false|1|0)$/i.test(String(s).trim()); }
 function isOverlayPos(s){ return ['tl','tr','bl','br'].includes(String(s).trim().toLowerCase()); }
+function isContentPos(s){ return /^[tmb][lmr]$/i.test(String(s).trim()); }
+function isSubtitleColor(s){ return /^(accent|primary)$/i.test(String(s).trim()); }
 function clamp(n, lo, hi){ n=Number(n); if(!isFinite(n)) return null; return Math.max(lo, Math.min(hi, n)); }
 function parseOpacity(raw){
   const s = String(raw||'').trim(); if(!s) return null;
@@ -201,6 +210,18 @@ function validateDeck(deckPath){
       case 'font-primary': case 'font-secondary': case 'primaryFont': case 'secondaryFont':
         if(!String(v||'').trim()) add(`Deck: '${key}' should be a non-empty font list`);
         break;
+      case 'content-pos':
+        if(!isContentPos(v)) add(`Deck: 'content-pos' must be tl|tm|tr|ml|mm|mr|bl|bm|br, got '${v}'`);
+        break;
+      case 'overlay-subtitle-size':
+        if(clamp(v,10,48)===null) add(`Deck: 'overlay-subtitle-size' must be a number 10..48, got '${v}'`);
+        break;
+      case 'overlay-subtitle-color': case 'overlaysubtitlecolor':
+        if(!isSubtitleColor(v)) add(`Deck: '${key}' must be primary|accent, got '${v}'`);
+        break;
+      case 'overlaysubtitle': case 'subtitleEnabled':
+        if(!isBoolLike(v)) add(`Deck: '${key}' must be true|false|on|off|1|0, got '${v}'`);
+        break;
     }
   }
 
@@ -233,6 +254,18 @@ function validateDeck(deckPath){
         case 'subtitle-size': case 'subtitlesize':
           if(clamp(v,10,48)===null) add(`Slide ${n}: '${key}' must be a number 10..48, got '${v}'`);
           break;
+        case 'content-pos':
+          if(!isContentPos(v)) add(`Slide ${n}: 'content-pos' must be tl|tm|tr|ml|mm|mr|bl|bm|br, got '${v}'`);
+          break;
+        case 'overlay-subtitle':
+          if(!isBoolLike(v)) add(`Slide ${n}: 'overlay-subtitle' must be true|false|on|off|1|0, got '${v}'`);
+          break;
+        case 'overlay-subtitle-size':
+          if(clamp(v,10,48)===null) add(`Slide ${n}: 'overlay-subtitle-size' must be a number 10..48, got '${v}'`);
+          break;
+        case 'overlay-subtitle-color': case 'overlaysubtitlecolor':
+          if(!isSubtitleColor(v)) add(`Slide ${n}: '${key}' must be primary|accent, got '${v}'`);
+          break;
       }
     }
   });
@@ -263,4 +296,3 @@ function main(){
 }
 
 if(require.main === module){ main(); }
-
