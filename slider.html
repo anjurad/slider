@@ -838,6 +838,12 @@
       primary: CONFIG.primary, accent: CONFIG.accent, textColor: CONFIG.textColor, btnTextColor: CONFIG.btnTextColor, slideOpacity: CONFIG.slideOpacity
     }); } }catch{}
   appNameEl.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp');
+  // Keep document.title in sync; deck name takes precedence when present
+  try{
+    const deckNm = (window.__deckAppName && String(window.__deckAppName).trim()) || '';
+    const cfgNm = (CONFIG.appName||CONFIG.brand||'SlideApp');
+    document.title = (deckNm || cfgNm || 'SlideApp').toString();
+  }catch{}
   // Apply app background colors and effect color if configured
     try{
   // Theme.applyConfig will set app background/effect/text CSS vars.
@@ -2050,6 +2056,8 @@
   try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
   // Ensure brand label reflects saved name immediately even when Theme.applyConfig handled CSS only
   try{ const el=document.getElementById('appName'); if(el){ el.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp'); } }catch{}
+  // Update tab title only if deck did not provide a name (deck takes precedence)
+  try{ if(!(window.__deckAppName && String(window.__deckAppName).trim())){ const nm=(CONFIG.appName||CONFIG.brand||'SlideApp'); if(nm && nm.trim()) document.title = nm.trim(); } }catch{}
   try{ updateActiveThumbGradient(); }catch{}
   cfgOverlay.style.display=cfgModal.style.display='none';
   // Notify with a summary of settings
@@ -2905,6 +2913,14 @@ Everything else in front matter is ignored by the app.`;
   // ===== Deck-level frontmatter application =====
   function applyDeckFrontmatter(fm){
     if(!fm || typeof fm !== 'object') return;
+  function setDocumentTitle(){
+    try{
+      const deckNm = (typeof window.__deckAppName === 'string' && window.__deckAppName.trim()) ? window.__deckAppName.trim() : '';
+      const cfgNm = (typeof CONFIG.appName === 'string' && CONFIG.appName.trim()) ? CONFIG.appName.trim() : '';
+      const title = deckNm || cfgNm || 'SlideApp';
+      document.title = title;
+    }catch{}
+  }
   // Reset temporary progress overrides when applying a new deck's settings
   try{ document.body.classList.remove('progress-on','progress-off'); }catch{}
     // Background mode
@@ -2915,7 +2931,7 @@ Everything else in front matter is ignored by the app.`;
     // App name (brand legacy)
     try{
       const nm = (fm.appname || fm['app-name'] || fm.brand || '').toString().trim();
-      if(nm){ CONFIG.appName = nm; CONFIG.brand = CONFIG.brand || nm; }
+      if(nm){ CONFIG.appName = nm; CONFIG.brand = CONFIG.brand || nm; try{ window.__deckAppName = nm; }catch{} }
     }catch{}
     // Colors (hex)
     const hexRe = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -3010,6 +3026,8 @@ Everything else in front matter is ignored by the app.`;
   try{ const sRaw = (typeof fm['overlay-subtitle-size']!=='undefined') ? fm['overlay-subtitle-size'] : (typeof fm.subtitlesize!=='undefined' ? fm.subtitlesize : fm['defaults-subtitle-size']); const n=Math.round(Number(sRaw)); if(isFinite(n)) CONFIG.overlaySubtitleSize = Math.max(10, Math.min(48, n)); }catch{}
   try{ const c=((fm.overlaysubtitlecolor||'') || (fm['overlay-subtitle-color']||'') ).toString().toLowerCase(); if(c==='accent'||c==='primary') CONFIG.overlaySubtitleColor=c; }catch{}
     applyConfig();
+  // Ensure tab title reflects deck/app precedence (deck > style config)
+    try{ setDocumentTitle(); }catch{}
   // Rebuild overlays for current slides
     try{
       if(Array.isArray(slidesHTML) && slidesHTML.length){
