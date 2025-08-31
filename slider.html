@@ -1846,19 +1846,15 @@
   }
     }catch{}
   const DEMO_MD = `---
-title: Welcome to SlideApp
-notes: Quick tour of features. Try arrow keys, notes, background, drawer, and UI modes.
-  Shortcuts: b (background), s (slides), n (notes), f (fullscreen), u (UI), p (progress), t (opacity), o (outline).
+app-name: SlideApp
+theme-primary: "#01B4E1"
+theme-accent: "#64FFFC"
+theme-text: "#e2e8f0"
 background: particles
-appname: SlideApp
-primary: "#01B4E1"
-accent: "#64FFFC"
-# Opacity tip: set via Style; your saved baseline persists across reload
-# UI can be: on/off/show/hide/true/false/1/0
 ui: on
 ---
 
-# Hello SlideApp
+## Hello SlideApp
 
 - ←/→ or buttons to navigate
 - S = Slides drawer · N = Notes panel
@@ -1866,13 +1862,6 @@ ui: on
 - F enters/leaves fullscreen
 
 Tip: “🎨 Style” lets you set brand colors, overlay, and opacity.
-
----
-
-title: Quick Start
-subtitle: Setup → Load → Present
-notes: Fast orientation for first-time use.
----
 
 ## Quick Start
 
@@ -1889,13 +1878,6 @@ notes: Fast orientation for first-time use.
 - Use keyboard shortcuts (see cheat sheet)
 - Print to PDF any time
 
----
-
-title: Shortcuts Cheat Sheet
-subtitle: One-hand friendly keys
-notes: All hotkeys in one place. Save persists style; Reset restores defaults.
----
-
 ## Shortcuts
 
 - Background: B cycles modes; label shows current
@@ -1909,13 +1891,6 @@ notes: All hotkeys in one place. Save persists style; Reset restores defaults.
 - Title overlay: Y toggles title/subtitle overlay
 - Clear preset: One-click 0% background
 
----
-
-title: Style & Outline
-subtitle: Brand, overlay, frame
-notes: Style sets brand, overlay, and outline width. Outline uses the Accent color; press O to toggle.
----
-
 ## Style & Outline
 
 - Brand: set App name + colors (Primary/Accent)
@@ -1924,26 +1899,12 @@ notes: Style sets brand, overlay, and outline width. Outline uses the Accent col
 - Outline width: dial it subtle → bold
 - Save persists; Reset restores defaults
 
----
-
-title: Opacity & Clear
-subtitle: Baseline + instant clear
-notes: Use Style slider to set baseline; T toggles 0% ⇄ baseline; Clear sets 0% instantly.
----
-
 ## Opacity & Clear
 
 - Set baseline: Style → Opacity slider (Save)
 - Live toggle: T for 0% ⇄ baseline
 - Panic button: Clear → instant 0%
 - Reset → 100% baseline
-
----
-
-title: UI Off + Overrides
-subtitle: Clean canvas, smart escapes
-notes: UI off hides chrome; S and P still work as temporary overrides.
----
 
 ## UI Off + Overrides
 
@@ -1952,38 +1913,17 @@ notes: UI off hides chrome; S and P still work as temporary overrides.
 - P: temporary progress bar/arrows/count
 - Overrides reset on UI toggle or deck load
 
----
-
-title: Remember Last Deck
-subtitle: Pick up where you left off
-notes: Persist or forget your last deck. Reset clears remembered decks too.
----
-
 ## Remember Last Deck
 
 - Style: enable “Remember last deck (persist)”
 - “Forget deck” removes it immediately
 - Reset clears style config and remembered decks
 
----
-
-title: Background Modes
-subtitle: ✨ Particles · 🌌 Gradient · ⛔ Off
-notes: Particles honor reduced-motion preference and fall back to Gradient.
----
-
 ## Background Modes
 
 - B cycles: ✨ Particles → 🌌 Gradient → ⛔ Off
 - Reduced motion → auto Gradient
 - Background button label shows current mode
-
----
-
-title: Image + Text Split
-subtitle: Visual + talking points
-notes: A classic visual + text layout. Inline HTML is safe (no scripts/events).
----
 
 ## Launch Overview
 <p class="muted-lead">Fast, modern slides with Markdown + a touch of inline HTML when needed.</p>
