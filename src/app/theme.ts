@@ -222,6 +222,8 @@ export type ThemeConfig = {
   primary?: string;
   accent?: string;
   textColor?: string;
+  btnTextColor?: string | 'auto';
+  btnFill?: 'solid' | 'outline';
   appBg1?: string;
   appBg2?: string;
   slideBg1?: string;
