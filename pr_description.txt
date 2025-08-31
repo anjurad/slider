@@ -6,3 +6,13 @@ Checklist:
 - [x] Remove debug lines from slide_app_v_0_91.html
 - [x] Add inline SVG preview to README.md
 - [ ] Confirm lint and unit tests pass locally
+
+Verification summary (local run @ 2025-08-26):
+- ESLint: PASS (exit 0)
+- Unit tests (Vitest): PASS
+- Playwright full E2E matrix: PASS — 177 passed, 3 skipped (Chromium/Firefox/WebKit; ~1.2m run)
+
+Notes:
+- Migration prefers `src/runtime/theme.js` helpers and falls back to deterministic legacy formatting when helpers are unavailable.
+- Temporary debug instrumentation and triage-only Playwright specs were removed.
+
