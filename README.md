@@ -2,7 +2,7 @@
 
 This repo contains a single-file HTML-based slide application and a Playwright test suite.
 
-Refactor work-in-progress is tracked in `docs/refactor-plan.md`. The goal is to gradually modularize code while keeping tests green.
+ 
 
 Slider — HTML5 Slide Presentation Application
 
@@ -177,7 +177,7 @@ Manual validation checklist (recommended after changes)
 Project structure (important files)
 - `slider.html` — the single-file application (HTML/CSS/JS).
 - `sample_presentation.md` — bundled sample deck used for manual testing.
-- `src/` — extracted modules and TypeScript sources (refactor-in-progress).
+- `src/` — runtime helpers and TypeScript sources.
 - `tests/` — Playwright E2E tests.
 - `unit/` — Vitest unit tests for utilities.
 - `dev-tools/` — helper scripts (e.g., `run-playwright-only.sh`).
