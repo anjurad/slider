@@ -73,6 +73,7 @@ const allowedDeck = new Set([
   'opacity', 'slideOpacity',
   // Newer deck-level keys
   'content-pos', 'overlay-subtitle-size', 'overlay-subtitle-color', 'overlaysubtitle', 'subtitleEnabled', 'overlaysubtitlecolor',
+  'button-text-color', 'btn-text-color', 'button-fill',
 ]);
 
 const allowedSlide = new Set([
@@ -177,8 +178,8 @@ function validateDeck(deckPath){
     if(migrationMap.has(key)){
       add(`Deck: legacy key '${key}' — prefer '${migrationMap.get(key)}'`);
     }
-    const v = rawVal;
-    switch(key){
+  const v = rawVal;
+  switch(key){
       case 'theme-primary': case 'theme-accent': case 'theme-text':
       case 'primary': case 'accent': case 'textColor': case 'text-color': case 'text':
       case 'effect-color': case 'effectColor': case 'effect':
@@ -222,7 +223,15 @@ function validateDeck(deckPath){
       case 'overlaysubtitle': case 'subtitleEnabled':
         if(!isBoolLike(v)) add(`Deck: '${key}' must be true|false|on|off|1|0, got '${v}'`);
         break;
-    }
+      case 'button-text-color': case 'btn-text-color': {
+        const t = String(v||'').trim().toLowerCase();
+        if(t !== 'auto' && !isHex(v)) add(`Deck: '${key}' expects hex or 'auto', got '${v}'`);
+        break;
+      }
+      case 'button-fill':
+        if(!isButtonFill(v)) add(`Deck: 'button-fill' must be solid|outline, got '${v}'`);
+        break;
+  }
   }
 
   // Validate per-slide keys

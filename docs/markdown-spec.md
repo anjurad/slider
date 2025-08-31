@@ -1,6 +1,6 @@
 # Markdown Handling Specification
 
-Last updated: 2025-08-31
+Last updated: 2025-08-31 (Static Site Mode + title precedence)
 
 This document describes how the single-file app (`slider.html`) parses Markdown, applies frontmatter, splits slides, sanitizes HTML, and maps results to application behavior and styling. It is a code-accurate baseline for future optimizations.
 
@@ -25,6 +25,9 @@ This document describes how the single-file app (`slider.html`) parses Markdown,
   - Saves `{ deckContent, fileName, loadedAt }` to sessionStorage.
   - Also saves to localStorage when `CONFIG.rememberLastDeck === true`.
   - Very large decks (> ~2.5 MB) are not persisted.
+ - Static Site Mode:
+   - If `slides.json` exists (or `?deck=…` is provided), the app loads decks directly from the repository.
+   - Multiple decks show a deck picker (📚 Decks). Deep‑link with `?deck=content/<file>.md`.
 
 ## Slide Splitting Rules
 
@@ -59,7 +62,7 @@ Deck-level frontmatter (file start)
   - Effect: sets background mode and button label.
 - App name / brand:
   - Keys: `appname`, `app-name`, `brand` (legacy).
-  - Effect: sets `CONFIG.appName` and (legacy) `CONFIG.brand`.
+  - Effect: sets `CONFIG.appName` and (legacy) `CONFIG.brand`. If present, `app-name` is used for the browser tab title.
 - Colors (hex, normalized):
   - Primary: `primary` or `theme-primary` → `CONFIG.primary`.
   - Accent: `accent` or `theme-accent` → `CONFIG.accent`.
@@ -100,6 +103,10 @@ Per-slide frontmatter (applies to individual slides)
   - `content-pos` with same allowed values overrides the deck default for that slide.
   - Precedence: per‑slide > deck > global `CONFIG.contentPos` > default `tl`.
 - Notes: ` ```notes ... ``` ` sections extracted to `fm.notes`.
+
+## Title precedence
+- If the current deck defines `app-name`, the browser tab title equals that value.
+- Otherwise, the tab title equals the Style UI app name (`CONFIG.appName` / legacy `brand`).
 
 ## Markdown Features
 

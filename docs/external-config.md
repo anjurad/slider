@@ -20,7 +20,8 @@ Schema (accepted keys)
   "appName": "SlideApp",
   "brand": "SlideApp", // legacy alias for appName
   "primary": "#01B4E1", "accent": "#64FFFC", "textColor": "#e2e8f0",
-  "btnTextColor": "#000000",
+  "btnTextColor": "auto", // or "#rrggbb" for custom
+  "btnFill": "solid",     // or "outline"
   "appBg1": "#0f172a", "appBg2": "#1e293b",
   "slideBg1": "#111827", "slideBg2": "#111827",
   "slideOpacity": 0.85, // 0..1
@@ -38,6 +39,10 @@ Schema (accepted keys)
 ```
 Unknown keys are ignored. Colors are normalized to `#rrggbb`. Numeric values are clamped.
 
+Title precedence
+- If the loaded deck provides `app-name` in frontmatter, the browser tab title uses that value.
+- Otherwise, the tab title uses `config.appName` (or `brand`).
+
 Examples
 - URL param:
   - `slider.html?config=https://example.com/slideapp-config.json`
@@ -54,3 +59,4 @@ window.postMessage({
 Notes
 - Presets remain available; external config simply overrides the active theme values.
 - If persistence is off, changes apply for the current session only.
+ - Button styling: `btnTextColor: "auto"` computes a readable text color against the theme; `btnFill: "outline"` removes the fill while preserving the outline.
