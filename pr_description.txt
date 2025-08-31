@@ -32,4 +32,6 @@ Checklist
 Local validation (2025-08-31)
 - Lint: PASS (`npm run lint`)
 - Unit tests: PASS — 21 passed (`npm run test:unit`)
-- Playwright (WebKit): PASS — 58 passed, 1 skipped (`npm test`)
+- Playwright (WebKit quick): PASS — 58 passed, 1 skipped (`npm test`)
+- Playwright (All browsers): 173 passed, 3 skipped, 1 flaky (1 re-run PASS)
+  - Flaky: `opacity-toggle-baseline.spec.ts: Reset sets baseline to 100%` on WebKit failed with a transient navigation timing; re-ran targeted spec and it passed.
