@@ -173,15 +173,6 @@
   background: rgba(255,255,255,0.04);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
-  /* Active state for preset buttons (compact segmented control) */
-  .preset-btn.active,
-  .preset-btn[aria-pressed="true"]{
-    border-color: var(--accent);
-    /* Match overlay-position selected appearance: subtle accent tint and inset highlight */
-    box-shadow: 0 0 0 1px var(--accent) inset;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--btn-text);
-  }
   /* Base style for preset buttons should match other small controls (no gradient) */
   .preset-btn{
     display:inline-block;
@@ -191,6 +182,16 @@
     background: var(--btn-bg);
     color: var(--btn-text);
     border: 2px solid rgba(255,255,255,0.06);
+  }
+  /* Active state for preset buttons (compact segmented control)
+     Place after base block so it overrides background consistently */
+  #cfgModal .preset-btn.active,
+  #cfgModal .preset-btn[aria-pressed="true"]{
+    border-color: var(--accent);
+    /* Match overlay-position selected appearance: subtle accent tint and inset highlight */
+    box-shadow: 0 0 0 1px var(--accent) inset;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--btn-text);
   }
   /* Disabled state for overlay position buttons */
   #cfgOverlayPos .btn[disabled],
@@ -1869,7 +1870,7 @@
         modeSel.onchange = ()=>{ if(modeSel.value==='auto'){ CONFIG.btnTextColor = 'auto'; } else { const n=normalizeHex(btnClr.value||''); if(n) CONFIG.btnTextColor = n; }
           try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} };
         const fillSel = document.getElementById('cfgBtnFill');
-        fillSel.onchange = ()=>{ const v=String(fillSel.value||'solid').toLowerCase(); CONFIG.btnFill = (v==='outline'?'outline':'solid'); try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} };
+        fillSel.onchange = ()=>{ const v=String(fillSel.value||'solid').toLowerCase(); CONFIG.btnFill = (v==='outline'?'outline':'solid'); try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} try{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }catch{} };
       }catch{}
       bindLive('cfgAppBg1','appBg1', true);
       bindLive('cfgAppBg2','appBg2', true);
