@@ -34,6 +34,10 @@
   <script src="src/ui/toast.js"></script>
   <!-- Background toggle helper -->
   <script src="src/ui/backgroundToggle.js"></script>
+  <!-- Notes controller -->
+  <script src="src/ui/notes.js"></script>
+  <!-- Drawer controller -->
+  <script src="src/ui/drawer.js"></script>
   <script src="src/ui/styleModal.js"></script>
   <div class="bg-gradient"></div>
   <canvas id="bg-canvas"></canvas>
@@ -1449,7 +1453,13 @@
 
   document.getElementById('btnPrev').addEventListener('click',prev);
   document.getElementById('btnNext').addEventListener('click',next);
-  function toggleNotes(){ const now = notesEl.classList.toggle('show'); try{ showToast(now ? 'Notes: shown' : 'Notes: hidden'); }catch{} }
+  function toggleNotes(){
+    if(window.NotesCtrl && typeof window.NotesCtrl.toggleNotes==='function'){
+      const now = window.NotesCtrl.toggleNotes(notesEl, (state)=>{ try{ showToast(state ? 'Notes: shown' : 'Notes: hidden'); }catch{} });
+      return now;
+    }
+    const now = notesEl.classList.toggle('show'); try{ showToast(now ? 'Notes: shown' : 'Notes: hidden'); }catch{}; return now;
+  }
   document.getElementById('notesBtn').addEventListener('click',toggleNotes);
   document.getElementById('bgBtn').addEventListener('click',cycleBackground);
   function toggleFullscreen(){ const el=document.documentElement; if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); } }
@@ -1466,8 +1476,21 @@
   document.addEventListener('keydown',e=>{ const tag=(e.target&&e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea'||e.target.isContentEditable) return; if(e.key==='ArrowRight'||e.key===' ') next(); if(e.key==='ArrowLeft') prev(); const k=e.key.toLowerCase(); if(k==='b') cycleBackground(); if(k==='n') toggleNotes(); if(k==='s') toggleDrawer(); if(k==='f'){ e.preventDefault(); toggleFullscreen(); } if(k==='u'){ e.preventDefault(); cycleUi(); } if(k==='p'){ e.preventDefault(); toggleProgress(); } if(k==='t'){ e.preventDefault(); toggleOpacity(); } if(k==='o'){ e.preventDefault(); toggleOutline(); } if(k==='y'){ e.preventDefault(); const b=document.getElementById('overlayBtn'); if(b) b.click(); } });
 
   // Drawer thumbnails (overlay on small screens)
-  const drawerKey='drawerCollapsed'; const isOverlay=()=>innerWidth<1024; function setDrawerUI(){ const collapsed=localStorage.getItem(drawerKey)==='1'; const open=localStorage.getItem('drawerOpen')==='1'; const overlay=isOverlay(); thumbsRoot.classList.remove('collapsed','overlay','open'); if(overlay){ thumbsRoot.classList.add('overlay'); if(open) thumbsRoot.classList.add('open'); scrimEl.style.display = open ? 'block' : 'none'; drawerBtn.textContent='🧭 Slides'; drawerBtn.title = open?'Hide slides':'Show slides'; } else { thumbsRoot.classList.toggle('collapsed',collapsed); scrimEl.style.display='none'; drawerBtn.textContent='🧭 Slides'; drawerBtn.title = collapsed?'Show slides':'Hide slides'; } }
-  function toggleDrawer(){ if(isOverlay()){ const open=!(localStorage.getItem('drawerOpen')==='1'); localStorage.setItem('drawerOpen', open?'1':'0'); setDrawerUI(); try{ showToast(open ? 'Slides: opened' : 'Slides: hidden'); }catch{} } else { const collapsed=!(localStorage.getItem(drawerKey)==='1'); localStorage.setItem(drawerKey, collapsed?'1':'0'); setDrawerUI(); try{ showToast(collapsed ? 'Slides: hidden' : 'Slides: shown'); }catch{} } }
+  const drawerKey='drawerCollapsed'; const isOverlay=()=>innerWidth<1024;
+  function setDrawerUI(){
+    if(window.DrawerCtrl && typeof window.DrawerCtrl.setDrawerUI==='function'){
+      window.DrawerCtrl.setDrawerUI({ thumbsRoot, drawerBtn, scrimEl, isOverlayFn: isOverlay });
+    } else {
+      const collapsed=localStorage.getItem(drawerKey)==='1'; const open=localStorage.getItem('drawerOpen')==='1'; const overlay=isOverlay(); thumbsRoot.classList.remove('collapsed','overlay','open'); if(overlay){ thumbsRoot.classList.add('overlay'); if(open) thumbsRoot.classList.add('open'); scrimEl.style.display = open ? 'block' : 'none'; drawerBtn.textContent='🧭 Slides'; drawerBtn.title = open?'Hide slides':'Show slides'; } else { thumbsRoot.classList.toggle('collapsed',collapsed); scrimEl.style.display='none'; drawerBtn.textContent='🧭 Slides'; drawerBtn.title = collapsed?'Show slides':'Hide slides'; }
+    }
+  }
+  function toggleDrawer(){
+    if(window.DrawerCtrl && typeof window.DrawerCtrl.toggleDrawer==='function'){
+      window.DrawerCtrl.toggleDrawer({ thumbsRoot, drawerBtn, scrimEl, isOverlayFn: isOverlay }, (open, overlay)=>{ try{ showToast(overlay ? (open ? 'Slides: opened' : 'Slides: hidden') : (open ? 'Slides: shown' : 'Slides: hidden')); }catch{} });
+    } else {
+      if(isOverlay()){ const open=!(localStorage.getItem('drawerOpen')==='1'); localStorage.setItem('drawerOpen', open?'1':'0'); setDrawerUI(); try{ showToast(open ? 'Slides: opened' : 'Slides: hidden'); }catch{} } else { const collapsed=!(localStorage.getItem(drawerKey)==='1'); localStorage.setItem(drawerKey, collapsed?'1':'0'); setDrawerUI(); try{ showToast(collapsed ? 'Slides: hidden' : 'Slides: shown'); }catch{} }
+    }
+  }
   // Enhance: allow toggling slides while UI is off by overriding hide-slides class when opening
   (function enhanceDrawerToggle(){
     const origToggle = toggleDrawer;
