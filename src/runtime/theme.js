@@ -1,10 +1,15 @@
-/* Lightweight runtime theming helpers (no build step). */
+/* Lightweight runtime theming helpers (no build step).
+   Uses shared core helpers from window.ThemeCore when available
+   to keep logic consistent with src/app/theme.ts.
+*/
 (function initThemeRuntime(){
+  var Core = (typeof window !== 'undefined' && window.ThemeCore) ? window.ThemeCore : null;
   function clamp01(n){ return Math.min(1, Math.max(0, n)); }
   function normalizeHex(hex){
-  if(!hex) return '';
-  // strip surrounding quotes if present and normalize
-  let s = String(hex).trim().replace(/^['"]|['"]$/g, '').toLowerCase();
+    if(Core && Core.normalizeHex) return Core.normalizeHex(hex);
+    if(!hex) return '';
+    // strip surrounding quotes if present and normalize
+    let s = String(hex).trim().replace(/^['"]|['"]$/g, '').toLowerCase();
     const m3 = /^#?([0-9a-f]{3})$/i.exec(s);
     if(m3){ const h=m3[1]; return '#'+h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; }
     const m6 = /^#?([0-9a-f]{6})$/i.exec(s);
@@ -12,6 +17,7 @@
     return '';
   }
   function hexToRgb(hex){
+    if(Core && Core.hexToRgb) return Core.hexToRgb(hex);
     const h = normalizeHex(hex).slice(1);
     const r = parseInt(h.slice(0,2),16);
     const g = parseInt(h.slice(2,4),16);
@@ -141,18 +147,25 @@
           // compute slide opacity CSS if provided as decimal 0..1
           if (typeof cfg.slideOpacity === 'number' && isFinite(cfg.slideOpacity)) {
             var pct = Math.round(Math.max(0, Math.min(100, cfg.slideOpacity * 100)));
-            // light-weight opacity handling: compute rgba from slideBg1/slideBg2 if present
-            var fallbackRgb = { r: 17, g: 24, b: 39 };
-            var s1 = (cfg.slideBg1 && normalizeHex(String(cfg.slideBg1))) || null;
-            var s2 = (cfg.slideBg2 && normalizeHex(String(cfg.slideBg2))) || null;
-            var c1 = s1 ? hexToRgb(s1) : fallbackRgb;
-            var c2 = s2 ? hexToRgb(s2) : fallbackRgb;
-            var o1 = (0.75 * (pct/100)).toFixed(3);
-            var o2 = (0.55 * (pct/100)).toFixed(3);
-            cssVars['--slide-bg1'] = `rgba(${c1.r},${c1.g},${c1.b},${o1})`;
-            cssVars['--slide-bg2'] = `rgba(${c2.r},${c2.g},${c2.b},${o2})`;
-            cssVars['--slide-blur'] = `${(8 * (pct/100)).toFixed(2)}px`;
-            cssVars['--slide-shadow'] = `0 10px 30px rgba(0,0,0,${(0.25 * (pct/100)).toFixed(3)})`;
+            var built = (Core && Core.buildSlideOpacityCss) ? Core.buildSlideOpacityCss(pct, cfg.slideBg1, cfg.slideBg2) : null;
+            if (built){
+              cssVars['--slide-bg1'] = built.slideBg1Rgba;
+              cssVars['--slide-bg2'] = built.slideBg2Rgba;
+              cssVars['--slide-blur'] = built.blurPx;
+              cssVars['--slide-shadow'] = built.shadow;
+            } else {
+              var fallbackRgb = { r: 17, g: 24, b: 39 };
+              var s1 = (cfg.slideBg1 && normalizeHex(String(cfg.slideBg1))) || null;
+              var s2 = (cfg.slideBg2 && normalizeHex(String(cfg.slideBg2))) || null;
+              var c1 = s1 ? hexToRgb(s1) : fallbackRgb;
+              var c2 = s2 ? hexToRgb(s2) : fallbackRgb;
+              var o1 = (0.75 * (pct/100)).toFixed(3);
+              var o2 = (0.55 * (pct/100)).toFixed(3);
+              cssVars['--slide-bg1'] = `rgba(${c1.r},${c1.g},${c1.b},${o1})`;
+              cssVars['--slide-bg2'] = `rgba(${c2.r},${c2.g},${c2.b},${o2})`;
+              cssVars['--slide-blur'] = `${(8 * (pct/100)).toFixed(2)}px`;
+              cssVars['--slide-shadow'] = `0 10px 30px rgba(0,0,0,${(0.25 * (pct/100)).toFixed(3)})`;
+            }
           }
 
           const classes = { 'border-off': cfg.slideBorderOn === false };

@@ -9,6 +9,15 @@
 
 const fs = require('fs');
 const path = require('path');
+// Reuse shared ThemeCore helpers for consistent color normalization
+let ThemeCore = null;
+try {
+  // Resolve relative to this file to avoid cwd issues
+  ThemeCore = require(path.resolve(__dirname, '../src/shared/theme-core.js'));
+} catch (e) {
+  // Fallback noop object if not available; local validators will still run
+  ThemeCore = { normalizeHex: () => '' };
+}
 
 function readFile(p){ return fs.readFileSync(p, 'utf8'); }
 
@@ -86,12 +95,16 @@ const allowedSlide = new Set([
   'content-pos', 'overlay-subtitle', 'overlay-subtitle-size', 'overlay-subtitle-color', 'overlaysubtitle', 'overlaysubtitlecolor',
 ]);
 
-function isHex(s){ const x = unquote(s); return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(x); }
+function isHex(s){
+  try { return ThemeCore.normalizeHex ? Boolean(ThemeCore.normalizeHex(s)) : /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(unquote(s)); }
+  catch { return false; }
+}
 function isBgMode(s){ return ['gradient','particles','off'].includes(String(s).trim().toLowerCase()); }
 function isBoolLike(s){ return /^(on|off|show|hide|true|false|1|0)$/i.test(String(s).trim()); }
 function isOverlayPos(s){ return ['tl','tr','bl','br'].includes(String(s).trim().toLowerCase()); }
 function isContentPos(s){ return /^[tmb][lmr]$/i.test(String(s).trim()); }
 function isSubtitleColor(s){ return /^(accent|primary)$/i.test(String(s).trim()); }
+function isButtonFill(s){ return ['solid','outline'].includes(String(s).trim().toLowerCase()); }
 function clamp(n, lo, hi){ n=Number(n); if(!isFinite(n)) return null; return Math.max(lo, Math.min(hi, n)); }
 function parseOpacity(raw){
   const s = String(raw||'').trim(); if(!s) return null;
@@ -160,17 +173,25 @@ function scanSlidesFMs(text){
   return perSlide;
 }
 
-function validateDeck(deckPath){
+function validateDeck(deckPath, opts={}){
   const src = readFile(deckPath);
   const { fm: deckFM } = parseFrontmatterAtStart(src);
   const slideFMs = scanSlidesFMs(src).slice(1); // exclude deck-level if present
 
   const warnings = [];
+  const infos = [];
   const add = (msg) => warnings.push(msg);
+  const info = (msg) => infos.push(msg);
 
   // Validate deck keys
   for(const [rawKey, rawVal] of Object.entries(deckFM)){
     const key = String(rawKey).trim();
+    // Optionally surface deck-level headings as informational
+    if(opts.infoHeadings && (key==='title' || key==='subtitle' || key==='notes')){
+      const v = String(rawVal||'').trim();
+      info(`Deck: ${key}: ${v ? `'${v}'` : '(empty)'}`);
+      continue;
+    }
     if(!allowedDeck.has(key)){
       const sug = migrationMap.get(key);
       add(`Deck: unknown key '${key}'${sug? ` (did you mean '${sug}'?)`: ''}`);
@@ -279,7 +300,7 @@ function validateDeck(deckPath){
     }
   });
 
-  return warnings;
+  return { warnings, infos };
 }
 
 function main(){
@@ -293,7 +314,11 @@ function main(){
     console.error(`File not found: ${p}`);
     process.exit(2);
   }
-  const warnings = validateDeck(p);
+  const infoFlagIndex = process.argv.findIndex(a=>/^--info-headings$/.test(a));
+  const { warnings, infos } = validateDeck(p, { infoHeadings: infoFlagIndex !== -1 });
+  if(infos.length){
+    for(const m of infos){ console.log('ℹ ' + m); }
+  }
   if(!warnings.length){
     console.log(`✔ Deck is valid: ${file}`);
     process.exit(0);
