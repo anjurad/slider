@@ -95,14 +95,36 @@
           const accent = (cfg.accent && String(cfg.accent).trim()) ? normalizeHex(String(cfg.accent)) : '';
           if (primary) cssVars['--primary'] = primary;
           if (accent) cssVars['--accent'] = accent;
-          if (primary && accent) cssVars['--btn-bg'] = `linear-gradient(90deg, ${primary}, ${accent})`;
+          // Button background fill
+          const btnFill = (cfg.btnFill && String(cfg.btnFill).trim().toLowerCase()) || '';
+          if (btnFill === 'outline') {
+            cssVars['--btn-bg'] = 'transparent';
+          } else if (primary && accent) {
+            cssVars['--btn-bg'] = `linear-gradient(90deg, ${primary}, ${accent})`;
+          }
           // btn-text and text
           // Accept raw color strings (hex quoted, shorthand, or rgb()).
           const rawText = (cfg.textColor && String(cfg.textColor).trim()) ? String(cfg.textColor).trim() : null;
           const normalizedText = rawText ? normalizeHex(rawText) : null;
-          // Prefer normalized hex, fall back to raw string (e.g., rgb(...)) or a sensible default
+          // Button text color: allow explicit btnTextColor or 'auto'
+          const rawBtnText = (cfg.btnTextColor && String(cfg.btnTextColor).trim()) ? String(cfg.btnTextColor).trim() : null;
+          let btnTextFinal = null;
+          if (rawBtnText && /^auto$/i.test(rawBtnText)) {
+            // AUTO: choose black/white by averaging primary+accent (fallback to app bg)
+            const toRgb = (h)=>{ const n=normalizeHex(h||''); if(!n) return null; const v=n.slice(1); return { r:parseInt(v.slice(0,2),16), g:parseInt(v.slice(2,4),16), b:parseInt(v.slice(4,6),16) }; };
+            const pr = toRgb(primary) || {r:17,g:24,b:39};
+            const ac = toRgb(accent) || {r:17,g:24,b:39};
+            const avg = { r: Math.round((pr.r+ac.r)/2), g: Math.round((pr.g+ac.g)/2), b: Math.round((pr.b+ac.b)/2) };
+            const toLin=(c)=>{ const s=c/255; return s<=0.03928? s/12.92: Math.pow((s+0.055)/1.055,2.4); };
+            const L = 0.2126*toLin(avg.r)+0.7152*toLin(avg.g)+0.0722*toLin(avg.b);
+            btnTextFinal = (L < 0.5) ? '#ffffff' : '#000000';
+          } else if (rawBtnText) {
+            const n = normalizeHex(rawBtnText);
+            btnTextFinal = n || rawBtnText; // allow rgb(...)
+          }
+          // General text color fallback chain
           const finalText = (normalizedText && normalizedText.length) ? normalizedText : (rawText || null);
-          cssVars['--btn-text'] = finalText || '#000000';
+          cssVars['--btn-text'] = btnTextFinal || finalText || '#000000';
           cssVars['--text'] = finalText || cssVars['--btn-text'];
           // App/background/effect
           if (cfg.appBg1) cssVars['--app-bg1'] = normalizeHex(String(cfg.appBg1)) || String(cfg.appBg1);

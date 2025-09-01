@@ -139,6 +139,8 @@
   #cfgModal, #cfgModal *{ color: inherit; }
   #cfgModal { color: var(--text); }
   #cfgModal label{ color: var(--text); }
+  /* Ensure modal buttons reflect the same button styling as the app */
+  #cfgModal .btn{ color: var(--btn-text) !important; background: var(--btn-bg); }
   :root { --admon-note:#60a5fa; --admon-tip:#34d399; --admon-warning:#fbbf24; }
   /* Admonitions */
   .admonition{border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin:12px 0;overflow:hidden;background:rgba(255,255,255,0.02)}
@@ -171,15 +173,6 @@
   background: rgba(255,255,255,0.04);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
-  /* Active state for preset buttons (compact segmented control) */
-  .preset-btn.active,
-  .preset-btn[aria-pressed="true"]{
-    border-color: var(--accent);
-    /* Match overlay-position selected appearance: subtle accent tint and inset highlight */
-    box-shadow: 0 0 0 1px var(--accent) inset;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--btn-text);
-  }
   /* Base style for preset buttons should match other small controls (no gradient) */
   .preset-btn{
     display:inline-block;
@@ -189,6 +182,16 @@
     background: var(--btn-bg);
     color: var(--btn-text);
     border: 2px solid rgba(255,255,255,0.06);
+  }
+  /* Active state for preset buttons (compact segmented control)
+     Place after base block so it overrides background consistently */
+  #cfgModal .preset-btn.active,
+  #cfgModal .preset-btn[aria-pressed="true"]{
+    border-color: var(--accent);
+    /* Match overlay-position selected appearance: subtle accent tint and inset highlight */
+    box-shadow: 0 0 0 1px var(--accent) inset;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--btn-text);
   }
   /* Disabled state for overlay position buttons */
   #cfgOverlayPos .btn[disabled],
@@ -313,10 +316,26 @@
           <input id="cfgAccent" type="color" />
         </div>
       </div>
-      <div class="row" style="margin-top:6px">
+      <div class="row" style="margin-top:6px; gap:12px; align-items:flex-end;">
         <div style="flex:1">
           <label for="cfgTextColor">General text color</label>
           <input id="cfgTextColor" type="color" />
+        </div>
+        <div style="flex:1">
+          <label>Buttons</label>
+          <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap;">
+            <label style="font-size:12px;">Text</label>
+            <select id="cfgBtnTextMode" class="btn" style="padding:6px 8px; min-width:96px;">
+              <option value="auto">Auto</option>
+              <option value="custom">Custom</option>
+            </select>
+            <input id="cfgBtnTextColor" type="color" />
+            <label style="font-size:12px; margin-left:8px;">Fill</label>
+            <select id="cfgBtnFill" class="btn" style="padding:6px 8px; min-width:120px;">
+              <option value="solid">Solid</option>
+              <option value="outline">Outline</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="row" style="margin-top:8px; gap:8px;">
@@ -627,7 +646,7 @@
 
   // ---- External config: schema, validation, merge, persistence ----
   const CONFIG_KEYS = new Set([
-    'appName','brand','primary','accent','textColor','btnTextColor',
+    'appName','brand','primary','accent','textColor','btnTextColor','btnFill',
     'appBg1','appBg2','slideBg1','slideBg2','slideOpacity',
     'slideBorderOn','slideBorderWidth',
     'overlayOn','overlayPos','overlayTitleSize','overlaySubtitleOn','overlaySubtitleSize','overlaySubtitleColor',
@@ -643,8 +662,12 @@
     const assignStr=(k)=>{ const v=input[k]; if(typeof v==='string' && v.trim()!=='') out[k]=v.trim(); };
     // strings
     ['appName','brand','overlayPos','fontPrimary','fontSecondary'].forEach(assignStr);
-    // hex colors
-    ['primary','accent','textColor','btnTextColor','appBg1','appBg2','slideBg1','slideBg2'].forEach(assignHex);
+    // hex colors (special-case btnTextColor: allow 'auto')
+    ['primary','accent','textColor','appBg1','appBg2','slideBg1','slideBg2'].forEach(assignHex);
+    if(typeof input.btnTextColor==='string'){
+      const v = input.btnTextColor.trim();
+      if(/^auto$/i.test(v)) out.btnTextColor = 'auto'; else { const n = normalizeHex(v); if(n) out.btnTextColor = n; }
+    }
     // numbers
     assignNum('slideOpacity',{min:0,max:1});
     assignNum('slideBorderWidth',{min:0,max:8});
@@ -655,6 +678,7 @@
     // enum
     if(typeof input.overlaySubtitleColor==='string' && /^(primary|accent)$/i.test(input.overlaySubtitleColor)) out.overlaySubtitleColor = input.overlaySubtitleColor.toLowerCase();
     if(typeof input.contentPos==='string' && /^(t[mlr]|m[mlr]|b[mlr])$/i.test(input.contentPos)) out.contentPos = input.contentPos.toLowerCase();
+    if(typeof input.btnFill==='string' && /^(solid|outline)$/i.test(input.btnFill)) out.btnFill = input.btnFill.toLowerCase();
     return out;
   }
 
@@ -1787,6 +1811,50 @@
     try{
   const txt = normalizeHex(CONFIG.textColor) || normalizeHex(getComputedStyle(document.documentElement).getPropertyValue('--text').trim()) || '#e2e8f0';
   const elText = document.getElementById('cfgTextColor'); if(elText) elText.value = txt;
+    // Button text color mode + picker
+    try{
+      const modeSel = document.getElementById('cfgBtnTextMode');
+      const btnClr = document.getElementById('cfgBtnTextColor');
+      const vRaw = (CONFIG.btnTextColor||'auto');
+      const v = typeof vRaw==='string' ? vRaw.trim().toLowerCase() : '';
+      const isAuto = (v === 'auto' || !v);
+      modeSel.value = isAuto ? 'auto' : 'custom';
+      if(!isAuto){ const n = normalizeHex(String(CONFIG.btnTextColor)); btnClr.value = n || '#ffffff'; }
+      btnClr.disabled = isAuto;
+      const applyModeChange = ()=>{
+        const isAuto = (modeSel.value==='auto');
+        btnClr.disabled = isAuto;
+        if(isAuto){
+          CONFIG.btnTextColor = 'auto';
+        } else {
+          // Set a sensible starting color when switching to custom
+          let start = normalizeHex(String(btnClr.value||''));
+          try{
+            if(!start){
+              const cs = getComputedStyle(document.documentElement);
+              const cur = (cs.getPropertyValue('--btn-text')||'').trim();
+              start = normalizeHex(cur) || '#ffffff';
+            }
+          }catch{}
+          btnClr.value = start || '#ffffff';
+          CONFIG.btnTextColor = start || '#ffffff';
+        }
+        try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{}
+      };
+      modeSel.onchange = applyModeChange;
+      modeSel.oninput = applyModeChange;
+      // If user clicks the color while disabled, switch to custom automatically
+      btnClr.addEventListener('click', ()=>{
+        if(btnClr.disabled){
+          modeSel.value = 'custom'; btnClr.disabled = false;
+          const n = normalizeHex(String(btnClr.value||'')) || '#ffffff';
+          CONFIG.btnTextColor = n;
+          try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{}
+        }
+      });
+    }catch{}
+    // Button fill
+    try{ const bf=document.getElementById('cfgBtnFill'); bf.value = (CONFIG.btnFill==='outline'?'outline':'solid'); }catch{}
     }catch{}
     // Live-preview bindings for color pickers: update CONFIG and applyConfig immediately
     try{
@@ -1794,6 +1862,16 @@
       bindLive('cfgPrimary','primary', false);
       bindLive('cfgAccent','accent', false);
       bindLive('cfgTextColor','textColor', true);
+      // live: custom button text color only when custom mode is active
+      try{
+        const modeSel = document.getElementById('cfgBtnTextMode');
+        const btnClr = document.getElementById('cfgBtnTextColor');
+        btnClr.oninput = ()=>{ if(modeSel.value==='custom'){ const n=normalizeHex(btnClr.value||''); if(n) CONFIG.btnTextColor = n; try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} } };
+        modeSel.onchange = ()=>{ if(modeSel.value==='auto'){ CONFIG.btnTextColor = 'auto'; } else { const n=normalizeHex(btnClr.value||''); if(n) CONFIG.btnTextColor = n; }
+          try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} };
+        const fillSel = document.getElementById('cfgBtnFill');
+        fillSel.onchange = ()=>{ const v=String(fillSel.value||'solid').toLowerCase(); CONFIG.btnFill = (v==='outline'?'outline':'solid'); try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} try{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }catch{} };
+      }catch{}
       bindLive('cfgAppBg1','appBg1', true);
       bindLive('cfgAppBg2','appBg2', true);
       bindLive('cfgSlideBg1','slideBg1', true);
@@ -2027,6 +2105,17 @@
     if(ns2) CONFIG.slideBg2 = ns2; else delete CONFIG.slideBg2;
   // text color
   try{ const rt = (document.getElementById('cfgTextColor')?.value || '').toString(); const nt = normalizeHex(rt); if(nt) CONFIG.textColor = nt; else delete CONFIG.textColor; }catch{}
+  // Button text color mode/value
+  try{
+    const modeSel = document.getElementById('cfgBtnTextMode');
+    const btnClr = document.getElementById('cfgBtnTextColor');
+    if(modeSel && btnClr){
+      if(modeSel.value==='auto'){ CONFIG.btnTextColor = 'auto'; }
+      else { const n = normalizeHex(String(btnClr.value||'')); if(n) CONFIG.btnTextColor = n; else delete CONFIG.btnTextColor; }
+    }
+  }catch{}
+  // Button fill
+  try{ const bf=document.getElementById('cfgBtnFill'); const v=(bf?.value||'').toString().toLowerCase(); CONFIG.btnFill = (v==='outline'?'outline':'solid'); }catch{}
   }catch(e){}
   // Save UI visibility checkboxes
   CONFIG.hideSlidesWithUi = document.getElementById('cfgHideSlidesWithUi').checked;
@@ -2777,7 +2866,8 @@ Everything else in front matter is ignored by the app.`;
           'defaults-overlay','defaults-overlay-pos','defaults-title-size','defaults-subtitle-size','defaults-slide-opacity','defaults-slide-bg1','defaults-slide-bg2',
           'appbg1','appbg2','app-bg1','app-bg2','app-bg-1','app-bg-2','opacity','slideopacity',
           // Newer deck-level keys
-          'content-pos','overlay-subtitle-size','overlay-subtitle-color','overlaysubtitlecolor','overlaysubtitle','subtitleenabled'
+          'content-pos','overlay-subtitle-size','overlay-subtitle-color','overlaysubtitlecolor','overlaysubtitle','subtitleenabled',
+          'button-text-color','btn-text-color','button-fill'
         ]);
         const allowedSlide = new Set([
           'title','subtitle','notes','overlay','overlay-pos','overlaypos','title-size','titlesize','subtitle-size','subtitlesize','slide-bg1','slide-bg2','slidebg1','slidebg2',
@@ -2793,6 +2883,7 @@ Everything else in front matter is ignored by the app.`;
         const isPos=(s)=>['tl','tr','bl','br'].includes((s||'').toString().trim().toLowerCase());
         const isContentPos=(s)=>/^[tmb][lmr]$/i.test((s||'').toString().trim());
         const isSubtitleColor=(s)=>/^(accent|primary)$/i.test((s||'').toString().trim());
+        const isButtonFill=(s)=>/^(solid|outline)$/i.test((s||'').toString().trim());
         const clamp=(n,lo,hi)=>{ n=Number(n); if(!isFinite(n)) return null; return Math.max(lo, Math.min(hi, n)); };
         const parseOpacity=(raw)=>{ const s=(raw||'').toString().trim(); if(!s) return null; if(/%$/.test(s)) return clamp(parseFloat(s),0,100); const num=parseFloat(s); if(!isFinite(num)) return null; if(num<=1) return clamp(num*100,0,100); return clamp(num,0,100); };
         const out=[];
@@ -2824,6 +2915,8 @@ Everything else in front matter is ignored by the app.`;
               case 'overlay-subtitle-size': if(clamp(v,10,48)===null) out.push(`Deck: 'overlay-subtitle-size' must be 10..48, got '${v}'`); break;
               case 'overlay-subtitle-color': case 'overlaysubtitlecolor': if(!isSubtitleColor(v)) out.push(`Deck: '${kRaw}' must be primary|accent, got '${v}'`); break;
               case 'overlaysubtitle': case 'subtitleenabled': if(!isBool(v)) out.push(`Deck: '${kRaw}' must be true|false|on|off|1|0, got '${v}'`); break;
+              case 'button-text-color': case 'btn-text-color': { const t=String(v).trim(); if(!/^auto$/i.test(t)){ if(!isHex(v)) out.push(`Deck: '${kRaw}' expects hex or 'auto', got '${v}'`); } break; }
+              case 'button-fill': if(!isButtonFill(v)) out.push(`Deck: 'button-fill' must be solid|outline, got '${v}'`); break;
             }
           }
           // Per-slide
@@ -2985,6 +3078,18 @@ Everything else in front matter is ignored by the app.`;
       const tcRaw = strip(fm.textcolor || fm['text-color'] || fm.text || '');
       const tc = normalizeHex(tcRaw);
       if(tc) CONFIG.textColor = tc;
+    }catch{}
+    // Button text color and fill
+    try{
+      const btcRaw = (fm['button-text-color'] || fm['btn-text-color'] || '').toString().trim();
+      if(btcRaw){
+        if(/^auto$/i.test(btcRaw)) CONFIG.btnTextColor = 'auto';
+        else { const n = normalizeHex(btcRaw); if(n) CONFIG.btnTextColor = n; }
+      }
+    }catch{}
+    try{
+      const bfRaw = (fm['button-fill'] || '').toString().trim().toLowerCase();
+      if(bfRaw && /^(solid|outline)$/.test(bfRaw)) CONFIG.btnFill = bfRaw;
     }catch{}
     // Opacity (percent 0-100 or decimal 0-1 or with %)
     let hasOpacity=false; let decOpacity=null;
