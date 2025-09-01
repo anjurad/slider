@@ -32,6 +32,8 @@
   <script src="src/runtime/particles.js"></script>
   <!-- Toast util -->
   <script src="src/ui/toast.js"></script>
+  <!-- Background toggle helper -->
+  <script src="src/ui/backgroundToggle.js"></script>
   <script src="src/ui/styleModal.js"></script>
   <div class="bg-gradient"></div>
   <canvas id="bg-canvas"></canvas>
@@ -337,28 +339,45 @@
 
   // Particle lifecycle is implemented in `src/runtime/particles.js` and exposed via window.Particles
   // Delegate resize handling to the runtime; runtime is expected to manage canvas sizing.
-  function resizeCanvas(){ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{}
-  }
-  function setBgButtonLabel(){ document.getElementById('bgBtn').textContent = (bgMode==='gradient'?'🌌 Background':bgMode==='particles'?'✨ Particles':'⛔ Background Off'); }
-  function setBackgroundMode(mode){
-    bgMode = mode;
-    localStorage.setItem('bgMode', bgMode);
-    setBgButtonLabel();
-    if (bgMode === 'off'){
-      try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
-      bgCanvas.style.display = 'none';
-      document.querySelector('.bg-gradient').style.display = 'none';
-    } else if (bgMode === 'gradient'){
-      try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
-      bgCanvas.style.display = 'none';
-      document.querySelector('.bg-gradient').style.display = 'block';
+  function resizeCanvas(){ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{} }
+  function setBgButtonLabel(){
+    if(window.BackgroundToggle && typeof window.BackgroundToggle.setBgButtonLabel==='function'){
+      window.BackgroundToggle.setBgButtonLabel(bgMode);
     } else {
-      document.querySelector('.bg-gradient').style.display = 'none';
-      bgCanvas.style.display = 'block';
-      try{ if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) }); }catch{}
+      document.getElementById('bgBtn').textContent = (bgMode==='gradient'?'🌌 Background':bgMode==='particles'?'✨ Particles':'⛔ Background Off');
     }
   }
-  const cycleBackground=()=>{ const order=['gradient','particles','off']; setBackgroundMode(order[(order.indexOf(bgMode)+1)%order.length]); try{ showToast(`Background: ${bgMode}`);}catch{} };
+  function setBackgroundMode(mode){
+    bgMode = mode;
+    if(window.BackgroundToggle && typeof window.BackgroundToggle.setBackgroundMode==='function'){
+      window.BackgroundToggle.setBackgroundMode(mode, { canvas: bgCanvas, particles: (window.Particles||null), prefersReduced });
+    } else {
+      try{ localStorage.setItem('bgMode', bgMode); }catch{}
+      setBgButtonLabel();
+      if (bgMode === 'off'){
+        try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
+        bgCanvas.style.display = 'none';
+        document.querySelector('.bg-gradient').style.display = 'none';
+      } else if (bgMode === 'gradient'){
+        try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
+        bgCanvas.style.display = 'none';
+        document.querySelector('.bg-gradient').style.display = 'block';
+      } else {
+        document.querySelector('.bg-gradient').style.display = 'none';
+        bgCanvas.style.display = 'block';
+        try{ if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced }); }catch{}
+      }
+    }
+  }
+  const cycleBackground=()=>{ 
+    if(window.BackgroundToggle && typeof window.BackgroundToggle.cycleBackground==='function'){
+      const next = window.BackgroundToggle.cycleBackground(bgMode);
+      setBackgroundMode(next);
+    } else {
+      const order=['gradient','particles','off']; setBackgroundMode(order[(order.indexOf(bgMode)+1)%order.length]);
+    }
+    try{ showToast(`Background: ${bgMode}`);}catch{}
+  };
   let resizeTimer=null; window.addEventListener('resize',()=>{ if(bgMode!=='particles') return; clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{} },120); });
 
   // ===== Config & Theme =====
