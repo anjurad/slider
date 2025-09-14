@@ -37,7 +37,7 @@
     const obj = input;
     const assignStr=(k)=>{ const v=obj[k]; if(typeof v==='string' && v.trim()) out[k]=v.trim(); };
     const assignHex=(k)=>{ const v=obj[k]; if(typeof v==='string'){ const n=normalizeHexLocal(v); if(n) out[k]=n; } };
-    const assignBool=(k)=>{ const v=obj[k]; if(typeof v==='boolean') out[k]=v; };
+    const assignBool=(k, defaultVal)=>{ const v=obj[k]; if(typeof v==='boolean') out[k]=v; else if(typeof v==='undefined') out[k]=defaultVal; };
     const assignNum=(k,min,max)=>{ const v=Number(obj[k]); if(Number.isFinite(v)){ let n=v; if(typeof min==='number') n=Math.max(min,n); if(typeof max==='number') n=Math.min(max,n); out[k]=n; } };
 
     ['appName','brand','overlayPos','fontPrimary','fontSecondary','contentPos'].forEach(assignStr);
@@ -57,8 +57,13 @@
     assignNum('slideBorderWidth', 0, 8);
     assignNum('overlayTitleSize', 12, 64);
     assignNum('overlaySubtitleSize', 10, 48);
-    // booleans
-    ['slideBorderOn','overlayOn','overlaySubtitleOn','rememberLastDeck','hideSlidesWithUi','hideProgressWithUi'].forEach(assignBool);
+    // booleans with defaults
+    assignBool('slideBorderOn', true);
+    assignBool('overlayOn', false);
+    assignBool('overlaySubtitleOn', true);
+    assignBool('rememberLastDeck', false);
+    assignBool('hideSlidesWithUi', true);
+    assignBool('hideProgressWithUi', true);
     return out;
   }
 

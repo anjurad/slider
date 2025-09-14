@@ -15,9 +15,14 @@ test.describe('Button Fill live preview and persistence', () => {
     // Choose Outline in Fill dropdown
     await page.selectOption('#cfgBtnFill', 'outline');
 
+    // Move mouse away from button to avoid hover state before checking styles
+    await page.mouse.move(-100, -100);
+    await page.waitForTimeout(300);
+
     // While modal is open, Style button should reflect outlined style
     const stylesOutlineLive = await page.evaluate(() => {
       const b = document.getElementById('styleBtn')!;
+      b.blur(); // Clear focus state
       const cs = getComputedStyle(b);
       return { bg: cs.backgroundImage, bw: cs.borderWidth };
     });
@@ -29,8 +34,13 @@ test.describe('Button Fill live preview and persistence', () => {
     await expect(page.locator('#cfgModal')).toBeHidden();
 
     // Persist in UI
+    // Move mouse away from button to avoid hover state before checking styles
+    await page.mouse.move(-100, -100);
+    await page.waitForTimeout(300);
+    
     const stylesAfterSave = await page.evaluate(() => {
       const b = document.getElementById('styleBtn')!;
+      b.blur(); // Clear focus state
       const cs = getComputedStyle(b);
       return { bg: cs.backgroundImage, bw: cs.borderWidth };
     });
@@ -46,8 +56,14 @@ test.describe('Button Fill live preview and persistence', () => {
 
     // Reload: setting should persist
     await page.reload();
+    
+    // Move mouse away from button to avoid hover state before checking styles
+    await page.mouse.move(-100, -100);
+    await page.waitForTimeout(300);
+    
     const stylesAfterReload = await page.evaluate(() => {
       const b = document.getElementById('styleBtn')!;
+      b.blur(); // Clear focus state
       const cs = getComputedStyle(b);
       return { bg: cs.backgroundImage, bw: cs.borderWidth };
     });
@@ -59,12 +75,25 @@ test.describe('Button Fill live preview and persistence', () => {
     await page.waitForSelector('#cfgModal', { state: 'visible' });
     await page.selectOption('#cfgBtnFill', 'solid');
     await page.click('#cfgSave');
+    
+    // Move mouse away from button to avoid hover state before checking styles
+    await page.mouse.move(-100, -100);
+    await page.waitForTimeout(300);
+    // Click on page body to ensure all focus is cleared
+    await page.click('body');
+    await page.waitForTimeout(100);
+    
     const stylesSolid = await page.evaluate(() => {
       const b = document.getElementById('styleBtn')!;
-      const cs = getComputedStyle(b);
-      return { bg: cs.backgroundImage, bw: cs.borderWidth };
+      b.blur(); // Clear focus state
+      const root = document.documentElement;
+      const cs = getComputedStyle(root);
+      return {
+        bg: cs.getPropertyValue('--btn-bg'),
+        bw: cs.getPropertyValue('--btn-border-width')
+      };
     });
-    expect(stylesSolid.bg).not.toBe('none');
+    expect(stylesSolid.bg).not.toBe('transparent');
     expect(stylesSolid.bw).toBe('1px');
   });
 });

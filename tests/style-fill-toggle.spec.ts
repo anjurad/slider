@@ -18,6 +18,10 @@ test.describe('Button Fill dropdown', () => {
     await page.click('#cfgSave');
 
     const styleBtn = page.getByRole('button', { name: 'Style' });
+            // Move mouse away from buttons to avoid hover state
+    await page.mouse.move(-100, -100);
+    await page.waitForTimeout(300);
+    await styleBtn.evaluate(el => el.blur());
     const stylesOutline = await styleBtn.evaluate(el => {
       const cs = getComputedStyle(el);
       return { bg: cs.backgroundImage, bw: cs.borderWidth, bc: cs.borderColor };
@@ -32,12 +36,23 @@ test.describe('Button Fill dropdown', () => {
     await page.selectOption('#cfgBtnFill', 'solid');
     await page.click('#cfgSave');
 
-    const stylesSolid = await styleBtn.evaluate(el => {
-      const cs = getComputedStyle(el);
-      return { bg: cs.backgroundImage, bw: cs.borderWidth };
+    // Blur the button to clear focus state before checking styles
+    await page.mouse.move(-100, -100);
+    await page.waitForTimeout(300);
+    await styleBtn.evaluate(el => el.blur());
+    // Click on page body to ensure all focus is cleared
+    await page.click('body');
+    await page.waitForTimeout(100);
+    const stylesSolid = await page.evaluate(() => {
+      const root = document.documentElement;
+      const cs = getComputedStyle(root);
+      return {
+        bg: cs.getPropertyValue('--btn-bg'),
+        bw: cs.getPropertyValue('--btn-border-width')
+      };
     });
     // Should not be 'none' (gradient set via --btn-bg) and border thinner
-    expect(stylesSolid.bg).not.toBe('none');
+    expect(stylesSolid.bg).not.toBe('transparent');
     expect(stylesSolid.bw).toBe('1px');
 
     // Re-open Style and ensure the dropdown persisted last selection

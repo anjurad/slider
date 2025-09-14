@@ -58,7 +58,7 @@ export function sanitizeConfig(input: unknown): Partial<ThemeConfig> {
   const obj = input as Record<string, unknown>;
   const setStr = (k: keyof ThemeConfig) => { const v = obj[k as string]; if (typeof v === 'string' && v.trim()) outRec[k as string] = v.trim(); };
   const setHex = (k: keyof ThemeConfig) => { const v = obj[k as string]; if (typeof v === 'string') { const n = normalizeHexLocal(v); if (n) outRec[k as string] = n; } };
-  const setBool = (k: keyof ThemeConfig) => { const v = obj[k as string]; if (typeof v === 'boolean') outRec[k as string] = v; };
+  const setBool = (k: keyof ThemeConfig, defaultVal?: boolean) => { const v = obj[k as string]; if (typeof v === 'boolean') outRec[k as string] = v; else if (typeof v === 'undefined' && typeof defaultVal === 'boolean') outRec[k as string] = defaultVal; };
   const setNum = (k: keyof ThemeConfig, min?: number, max?: number) => { const v = Number(obj[k as string]); if (Number.isFinite(v)) { let n=v; if (typeof min==='number') n=Math.max(min,n); if(typeof max==='number') n=Math.min(max,n); outRec[k as string] = n; } };
 
   // strings
@@ -79,8 +79,13 @@ export function sanitizeConfig(input: unknown): Partial<ThemeConfig> {
   setNum('slideBorderWidth', 0, 8);
   setNum('overlayTitleSize', 12, 64);
   setNum('overlaySubtitleSize', 10, 48);
-  // booleans
-  ['slideBorderOn','overlayOn','overlaySubtitleOn','rememberLastDeck','hideSlidesWithUi','hideProgressWithUi'].forEach(k => setBool(k as keyof ThemeConfig));
+  // booleans with defaults
+  setBool('slideBorderOn', true);
+  setBool('overlayOn', false);
+  setBool('overlaySubtitleOn', true);
+  setBool('rememberLastDeck', false);
+  setBool('hideSlidesWithUi', true);
+  setBool('hideProgressWithUi', true);
   return out;
 }
 

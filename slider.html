@@ -400,6 +400,7 @@
   {name:'Light 2', primary:'#50677B', accent:'#01B4E1', textColor:'#0b1220', group:'light', appBg1:'#f8fafc', appBg2:'#ffffff', slideBg1:'#ffffff', slideBg2:'#f7fbff'},
   {name:'Light 3', primary:'#01B4E1', accent:'#50677B', textColor:'#0b1220', group:'light', appBg1:'#ffffff', appBg2:'#ffffff', slideBg1:'#ffffff', slideBg2:'#ffffff'}
   ];
+  window.PRESETS = PRESETS;
 
   // If no theme values in saved CONFIG, apply the Default preset (non-persistent) so the UI shows a consistent base
   (function applyDefaultIfMissing(){
@@ -417,6 +418,8 @@
   if(typeof CONFIG.slideBorderOn !== 'boolean') CONFIG.slideBorderOn = true;
   // Default outline width (px)
   if(typeof CONFIG.slideBorderWidth !== 'number') CONFIG.slideBorderWidth = 3;
+  // Default progress bar behavior: hide when UI is off
+  if(typeof CONFIG.hideProgressWithUi !== 'boolean') CONFIG.hideProgressWithUi = true;
   // Overlay & typography defaults (with migration from previous keys)
   if(typeof CONFIG.overlayOn !== 'boolean'){
     if(typeof CONFIG.overlayTitleOn === 'boolean') CONFIG.overlayOn = CONFIG.overlayTitleOn; else CONFIG.overlayOn = false;
@@ -2100,7 +2103,7 @@ Everything else in front matter is ignored by the app.`;
     try{
       // Determine current value from CONFIG (decimal 0..1) and compute baseline from persisted settings
       let dec = (typeof CONFIG.slideOpacity === 'number' && isFinite(CONFIG.slideOpacity)) ? CONFIG.slideOpacity : 1;
-      let base = (typeof BASE_OPACITY === 'number' && isFinite(BASE_OPACITY)) ? BASE_OPACITY : 1;
+      let base = (typeof window.BASE_OPACITY === 'number' && isFinite(window.BASE_OPACITY)) ? window.BASE_OPACITY : 1;
       if(base <= 0) base = 1; // guard against degenerate baseline of 0
       const pct = Math.round(dec * 100);
       const nextPct = pct > 0 ? 0 : Math.round(base * 100);
