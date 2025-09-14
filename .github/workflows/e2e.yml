@@ -20,6 +20,13 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Verify checkout and lockfile
+        run: |
+          echo "Workspace: $GITHUB_WORKSPACE"
+          pwd
+          ls -la
+          echo "Lockfiles found:" && find . -maxdepth 2 -name "package*.json" -print || true
+
       - name: Cache npm (restore)
         uses: actions/cache@v4
         with:
@@ -29,7 +36,14 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            echo "package-lock.json not found; falling back to npm install"
+            npm install --no-audit --no-fund
+          fi
 
       - name: Install Chromium browser + deps
         run: |
@@ -72,6 +86,13 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Verify checkout and lockfile
+        run: |
+          echo "Workspace: $GITHUB_WORKSPACE"
+          pwd
+          ls -la
+          echo "Lockfiles found:" && find . -maxdepth 2 -name "package*.json" -print || true
+
       - name: Cache npm (restore)
         uses: actions/cache@v4
         with:
@@ -81,7 +102,14 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            echo "package-lock.json not found; falling back to npm install"
+            npm install --no-audit --no-fund
+          fi
 
       - name: Install Playwright browsers + deps (all)
         run: npx playwright install --with-deps
