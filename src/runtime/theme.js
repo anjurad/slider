@@ -18,7 +18,9 @@
   }
   function hexToRgb(hex){
     if(Core && Core.hexToRgb) return Core.hexToRgb(hex);
-    const h = normalizeHex(hex).slice(1);
+    const norm = normalizeHex(hex);
+    if(!norm) return { r: 0, g: 0, b: 0 };
+    const h = norm.slice(1);
     const r = parseInt(h.slice(0,2),16);
     const g = parseInt(h.slice(2,4),16);
     const b = parseInt(h.slice(4,6),16);
@@ -28,7 +30,6 @@
     const {r,g,b} = hexToRgb(hex);
     return `rgb(${r}, ${g}, ${b})`;
   }
-  function clamp01(n){ return Math.max(0, Math.min(1, n)); }
   function mixColors(rgbA, rgbB, t){
     const r = Math.round(rgbA.r*(1-t) + rgbB.r*t);
     const g = Math.round(rgbA.g*(1-t) + rgbB.g*t);
