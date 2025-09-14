@@ -3,7 +3,8 @@
   "version": "1.2.0",
   "main": "index.js",
   "scripts": {
-    "test": "playwright test --project=webkit",
+    "test": "playwright test --project=chromium",
+    "test:chromium": "playwright test --project=chromium",
     "test:ui": "playwright test --ui",
     "test:all": "playwright test",
     "test:unit": "vitest run unit --reporter verbose",

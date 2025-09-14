@@ -6,240 +6,7 @@
   <title>SlideApp v0.9.1 — Optimised & Secure</title>
   <!-- Favicon (fixed stray quote) -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
-  <style>
-    :root { 
-  --bg-1:#0f172a;--bg-2:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--primary:#01B4E1;--accent:#64FFFC;--card:#111827cc;--radius:18px;--shadow:0 10px 30px rgba(0,0,0,0.25);
-      /* App background colors (configurable via front matter) */
-      --app-bg1: var(--bg-1);
-      --app-bg2: var(--bg-2);
-      /* Effect color for particles/gradients (configurable via front matter) */
-      --effect-color: var(--accent);
-      /* Typography defaults (configurable) */
-      --font-primary: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      --font-secondary: Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      /* Overlay title sizes */
-      --title-size: 22px; /* default */
-      --subtitle-size: 16px; /* default */
-    } 
-    *{box-sizing:border-box}
-  body{margin:0;font-family:var(--font-primary);color:var(--text);background:linear-gradient(120deg,var(--app-bg1),var(--app-bg2));overflow:hidden;height:100vh;display:flex}
-  .bg-gradient{position:fixed;inset:0;z-index:-2;background:linear-gradient(45deg,var(--app-bg1),var(--app-bg2),var(--app-bg1));background-size:400% 400%;animation:moveGradient 30s ease-in-out infinite;filter:saturate(1.1)}
-    #bg-canvas{position:fixed;inset:0;z-index:-1;display:none}
-    @keyframes moveGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-
-  .thumbs{width:220px;background:linear-gradient(180deg,var(--app-bg1, #0b1220), var(--app-bg2, #0f172a));overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;border-right:1px solid rgba(255,255,255,.08)}
-    .thumbs.overlay{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:transform .25s ease;z-index:14}
-    .thumbs.overlay.open{transform:translateX(0)}
-    .thumbs.collapsed{width:0;padding:0;border-right:none}
-  /* Thumbnail visuals (CSS-driven)
-     Variables:
-       --thumb-radius      Border radius for thumbnails
-       --thumb-padding     Padding inside each thumbnail
-       --thumb-font-size   Font size used in thumbnails
-       --thumb-border      Border width for thumbnail frames
-       --thumb-transition  Duration for thumb transitions
-       --thumb-elevation   Shadow/elevation magnitude used on hover/active
-  */
-  :root{ --thumb-radius:8px; --thumb-padding:8px; --thumb-font-size:12px; --thumb-border:1px; --thumb-transition:220ms; --thumb-elevation:6px; }
-  .thumb{cursor:pointer;padding:var(--thumb-padding);border-radius:var(--thumb-radius);font-size:var(--thumb-font-size);color:var(--text);background:linear-gradient(180deg,var(--app-bg1, #0b1220), var(--app-bg2, #0f172a));border:var(--thumb-border) solid rgba(0,0,0,0.12);transition:transform var(--thumb-transition) ease, box-shadow var(--thumb-transition) ease, border-color var(--thumb-transition) ease, background var(--thumb-transition) ease;transform-origin:left center;display:flex;align-items:center;gap:8px}
-  .thumb:hover{ transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,0.18); }
-  /* Accessible focus styles for keyboard users */
-  .thumb:focus{ outline: none; }
-  .thumb:focus-visible{ box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); transform: translateY(-4px) scale(1.02); }
-  /* Active slide in the thumbnails reflects theme colors: subtle scale + accent outline */
-  /* Use background shorthand so computed background includes our gradient for automated checks */
-  /* Ensure computed backgroundImage reflects the active gradient explicitly for testing */
-  .thumb.active{background:var(--thumb-active-bg, linear-gradient(135deg,var(--primary),var(--accent))) !important;background-image:var(--thumb-active-bg, linear-gradient(135deg,var(--primary),var(--accent))) !important;color:#fff;border-color:color-mix(in srgb, var(--accent) 40%, transparent);transform:translateY(-2px) scale(1.04);box-shadow:0 10px 28px color-mix(in srgb, var(--accent) 18%, rgba(0,0,0,0.18));}
-  /* Slightly emphasize active thumb with an inner ring on larger displays */
-  @media (min-width:720px){ .thumb.active{ outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent); outline-offset:2px; } }
-
-    .deck{position:relative;flex:1;height:100vh;overflow:hidden}
-    .deck-header{position:absolute;top:14px;left:24px;right:24px;display:flex;align-items:center;justify-content:space-between;z-index:5}
-  /* Show brand as plain text (no pill) so presets like Light 1 don't create a grey rounded background */
-  .brand{display:flex;align-items:center;gap:12px;padding:0;background:transparent;border-radius:0;box-shadow:none}
-    .brand-badge{height:28px;width:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--accent))}
-    .brand-name{font-weight:700}
-    .deck-tools{display:flex;gap:8px;align-items:center}
-  /* Buttons use a subtle translucent overlay so text remains readable on light and dark app backgrounds */
-  .btn{cursor:pointer;padding:6px 10px;border-radius:12px;color:var(--text);background:linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04));border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);font-size:12px;line-height:1;display:inline-flex;align-items:center;min-height:32px}
-  /* Keep header buttons stable regardless of drawer state */
-  .deck-header .btn{ border-radius:12px; padding:8px 12px; min-height:32px; }
-  /* Use CSS variables for button background so themes can update them consistently */
-  :root{ --btn-bg: linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04)); --btn-text: var(--text); }
-  .btn{ background: var(--btn-bg); color: var(--btn-text); }
-
-    /* Reserve space using CSS vars so we can position the frame precisely */
-    :root{ --pad-top:96px; --pad-bottom:120px; --pad-side:72px }
-    .slides{position:absolute;inset:0;display:block}
-    body.ui-off :root{ --pad-top:24px; --pad-bottom:32px }
-  /* A single framed slide that fills the padded area and scrolls internally */
-  .slide{position:absolute;top:var(--pad-top);bottom:var(--pad-bottom);left:var(--pad-side);right:var(--pad-side);display:block;background:linear-gradient(180deg,var(--slide-bg1, rgba(17,24,39,.75)),var(--slide-bg2, rgba(17,24,39,.55)));border-radius:var(--radius);box-shadow:var(--slide-shadow, var(--shadow));opacity:0;transform:translate3d(60px,0,0) scale(.98);transition:all 0.6s cubic-bezier(0.4, 0, 0.2, 1);backdrop-filter:blur(var(--slide-blur, 8px));padding:0;overflow:hidden;outline:none}
-  .slide .content-scroll{position:relative;height:100%;width:100%;overflow:auto;padding:56px 48px 96px 48px;display:flex;justify-content:var(--content-x, flex-start);align-items:var(--content-y, flex-start)}
-  /* Slide title/subtitle overlay */
-  .slide .slide-overlay{position:absolute;pointer-events:none;z-index:50;max-width:70%;display:flex;flex-direction:column;gap:4px;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-  .slide .slide-overlay.pos-tl{top:18px;left:24px;text-align:left}
-  .slide .slide-overlay.pos-tr{top:18px;right:24px;text-align:right}
-  .slide .slide-overlay.pos-bl{bottom:18px;left:24px;text-align:left}
-  .slide .slide-overlay.pos-br{bottom:18px;right:24px;text-align:right}
-  .slide .slide-overlay .slide-title{color:var(--primary);font-family:var(--font-primary);font-weight:800;font-size:var(--title-size);line-height:1.15;letter-spacing:-0.01em}
-  .slide .slide-overlay .slide-subtitle{color:var(--primary);font-family:var(--font-secondary);font-weight:400;font-size:var(--subtitle-size);line-height:1.2;opacity:.95}
-  .slide .slide-overlay .accent-subtitle{ color: var(--accent); }
-  /* Theme outline around the active slide, uses accent; width configurable via --outline-w; can be disabled via body.border-off */
-  .slide.active::before{content:"";position:absolute;inset:0;border-radius:var(--radius);pointer-events:none;box-shadow:inset 0 0 0 var(--outline-w, 3px) var(--accent)}
-  body.border-off .slide.active::before{box-shadow:none}
-    .slide.active{opacity:1;transform:translate3d(0,0,0) scale(1);z-index:2}
-    .slide.prev{opacity:0;transform:translate3d(-50px,0,0) scale(.98);z-index:1}
-    .slide.slide-in-right{opacity:0;transform:translate3d(100px,0,0) scale(.95)}
-    .slide.slide-in-left{opacity:0;transform:translate3d(-100px,0,0) scale(.95)}
-    .slide.slide-out-left{opacity:0;transform:translate3d(-100px,0,0) scale(.95)}
-    .slide.slide-out-right{opacity:0;transform:translate3d(100px,0,0) scale(.95)}
-
-.md{width:min(1100px,92%)}
-  .md ul,.md ol{padding-left:20px;margin:16px 0}
-  .md li{margin:8px 0}
-  .md ul li{list-style-type:disc}
-  .md ol li{list-style-type:decimal}
-    .md blockquote{border-left:4px solid var(--accent);padding-left:16px;margin:16px 0;font-style:italic;color:var(--muted)}
-    .md img{max-width:100%;height:auto;border-radius:8px;margin:16px 0}
-    .md a{color:var(--accent);text-decoration:none}
-    .md a:hover{text-decoration:underline}
-  /* Headings hierarchy */
-  .md h1{font-size:clamp(28px,3.2vw,40px);line-height:1.2;margin:0 0 12px;font-weight:800}
-  .md h2{font-size:clamp(22px,2.4vw,30px);line-height:1.25;margin:18px 0 10px;font-weight:700}
-  .md h3{font-size:clamp(18px,1.9vw,24px);line-height:1.3;margin:16px 0 8px;font-weight:700;color:var(--text)}
-  /* Tables */
-  .md table{width:100%;border-collapse:collapse;margin:16px 0;border:1px solid rgba(255,255,255,.08);border-radius:8px;overflow:hidden}
-  .md th,.md td{padding:10px 12px;border:1px solid rgba(255,255,255,.08)}
-  .md thead th{background:rgba(255,255,255,.06);font-weight:700}
-  .md tbody tr:nth-child(odd) td{background:rgba(255,255,255,.03)}
-  /* Columns shortcode */
-  .md .cols{display:flex;gap:24px;align-items:flex-start}
-  .md .cols .col{flex:1;min-width:0}
-  @media (max-width: 820px){.md .cols{flex-direction:column}}
-    pre{background:rgba(0,0,0,.35);padding:10px;border-radius:8px;overflow:auto}
-    code{font-family:monospace}
-
-    .deck-footer{position:absolute;left:24px;right:24px;bottom:18px;display:flex;align-items:center;justify-content:space-between;z-index:5}
-    .progress{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
-    .progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent))}
-
-    .notes{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.95);color:#ffffff;padding:20px 24px;font-size:16px;font-weight:500;display:none;z-index:10;max-height:30%;overflow:auto;border-top:3px solid var(--accent);box-shadow:0 -4px 20px rgba(0,0,0,0.5)}
-    .notes.show{display:block}
-
-    #scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:13}
-
-    /* Config modal */
-    #cfgOverlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:30}
-  /* Use app background variables so the Style modal previews theme immediately */
-  #cfgModal{position:fixed;top:20px;bottom:20px;left:20px;right:20px;transform:none;width:auto;max-width:none;background:linear-gradient(135deg,var(--app-bg1, #0b1220),var(--app-bg2, #0f172a));color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column}
-  #cfgModal header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex:0 0 auto}
-  #cfgModal main{padding:14px;overflow:auto;flex:1 1 auto}
-  #cfgModal label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-  /* Ensure modal labels and form text follow the configured --text color */
-  #cfgModal, #cfgModal *{ color: inherit; }
-  #cfgModal { color: var(--text); }
-  #cfgModal label{ color: var(--text); }
-  /* Ensure modal buttons reflect the same button styling as the app */
-  #cfgModal .btn{ color: var(--btn-text) !important; background: var(--btn-bg); }
-  :root { --admon-note:#60a5fa; --admon-tip:#34d399; --admon-warning:#fbbf24; }
-  /* Admonitions */
-  .admonition{border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin:12px 0;overflow:hidden;background:rgba(255,255,255,0.02)}
-  .admonition .admonition-title{font-weight:600;padding:8px 12px;font-size:13px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06)}
-  .admonition .admonition-body{padding:10px 12px}
-  .admonition.note .admonition-title{color:var(--admon-note)}
-  .admonition.tip .admonition-title{color:var(--admon-tip)}
-  .admonition.warning .admonition-title{color:var(--admon-warning)}
-  /* Task lists */
-  li.task{list-style:none}
-  li.task::marker{content:''}
-  li.task{padding-left:2px}
-  /* Heading anchor hint area */
-  h1[id], h2[id], h3[id]{scroll-margin-top: 80px}
-  .anchor-link{margin-left:8px;opacity:.0;transition:opacity .15s ease;color:var(--muted);text-decoration:none}
-  h1[id]:hover .anchor-link, h2[id]:hover .anchor-link, h3[id]:hover .anchor-link{opacity:1}
-  /* Small helper for muted lead text in demo content */
-  .muted-lead{color:var(--muted);margin:-6px 0 12px 0}
-  #cfgModal input[type="text"]{width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,0.03);color:var(--text)}
-  #cfgModal input[type="color"]{width:54px;height:32px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:transparent;color:var(--text)}
-    #cfgModal .row{display:flex;gap:10px;align-items:center}
-  #cfgModal footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12));backdrop-filter:blur(4px)}
-  /* Active state for overlay position buttons */
-  #cfgOverlayPos .btn{ min-width:44px; height:32px; box-sizing:border-box; text-align:center; padding:8px 10px; line-height:1; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; font-weight:600; }
-  #cfgOverlayPos .btn.active,
-  #cfgOverlayPos .btn[aria-pressed="true"]{
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent) inset;
-  /* Fallback then accent-derived tint for better theme consistency */
-  background: rgba(255,255,255,0.04);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  }
-  /* Base style for preset buttons should match other small controls (no gradient) */
-  .preset-btn{
-    display:inline-block;
-    padding:10px 18px;
-    margin:6px 8px;
-    border-radius:12px;
-    background: var(--btn-bg);
-    color: var(--btn-text);
-    border: 2px solid rgba(255,255,255,0.06);
-  }
-  /* Active state for preset buttons (compact segmented control)
-     Place after base block so it overrides background consistently */
-  #cfgModal .preset-btn.active,
-  #cfgModal .preset-btn[aria-pressed="true"]{
-    border-color: var(--accent);
-    /* Match overlay-position selected appearance: subtle accent tint and inset highlight */
-    box-shadow: 0 0 0 1px var(--accent) inset;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--btn-text);
-  }
-  /* Disabled state for overlay position buttons */
-  #cfgOverlayPos .btn[disabled],
-  #cfgOverlayPos .btn[aria-disabled="true"]{
-    opacity: .5;
-    cursor: not-allowed;
-    filter: grayscale(30%);
-    height:32px; min-width:44px; /* keep dimensions stable when disabled */
-  }
-  /* Disabled style for range sliders within modal */
-  #cfgModal input[type="range"][disabled]{
-    opacity: .5;
-    cursor: not-allowed;
-    filter: grayscale(20%);
-  }
-  /* Disabled style for select and checkbox within modal */
-  #cfgModal select[disabled],
-  #cfgModal input[type="checkbox"][disabled]{
-    opacity: .6;
-    cursor: not-allowed;
-  }
-
-    @media print{body{overflow:visible;background:#fff;color:#000}.deck-header,.deck-footer,.bg-gradient,#bg-canvas,.thumbs,.notes{display:none!important}.slide{position:static;opacity:1;transform:none;page-break-after:always;box-shadow:none;background:#fff;color:#000}}
-
-  /* UI visibility toggle (configurable) */
-  body.ui-off .deck-header { display: none !important; }
-  body.ui-off.hide-slides .thumbs { display: none !important; }
-  body.ui-off.hide-slides .thumbs.overlay { transform: translateX(-100%) !important; }
-  body.ui-off.hide-progress .deck-footer .progress,
-  body.ui-off.hide-progress .deck-footer > div:first-child,
-  body.ui-off.hide-progress .deck-footer #slideNo { display: none !important; }
-  body.ui-off #scrim { display: none !important; }
-  /* Progress key-toggle overrides */
-  body.progress-on .deck-footer .progress,
-  body.progress-on .deck-footer > div:first-child,
-  body.progress-on .deck-footer #slideNo { display: block !important; }
-  body.ui-off.hide-progress.progress-on .deck-footer .progress,
-  body.ui-off.hide-progress.progress-on .deck-footer > div:first-child,
-  body.ui-off.hide-progress.progress-on .deck-footer #slideNo { display: block !important; }
-  body.progress-off .deck-footer .progress,
-  body.progress-off .deck-footer > div:first-child,
-  body.progress-off .deck-footer #slideNo { display: none !important; }
-
-  /* Toast (lightweight notification) */
-  .toast{position:fixed;left:28px;bottom:28px;z-index:50;display:none;padding:10px 12px;border-radius:10px;background:rgba(17,24,39,.85);border:1px solid rgba(255,255,255,.12);color:var(--text);box-shadow:var(--shadow);font-size:14px;opacity:0;transform:translateY(8px);transition:opacity .2s ease, transform .2s ease}
-  .toast.show{display:block;opacity:1;transform:translateY(0)}
-  .toast.no-anim{transition:none}
-  </style>
+  <link rel="stylesheet" href="assets/app.css">
     <script>
       // Global helper for test-driven deterministic behavior.
       // Usage: if (window.__isDeterministicTestMode && window.__isDeterministicTestMode()) { ... }
@@ -255,10 +22,25 @@
     </script>
 </head>
 <body>
+  <!-- Optional shared core for theming helpers (provides window.ThemeCore) -->
+  <script src="src/shared/theme-core.js"></script>
+  <!-- Centralized config schema (provides window.ConfigSchema) -->
+  <script src="src/config/schema.js"></script>
   <!-- Optional runtime theming helpers (no behavior change if absent) -->
   <script src="src/runtime/theme.js"></script>
   <!-- Particles runtime: provides start/stop/resize for canvas effects -->
   <script src="src/runtime/particles.js"></script>
+  <!-- Toast util -->
+  <script src="src/ui/toast.js"></script>
+  <!-- Background toggle helper -->
+  <script src="src/ui/backgroundToggle.js"></script>
+  <!-- Notes controller -->
+  <script src="src/ui/notes.js"></script>
+  <!-- Drawer controller -->
+  <script src="src/ui/drawer.js"></script>
+  <!-- Overlay controller -->
+  <script src="src/ui/overlay.js"></script>
+  <script src="src/ui/styleModal.js"></script>
   <div class="bg-gradient"></div>
   <canvas id="bg-canvas"></canvas>
   <div id="scrim"></div>
@@ -299,7 +81,7 @@
   <div id="cfgModal" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
     <header>
       <strong id="cfgTitle">Style Settings</strong>
-      <button class="btn" id="cfgClose" aria-label="Close">✕</button>
+      <button class="btn" id="cfgClose" aria-label="Close" type="button">✕</button>
     </header>
     <main>
       <label for="cfgName">App name</label>
@@ -335,6 +117,8 @@
               <option value="solid">Solid</option>
               <option value="outline">Outline</option>
             </select>
+            <label style="font-size:12px; margin-left:8px;" for="cfgBtnBorderWidth">Border width <span id="cfgBtnBorderWidthVal" aria-hidden="true"></span></label>
+            <input id="cfgBtnBorderWidth" type="range" min="1" max="6" step="1" style="width:140px;" />
           </div>
         </div>
       </div>
@@ -487,8 +271,8 @@
       </div>
     </main>
     <footer>
-      <button class="btn" id="cfgReset" title="Reset to defaults">↺ Reset</button>
-      <button class="btn" id="cfgSave">Save</button>
+      <button class="btn" id="cfgReset" title="Reset to defaults" type="button">↺ Reset</button>
+      <button class="btn" id="cfgSave" type="button">Save</button>
     </footer>
   </div>
   <!-- Validation modal -->
@@ -536,63 +320,70 @@
   // Helper to rebuild overlays on all current slides using CONFIG and per-slide frontmatter
   function rebuildOverlays(tempPos){
     try{
-      const slides = [...document.querySelectorAll('.slide')];
-        slides.forEach(s => { s.querySelector('.slide-overlay')?.remove(); });
-      if(CONFIG.overlayOn===true && Array.isArray(slidesHTML) && slidesHTML.length){
-          slides.forEach((slideEl, idx) => {
-          const fm = slidesHTML[idx]?.fm || {};
-          const slideOverlayFlag = (typeof fm.overlay !== 'undefined') ? /^(1|on|true)$/i.test(String(fm.overlay).trim()) : true;
-          if(!slideOverlayFlag) return;
-          const pos = (fm.overlaypos || tempPos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
-          const tSize = isFinite(Number(fm.titlesize)) ? Math.max(12, Math.min(64, Math.round(Number(fm.titlesize)))) : CONFIG.overlayTitleSize;
-          const sSize = isFinite(Number(fm.subtitlesize)) ? Math.max(10, Math.min(48, Math.round(Number(fm.subtitlesize)))) : CONFIG.overlaySubtitleSize;
-          const titleTxt = (fm.title||'').toString().trim() || `Slide ${idx+1}`;
-          const subtitleTxt = (fm.subtitle||'').toString().trim();
-          const wrap = document.createElement('div');
-          wrap.className = `slide-overlay pos-${pos}`;
-          if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
-          if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
-          const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-            if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
-          wrap.setAttribute('aria-hidden','true');
-          slideEl.appendChild(wrap);
-        });
+      if(window.OverlayCtrl && typeof window.OverlayCtrl.rebuildOverlays==='function'){
+        return window.OverlayCtrl.rebuildOverlays(tempPos);
       }
-    }catch{}
+    }catch(e){}
+    // Fallback (should rarely run): no-op if controller missing
+    try{
+      const slides = [...document.querySelectorAll('.slide')];
+      slides.forEach(s => { s.querySelector('.slide-overlay')?.remove(); });
+    }catch(e){}
   }
 
   // Particle lifecycle is implemented in `src/runtime/particles.js` and exposed via window.Particles
   // Delegate resize handling to the runtime; runtime is expected to manage canvas sizing.
-  function resizeCanvas(){ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{}
-  }
-  function setBgButtonLabel(){ document.getElementById('bgBtn').textContent = (bgMode==='gradient'?'🌌 Background':bgMode==='particles'?'✨ Particles':'⛔ Background Off'); }
-  function setBackgroundMode(mode){
-    bgMode = mode;
-    localStorage.setItem('bgMode', bgMode);
-    setBgButtonLabel();
-    if (bgMode === 'off'){
-      try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
-      bgCanvas.style.display = 'none';
-      document.querySelector('.bg-gradient').style.display = 'none';
-    } else if (bgMode === 'gradient'){
-      try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
-      bgCanvas.style.display = 'none';
-      document.querySelector('.bg-gradient').style.display = 'block';
+  function resizeCanvas(){ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{} }
+  function setBgButtonLabel(){
+    if(window.BackgroundToggle && typeof window.BackgroundToggle.setBgButtonLabel==='function'){
+      window.BackgroundToggle.setBgButtonLabel(bgMode);
     } else {
-      document.querySelector('.bg-gradient').style.display = 'none';
-      bgCanvas.style.display = 'block';
-      try{ if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) }); }catch{}
+      document.getElementById('bgBtn').textContent = (bgMode==='gradient'?'🌌 Background':bgMode==='particles'?'✨ Particles':'⛔ Background Off');
     }
   }
-  const cycleBackground=()=>{ const order=['gradient','particles','off']; setBackgroundMode(order[(order.indexOf(bgMode)+1)%order.length]); try{ showToast(`Background: ${bgMode}`);}catch{} };
+  function setBackgroundMode(mode){
+    bgMode = mode;
+    if(window.BackgroundToggle && typeof window.BackgroundToggle.setBackgroundMode==='function'){
+      window.BackgroundToggle.setBackgroundMode(mode, { canvas: bgCanvas, particles: (window.Particles||null), prefersReduced });
+    } else {
+      try{ localStorage.setItem('bgMode', bgMode); }catch{}
+      setBgButtonLabel();
+      if (bgMode === 'off'){
+        try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
+        bgCanvas.style.display = 'none';
+        document.querySelector('.bg-gradient').style.display = 'none';
+      } else if (bgMode === 'gradient'){
+        try{ if(window && window.Particles && typeof window.Particles.stop === 'function') window.Particles.stop(); }catch{}
+        bgCanvas.style.display = 'none';
+        document.querySelector('.bg-gradient').style.display = 'block';
+      } else {
+        document.querySelector('.bg-gradient').style.display = 'none';
+        bgCanvas.style.display = 'block';
+        try{ if(window && window.Particles && typeof window.Particles.start === 'function') window.Particles.start({ prefersReduced }); }catch{}
+      }
+    }
+  }
+  const cycleBackground=()=>{ 
+    if(window.BackgroundToggle && typeof window.BackgroundToggle.cycleBackground==='function'){
+      const next = window.BackgroundToggle.cycleBackground(bgMode);
+      setBackgroundMode(next);
+    } else {
+      const order=['gradient','particles','off']; setBackgroundMode(order[(order.indexOf(bgMode)+1)%order.length]);
+    }
+    try{ showToast(`Background: ${bgMode}`);}catch{}
+  };
   let resizeTimer=null; window.addEventListener('resize',()=>{ if(bgMode!=='particles') return; clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{} },120); });
 
   // ===== Config & Theme =====
   const CONFIG = JSON.parse(localStorage.getItem('slideapp.config')||'{}');
+  // Expose CONFIG globally so UI modules (e.g., Style modal) operate on the same object
+  try{ window.CONFIG = CONFIG; }catch{}
   // Whether to persist config changes to localStorage (default: true for backward-compat)
   let PERSIST_CONFIG = (()=>{ try{ const v = localStorage.getItem('slideapp.config.persist'); if(v===null) return true; return v==='1' || String(v).toLowerCase()==='true'; }catch{} return true; })();
+  try{ window.PERSIST_CONFIG = PERSIST_CONFIG; }catch{}
   // Baseline opacity for T-key toggle: use last saved value from persisted config; fallback to 1 (100%).
   let BASE_OPACITY = (()=>{ try{ const saved=JSON.parse(localStorage.getItem('slideapp.config')||'{}'); const v=saved && typeof saved.slideOpacity==='number' ? saved.slideOpacity : undefined; if(typeof v==='number' && isFinite(v)) return Math.max(0, Math.min(1, v)); }catch{} return 1; })();
+  try{ window.BASE_OPACITY = BASE_OPACITY; }catch{}
   // Back-compat: migrate legacy brand -> appName if needed (do not delete brand to avoid breaking older versions)
   if(typeof CONFIG.appName !== 'string' && typeof CONFIG.brand === 'string'){
     CONFIG.appName = CONFIG.brand;
@@ -645,41 +436,11 @@
   if(typeof CONFIG.contentPos !== 'string') CONFIG.contentPos = 'tl';
 
   // ---- External config: schema, validation, merge, persistence ----
-  const CONFIG_KEYS = new Set([
-    'appName','brand','primary','accent','textColor','btnTextColor','btnFill',
-    'appBg1','appBg2','slideBg1','slideBg2','slideOpacity',
-    'slideBorderOn','slideBorderWidth',
-    'overlayOn','overlayPos','overlayTitleSize','overlaySubtitleOn','overlaySubtitleSize','overlaySubtitleColor',
-    'fontPrimary','fontSecondary',
-    'rememberLastDeck','hideSlidesWithUi','hideProgressWithUi','contentPos'
-  ]);
+  const CONFIG_KEYS = (window.ConfigSchema && window.ConfigSchema.KEY_SET) ? window.ConfigSchema.KEY_SET : new Set();
 
   function sanitizeConfig(input){
-    const out={}; if(!input || typeof input!=='object') return out;
-    const assignHex=(k)=>{ const n=normalizeHex(input[k]); if(n) out[k]=n; };
-    const assignBool=(k)=>{ const v=input[k]; if(typeof v==='boolean') out[k]=v; };
-    const assignNum=(k,{min,max}={})=>{ const v=Number(input[k]); if(isFinite(v)){ let n=v; if(typeof min==='number') n=Math.max(min,n); if(typeof max==='number') n=Math.min(max,n); out[k]=n; }};
-    const assignStr=(k)=>{ const v=input[k]; if(typeof v==='string' && v.trim()!=='') out[k]=v.trim(); };
-    // strings
-    ['appName','brand','overlayPos','fontPrimary','fontSecondary'].forEach(assignStr);
-    // hex colors (special-case btnTextColor: allow 'auto')
-    ['primary','accent','textColor','appBg1','appBg2','slideBg1','slideBg2'].forEach(assignHex);
-    if(typeof input.btnTextColor==='string'){
-      const v = input.btnTextColor.trim();
-      if(/^auto$/i.test(v)) out.btnTextColor = 'auto'; else { const n = normalizeHex(v); if(n) out.btnTextColor = n; }
-    }
-    // numbers
-    assignNum('slideOpacity',{min:0,max:1});
-    assignNum('slideBorderWidth',{min:0,max:8});
-    assignNum('overlayTitleSize',{min:12,max:64});
-    assignNum('overlaySubtitleSize',{min:10,max:48});
-    // booleans
-    ['slideBorderOn','overlayOn','overlaySubtitleOn','rememberLastDeck','hideSlidesWithUi','hideProgressWithUi'].forEach(assignBool);
-    // enum
-    if(typeof input.overlaySubtitleColor==='string' && /^(primary|accent)$/i.test(input.overlaySubtitleColor)) out.overlaySubtitleColor = input.overlaySubtitleColor.toLowerCase();
-    if(typeof input.contentPos==='string' && /^(t[mlr]|m[mlr]|b[mlr])$/i.test(input.contentPos)) out.contentPos = input.contentPos.toLowerCase();
-    if(typeof input.btnFill==='string' && /^(solid|outline)$/i.test(input.btnFill)) out.btnFill = input.btnFill.toLowerCase();
-    return out;
+    try{ if(window.ConfigSchema && typeof window.ConfigSchema.sanitizeConfig==='function'){ return window.ConfigSchema.sanitizeConfig(input); } }catch{}
+    return {};
   }
 
   function mergeConfig(incoming, mode){
@@ -1409,6 +1170,7 @@
 
   // ===== Render & Navigation =====
   let current=0, slidesHTML=[];
+  try{ window.slidesHTML = slidesHTML; }catch{}
   function renderSlides(list){ slidesRoot.innerHTML=''; thumbsRoot.innerHTML=''; if(!Array.isArray(list)||!list.length){ current=0; document.getElementById('progress').style.width='0%'; document.getElementById('slideNo').textContent='0/0'; return; } list.forEach((obj,i)=>{ const node=document.createElement('section'); node.className='slide';
     // Per-slide background override via front matter: slidebg1/slidebg2 (hex)
     try{
@@ -1501,37 +1263,8 @@
         }
       }catch(e){}
     }
-    // Build overlays if enabled
-    try{
-      const slides = [...document.querySelectorAll('.slide')];
-      slides.forEach(s=>{ const old=s.querySelector('.slide-overlay'); if(old) old.remove(); });
-      if(CONFIG.overlayOn===true){
-        slides.forEach((slideEl, idx)=>{
-          const fm = list[idx]?.fm || {};
-          // per-slide overrides
-          const slideOverlayFlagVal = (typeof fm.overlay !== 'undefined') ? String(fm.overlay).trim()
-            : (typeof fm['overlay-pos'] !== 'undefined' || typeof fm['title-size'] !== 'undefined' || typeof fm['subtitle-size'] !== 'undefined') ? 'on' : undefined;
-          const slideOverlayFlag = (typeof slideOverlayFlagVal !== 'undefined') ? /^(1|on|true)$/i.test(slideOverlayFlagVal) : true;
-          if(!slideOverlayFlag) return;
-          const pos = (fm['overlay-pos'] || fm.overlaypos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
-          const tSizeRaw = (typeof fm['title-size'] !== 'undefined') ? fm['title-size'] : fm.titlesize;
-          const sSizeRaw = (typeof fm['subtitle-size'] !== 'undefined') ? fm['subtitle-size'] : fm.subtitlesize;
-          const tSize = isFinite(Number(tSizeRaw)) ? Math.max(12, Math.min(64, Math.round(Number(tSizeRaw)))) : CONFIG.overlayTitleSize;
-          const sSize = isFinite(Number(sSizeRaw)) ? Math.max(10, Math.min(48, Math.round(Number(sSizeRaw)))) : CONFIG.overlaySubtitleSize;
-          const titleTxt = (fm.title||'').toString().trim() || `Slide ${idx+1}`;
-          const subtitleTxt = (fm.subtitle||'').toString().trim();
-          const wrap = document.createElement('div');
-          wrap.className = `slide-overlay pos-${pos}`;
-          // per-slide size overrides via inline style
-          if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
-          if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
-          const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-          if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
-          wrap.setAttribute('aria-hidden','true');
-          slideEl.appendChild(wrap);
-        });
-      }
-    }catch{}
+  // Build overlays via controller
+  try{ rebuildOverlays(); }catch(e){}
   }
 
   function setActive(i, direction = 'none'){
@@ -1686,7 +1419,13 @@
 
   document.getElementById('btnPrev').addEventListener('click',prev);
   document.getElementById('btnNext').addEventListener('click',next);
-  function toggleNotes(){ const now = notesEl.classList.toggle('show'); try{ showToast(now ? 'Notes: shown' : 'Notes: hidden'); }catch{} }
+  function toggleNotes(){
+    if(window.NotesCtrl && typeof window.NotesCtrl.toggleNotes==='function'){
+      const now = window.NotesCtrl.toggleNotes(notesEl, (state)=>{ try{ showToast(state ? 'Notes: shown' : 'Notes: hidden'); }catch{} });
+      return now;
+    }
+    const now = notesEl.classList.toggle('show'); try{ showToast(now ? 'Notes: shown' : 'Notes: hidden'); }catch{}; return now;
+  }
   document.getElementById('notesBtn').addEventListener('click',toggleNotes);
   document.getElementById('bgBtn').addEventListener('click',cycleBackground);
   function toggleFullscreen(){ const el=document.documentElement; if(!document.fullscreenElement){ el.requestFullscreen?.(); } else { document.exitFullscreen?.(); } }
@@ -1703,8 +1442,21 @@
   document.addEventListener('keydown',e=>{ const tag=(e.target&&e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='textarea'||e.target.isContentEditable) return; if(e.key==='ArrowRight'||e.key===' ') next(); if(e.key==='ArrowLeft') prev(); const k=e.key.toLowerCase(); if(k==='b') cycleBackground(); if(k==='n') toggleNotes(); if(k==='s') toggleDrawer(); if(k==='f'){ e.preventDefault(); toggleFullscreen(); } if(k==='u'){ e.preventDefault(); cycleUi(); } if(k==='p'){ e.preventDefault(); toggleProgress(); } if(k==='t'){ e.preventDefault(); toggleOpacity(); } if(k==='o'){ e.preventDefault(); toggleOutline(); } if(k==='y'){ e.preventDefault(); const b=document.getElementById('overlayBtn'); if(b) b.click(); } });
 
   // Drawer thumbnails (overlay on small screens)
-  const drawerKey='drawerCollapsed'; const isOverlay=()=>innerWidth<1024; function setDrawerUI(){ const collapsed=localStorage.getItem(drawerKey)==='1'; const open=localStorage.getItem('drawerOpen')==='1'; const overlay=isOverlay(); thumbsRoot.classList.remove('collapsed','overlay','open'); if(overlay){ thumbsRoot.classList.add('overlay'); if(open) thumbsRoot.classList.add('open'); scrimEl.style.display = open ? 'block' : 'none'; drawerBtn.textContent='🧭 Slides'; drawerBtn.title = open?'Hide slides':'Show slides'; } else { thumbsRoot.classList.toggle('collapsed',collapsed); scrimEl.style.display='none'; drawerBtn.textContent='🧭 Slides'; drawerBtn.title = collapsed?'Show slides':'Hide slides'; } }
-  function toggleDrawer(){ if(isOverlay()){ const open=!(localStorage.getItem('drawerOpen')==='1'); localStorage.setItem('drawerOpen', open?'1':'0'); setDrawerUI(); try{ showToast(open ? 'Slides: opened' : 'Slides: hidden'); }catch{} } else { const collapsed=!(localStorage.getItem(drawerKey)==='1'); localStorage.setItem(drawerKey, collapsed?'1':'0'); setDrawerUI(); try{ showToast(collapsed ? 'Slides: hidden' : 'Slides: shown'); }catch{} } }
+  const drawerKey='drawerCollapsed'; const isOverlay=()=>innerWidth<1024;
+  function setDrawerUI(){
+    if(window.DrawerCtrl && typeof window.DrawerCtrl.setDrawerUI==='function'){
+      window.DrawerCtrl.setDrawerUI({ thumbsRoot, drawerBtn, scrimEl, isOverlayFn: isOverlay });
+    } else {
+      const collapsed=localStorage.getItem(drawerKey)==='1'; const open=localStorage.getItem('drawerOpen')==='1'; const overlay=isOverlay(); thumbsRoot.classList.remove('collapsed','overlay','open'); if(overlay){ thumbsRoot.classList.add('overlay'); if(open) thumbsRoot.classList.add('open'); scrimEl.style.display = open ? 'block' : 'none'; drawerBtn.textContent='🧭 Slides'; drawerBtn.title = open?'Hide slides':'Show slides'; } else { thumbsRoot.classList.toggle('collapsed',collapsed); scrimEl.style.display='none'; drawerBtn.textContent='🧭 Slides'; drawerBtn.title = collapsed?'Show slides':'Hide slides'; }
+    }
+  }
+  function toggleDrawer(){
+    if(window.DrawerCtrl && typeof window.DrawerCtrl.toggleDrawer==='function'){
+      window.DrawerCtrl.toggleDrawer({ thumbsRoot, drawerBtn, scrimEl, isOverlayFn: isOverlay }, (open, overlay)=>{ try{ showToast(overlay ? (open ? 'Slides: opened' : 'Slides: hidden') : (open ? 'Slides: shown' : 'Slides: hidden')); }catch{} });
+    } else {
+      if(isOverlay()){ const open=!(localStorage.getItem('drawerOpen')==='1'); localStorage.setItem('drawerOpen', open?'1':'0'); setDrawerUI(); try{ showToast(open ? 'Slides: opened' : 'Slides: hidden'); }catch{} } else { const collapsed=!(localStorage.getItem(drawerKey)==='1'); localStorage.setItem(drawerKey, collapsed?'1':'0'); setDrawerUI(); try{ showToast(collapsed ? 'Slides: hidden' : 'Slides: shown'); }catch{} }
+    }
+  }
   // Enhance: allow toggling slides while UI is off by overriding hide-slides class when opening
   (function enhanceDrawerToggle(){
     const origToggle = toggleDrawer;
@@ -1791,434 +1543,16 @@
   })();
 
   // Style modal
-  const cfgOverlay=document.getElementById('cfgOverlay'); const cfgModal=document.getElementById('cfgModal'); document.getElementById('styleBtn').addEventListener('click',()=>{
-  cfgOverlay.style.display='block'; cfgModal.style.display='flex';
-  document.getElementById('cfgName').value=(CONFIG.appName||CONFIG.brand||'');
-  try{ const pNorm = normalizeHex(CONFIG.primary||'') || '#01B4E1'; document.getElementById('cfgPrimary').value = pNorm; }catch{}
-  try{ const aNorm = normalizeHex(CONFIG.accent||'') || '#64FFFC'; document.getElementById('cfgAccent').value = aNorm; }catch{}
-    // Initialize background pickers from CONFIG or computed CSS vars
-    try{
-  const appBg1 = normalizeHex(CONFIG.appBg1) || normalizeHex(getComputedStyle(document.documentElement).getPropertyValue('--app-bg1').trim()) || '#0f172a';
-  const appBg2 = normalizeHex(CONFIG.appBg2) || normalizeHex(getComputedStyle(document.documentElement).getPropertyValue('--app-bg2').trim()) || '#1e293b';
-  const slideBg1 = normalizeHex(CONFIG.slideBg1) || '#111827';
-  const slideBg2 = normalizeHex(CONFIG.slideBg2) || '#111827';
-      const elApp1 = document.getElementById('cfgAppBg1'); if(elApp1) elApp1.value = appBg1;
-      const elApp2 = document.getElementById('cfgAppBg2'); if(elApp2) elApp2.value = appBg2;
-      const elS1 = document.getElementById('cfgSlideBg1'); if(elS1) elS1.value = slideBg1;
-      const elS2 = document.getElementById('cfgSlideBg2'); if(elS2) elS2.value = slideBg2;
-    }catch(e){}
-    // Initialize text color picker from CONFIG or computed --text
-    try{
-  const txt = normalizeHex(CONFIG.textColor) || normalizeHex(getComputedStyle(document.documentElement).getPropertyValue('--text').trim()) || '#e2e8f0';
-  const elText = document.getElementById('cfgTextColor'); if(elText) elText.value = txt;
-    // Button text color mode + picker
-    try{
-      const modeSel = document.getElementById('cfgBtnTextMode');
-      const btnClr = document.getElementById('cfgBtnTextColor');
-      const vRaw = (CONFIG.btnTextColor||'auto');
-      const v = typeof vRaw==='string' ? vRaw.trim().toLowerCase() : '';
-      const isAuto = (v === 'auto' || !v);
-      modeSel.value = isAuto ? 'auto' : 'custom';
-      if(!isAuto){ const n = normalizeHex(String(CONFIG.btnTextColor)); btnClr.value = n || '#ffffff'; }
-      btnClr.disabled = isAuto;
-      const applyModeChange = ()=>{
-        const isAuto = (modeSel.value==='auto');
-        btnClr.disabled = isAuto;
-        if(isAuto){
-          CONFIG.btnTextColor = 'auto';
-        } else {
-          // Set a sensible starting color when switching to custom
-          let start = normalizeHex(String(btnClr.value||''));
-          try{
-            if(!start){
-              const cs = getComputedStyle(document.documentElement);
-              const cur = (cs.getPropertyValue('--btn-text')||'').trim();
-              start = normalizeHex(cur) || '#ffffff';
-            }
-          }catch{}
-          btnClr.value = start || '#ffffff';
-          CONFIG.btnTextColor = start || '#ffffff';
-        }
-        try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{}
-      };
-      modeSel.onchange = applyModeChange;
-      modeSel.oninput = applyModeChange;
-      // If user clicks the color while disabled, switch to custom automatically
-      btnClr.addEventListener('click', ()=>{
-        if(btnClr.disabled){
-          modeSel.value = 'custom'; btnClr.disabled = false;
-          const n = normalizeHex(String(btnClr.value||'')) || '#ffffff';
-          CONFIG.btnTextColor = n;
-          try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{}
-        }
-      });
-    }catch{}
-    // Button fill
-    try{ const bf=document.getElementById('cfgBtnFill'); bf.value = (CONFIG.btnFill==='outline'?'outline':'solid'); }catch{}
-    }catch{}
-    // Live-preview bindings for color pickers: update CONFIG and applyConfig immediately
-    try{
-  const bindLive=(id,key,norm)=>{ const el=document.getElementById(id); if(!el) return; el.oninput=(ev)=>{ const v=(ev.target.value||'').toString(); try{ if(norm){ const n=normalizeHex(v); if(n) CONFIG[key]=n; else delete CONFIG[key]; } else { CONFIG[key]=v; } }catch{} try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{} }; };
-      bindLive('cfgPrimary','primary', false);
-      bindLive('cfgAccent','accent', false);
-      bindLive('cfgTextColor','textColor', true);
-      // live: custom button text color only when custom mode is active
-      try{
-        const modeSel = document.getElementById('cfgBtnTextMode');
-        const btnClr = document.getElementById('cfgBtnTextColor');
-        btnClr.oninput = ()=>{ if(modeSel.value==='custom'){ const n=normalizeHex(btnClr.value||''); if(n) CONFIG.btnTextColor = n; try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} } };
-        modeSel.onchange = ()=>{ if(modeSel.value==='auto'){ CONFIG.btnTextColor = 'auto'; } else { const n=normalizeHex(btnClr.value||''); if(n) CONFIG.btnTextColor = n; }
-          try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} };
-        const fillSel = document.getElementById('cfgBtnFill');
-        fillSel.onchange = ()=>{ const v=String(fillSel.value||'solid').toLowerCase(); CONFIG.btnFill = (v==='outline'?'outline':'solid'); try{ window.Theme && window.Theme.applyConfig && window.Theme.applyConfig(CONFIG); }catch{} try{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }catch{} };
-      }catch{}
-      bindLive('cfgAppBg1','appBg1', true);
-      bindLive('cfgAppBg2','appBg2', true);
-      bindLive('cfgSlideBg1','slideBg1', true);
-      bindLive('cfgSlideBg2','slideBg2', true);
-    }catch(e){}
-    const row=document.getElementById('presetRow'); row.innerHTML='';
-    // Build compact segmented preset buttons (behaves like overlay-position selector)
-    const makeGroup = (title)=>{
-      const container=document.createElement('div'); container.style.display='flex'; container.style.flexDirection='column'; container.style.gap='6px';
-  const label=document.createElement('label'); label.style.fontSize='12px'; label.textContent=title;
-      const group=document.createElement('div'); group.style.display='flex'; group.style.gap='6px'; group.setAttribute('role','toolbar');
-      container.appendChild(label); container.appendChild(group);
-      return {container, group};
-    };
-    const darkGroup = makeGroup('Dark presets');
-    const lightGroup = makeGroup('Light presets');
-
-    // Active state helper (single active at a time across all presets)
-    const setActivePreset = (idx)=>{
-      [...row.querySelectorAll('button.preset-btn')].forEach(b=>{ const on = b.dataset.presetIndex===String(idx); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); });
-    };
-
-    PRESETS.forEach((p,idx)=>{
-      const b=document.createElement('button'); b.className='btn preset-btn'; b.textContent=p.name; b.title = `Apply ${p.name}`;
-  // Use CSS-driven button background; no inline gradient so it matches other controls
-      b.dataset.presetIndex = String(idx);
-      b.setAttribute('aria-pressed','false');
-      try{ b.style.removeProperty('color'); }catch{}
-      try{ b.style.borderColor = 'rgba(255,255,255,0.06)'; }catch{}
-      b.onclick = ()=>{
-        // populate inputs
-        try{ document.getElementById('cfgPrimary').value = p.primary; }catch{}
-        try{ document.getElementById('cfgAccent').value = p.accent; }catch{}
-        try{ if(p.textColor) document.getElementById('cfgTextColor').value = p.textColor; }catch{}
-        try{ if(p.appBg1) document.getElementById('cfgAppBg1').value = p.appBg1; }catch{}
-        try{ if(p.appBg2) document.getElementById('cfgAppBg2').value = p.appBg2; }catch{}
-        try{ if(p.slideBg1) document.getElementById('cfgSlideBg1').value = p.slideBg1; }catch{}
-        try{ if(p.slideBg2) document.getElementById('cfgSlideBg2').value = p.slideBg2; }catch{}
-        // apply immediately (update CONFIG and set CSS vars for instant preview)
-        try{
-          // normalize and store
-          const nPrimary = normalizeHex(p.primary) || p.primary;
-          const nAccent = normalizeHex(p.accent) || p.accent;
-          CONFIG.primary = nPrimary;
-          CONFIG.accent = nAccent;
-          if(p.textColor){ const nt = normalizeHex(p.textColor) || p.textColor; CONFIG.textColor = nt; } else { delete CONFIG.textColor; }
-          if(p.appBg1) CONFIG.appBg1 = normalizeHex(p.appBg1) || p.appBg1; else delete CONFIG.appBg1;
-          if(p.appBg2) CONFIG.appBg2 = normalizeHex(p.appBg2) || p.appBg2; else delete CONFIG.appBg2;
-          if(p.slideBg1) CONFIG.slideBg1 = normalizeHex(p.slideBg1) || p.slideBg1; else delete CONFIG.slideBg1;
-          if(p.slideBg2) CONFIG.slideBg2 = normalizeHex(p.slideBg2) || p.slideBg2; else delete CONFIG.slideBg2;
-          // set CSS vars explicitly so modal and UI reflect the preset immediately
-          // Theme.applyConfig will manage these CSS vars; no inline writes here.
-          // Recompute derived values and update UI (use non-persisting opacity preview)
-          try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
-          setSlideOpacity(typeof CONFIG.slideOpacity==='number' ? Math.round(CONFIG.slideOpacity*100) : 100, false);
-        }catch{}
-        // set active visual state
-        setActivePreset(idx);
-        try{ showToast(`Preset: ${p.name}`);}catch{}
-      };
-      if(p.group==='dark') darkGroup.group.appendChild(b); else lightGroup.group.appendChild(b);
-    });
-
-    if(darkGroup.group.children.length){ row.appendChild(darkGroup.container); }
-    if(lightGroup.group.children.length){ row.appendChild(lightGroup.container); }
-
-    // If no saved config present, mark the Default preset active for clarity
-    try{
-      const raw = localStorage.getItem('slideapp.config');
-      if(!raw){ const defaultIdx = PRESETS.findIndex(p=>p.name && p.name.toLowerCase()==='default'); if(defaultIdx>=0) setActivePreset(defaultIdx); }
-    }catch(e){}
-    // init slide opacity slider
-    const slider = document.getElementById('cfgSlideOpacity');
-    const readout = document.getElementById('cfgSlideOpacityVal');
-    const val = typeof CONFIG.slideOpacity==='number'? Math.round(CONFIG.slideOpacity*100):100;
-    slider.value = String(val);
-    readout.textContent = `(${val}%)`;
-    slider.oninput = (e)=>{
-      const pct = Number(e.target.value)||0; readout.textContent = `(${pct}%)`;
-      setSlideOpacity(pct);
-    };
-    // UI visibility checkboxes
-    const chkSlides = document.getElementById('cfgHideSlidesWithUi');
-    const chkProgress = document.getElementById('cfgHideProgressWithUi');
-    const chkOutline = document.getElementById('cfgSlideOutline');
-    chkSlides.checked = (CONFIG.hideSlidesWithUi !== false); // default true
-    chkProgress.checked = (CONFIG.hideProgressWithUi !== false); // default true
-    chkOutline.checked = (CONFIG.slideBorderOn !== false); // default true
-    chkOutline.onchange = ()=>{
-      CONFIG.slideBorderOn = chkOutline.checked;
-      document.body.classList.toggle('border-off', CONFIG.slideBorderOn===false);
-      try{ showToast(CONFIG.slideBorderOn===false ? 'Outline: hidden' : 'Outline: shown'); }catch{}
-    };
-    // Outline width control
-    const ow = document.getElementById('cfgOutlineWidth');
-    const owVal = document.getElementById('cfgOutlineWidthVal');
-    const owDefault = (typeof CONFIG.slideBorderWidth === 'number' && isFinite(CONFIG.slideBorderWidth)) ? Math.round(CONFIG.slideBorderWidth) : 3;
-    ow.value = String(owDefault);
-    owVal.textContent = `(${owDefault}px)`;
-    ow.oninput = (e)=>{
-      const px = Math.max(0, Math.min(8, Math.round(Number(e.target.value)||0)));
-      owVal.textContent = `(${px}px)`;
-      document.documentElement.style.setProperty('--outline-w', `${px}px`);
-    };
-    // Remember deck controls
-    const chkRemember = document.getElementById('cfgRememberDeck');
-    chkRemember.checked = (CONFIG.rememberLastDeck === true);
-    const btnForget = document.getElementById('cfgForgetDeck');
-    btnForget.onclick = ()=>{
-      try{
-        sessionStorage.removeItem('slideapp.session.deck');
-        localStorage.removeItem('slideapp.persist.deck');
-        showToast('Forgot last deck');
-      }catch{}
-    };
-    // Bind Clear button next to slider
-    const clearBtn = document.getElementById('btnClearOpacity');
-    if(clearBtn){
-      clearBtn.onclick = ()=>{
-        slider.value = '0';
-        readout.textContent = '(0%)';
-        setSlideOpacity(0);
-        try{ showToast('Clear'); }catch{}
-      };
-    }
-    // Overlay controls init
-    try{
-      const cbTitle = document.getElementById('cfgOverlayTitleOn'); cbTitle.checked = (CONFIG.overlayOn===true);
-  const cbSub = document.getElementById('cfgOverlaySubtitleOn'); cbSub.checked = (CONFIG.overlaySubtitleOn!==false);
-  const ts = document.getElementById('cfgTitleSize'); const tsVal=document.getElementById('cfgTitleSizeVal'); const tsDefault = Math.max(12, Math.min(64, Math.round(CONFIG.overlayTitleSize||22))); ts.value=String(tsDefault); tsVal.textContent = `(${tsDefault}px)`; ts.oninput=(e)=>{ const px=Math.max(12, Math.min(64, Math.round(Number(e.target.value)||22))); tsVal.textContent=`(${px}px)`; try{ document.documentElement.style.setProperty('--title-size', `${px}px`); }catch(e){} };
-  const ss = document.getElementById('cfgSubtitleSize'); const ssVal=document.getElementById('cfgSubtitleSizeVal'); const ssDefault = Math.max(10, Math.min(48, Math.round(CONFIG.overlaySubtitleSize||16))); ss.value=String(ssDefault); ssVal.textContent = `(${ssDefault}px)`; ss.oninput=(e)=>{ const px=Math.max(10, Math.min(48, Math.round(Number(e.target.value)||16))); ssVal.textContent=`(${px}px)`; try{ document.documentElement.style.setProperty('--subtitle-size', `${px}px`); }catch(e){} };
-  const sc = document.getElementById('cfgSubtitleColor'); sc.value = (CONFIG.overlaySubtitleColor||'primary');
-      const posWrap = document.getElementById('cfgOverlayPos');
-      const posHint = document.getElementById('cfgOverlayPosHint');
-      const setActive=(p)=>{ [...posWrap.querySelectorAll('button')].forEach(b=>{ const on=(b.dataset.pos===p); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); }); };
-      const cur=(CONFIG.overlayPos||'tl').toLowerCase(); setActive(cur);
-      const setPosDisabled = (off)=>{
-        const disable = !!off;
-        [...posWrap.querySelectorAll('button')].forEach(b=>{ if(disable){ b.setAttribute('disabled',''); b.setAttribute('aria-disabled','true'); } else { b.removeAttribute('disabled'); b.setAttribute('aria-disabled','false'); } });
-        if(posHint){ posHint.style.display = disable ? 'inline' : 'none'; }
-      };
-      const setSizeDisabled = (off)=>{
-        const disable = !!off; if(ts){ ts.disabled = disable; } if(ss){ ss.disabled = disable; }
-      };
-      const setSubtitleControlsDisabled = (off)=>{
-        const disable = !!off; if(cbSub){ cbSub.disabled = disable; } if(sc){ sc.disabled = disable; }
-      };
-      setPosDisabled(!(CONFIG.overlayOn===true));
-      setSizeDisabled(!(CONFIG.overlayOn===true));
-      setSubtitleControlsDisabled(!(CONFIG.overlayOn===true));
-      cbTitle.onchange = ()=>{
-        // update disabled state and preview if turned on
-        const on = cbTitle.checked;
-        setPosDisabled(!on);
-        setSizeDisabled(!on);
-        setSubtitleControlsDisabled(!on);
-        // if user turns overlay on while modal is open, show preview
-        CONFIG.overlayOn = on; // reflect intent temporarily; Save will persist real value
-        if(on){ try{ rebuildOverlays(window.__tempOverlayPos || cur); }catch{} } else { try{ rebuildOverlays(); }catch{} }
-      };
-      posWrap.querySelectorAll('button').forEach(btn=>{
-        btn.setAttribute('aria-pressed', btn.dataset.pos===cur ? 'true' : 'false');
-        btn.onclick=()=>{
-          const pos = btn.dataset.pos;
-          setActive(pos);
-          // store a temporary selection used for live preview; persist on Save only
-          try{ window.__tempOverlayPos = pos; }catch{}
-          try{ showToast(`Title position: ${pos.toUpperCase()}`);}catch{}
-          // live preview if overlay is currently ON
-          if(CONFIG.overlayOn===true){
-            try{ rebuildOverlays(pos); }catch{}
-          }
-        };
-      });
-      const fp = document.getElementById('cfgFontPrimary'); const fs = document.getElementById('cfgFontSecondary'); fp.value = CONFIG.fontPrimary||''; fs.value = CONFIG.fontSecondary||'';
-    }catch{}
-
-    // Content position controls
-    try{
-      const group = document.getElementById('cfgContentPos');
-      if(group){
-        const setActive=(p)=>{ [...group.querySelectorAll('button')].forEach(b=>{ const on=(b.dataset.pos===p); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); }); };
-        const current = (CONFIG.contentPos || 'tl').toLowerCase(); setActive(current);
-        const applyPreview=(p)=>{
-          const sc = document.querySelector('.slide.active .content-scroll');
-          if(!sc) return;
-          const mapRow = { t:'flex-start', m:'center', b:'flex-end' };
-          const mapCol = { l:'flex-start', m:'center', r:'flex-end' };
-          if(/^[tmb][lmr]$/.test(p)){
-            sc.style.setProperty('--content-y', mapRow[p[0]]);
-            sc.style.setProperty('--content-x', mapCol[p[1]]);
-          }
-        };
-        group.querySelectorAll('button').forEach(btn=>{
-          btn.onclick=()=>{ const pos=(btn.dataset.pos||'tl').toLowerCase(); setActive(pos); try{ window.__tempContentPos = pos; }catch{} applyPreview(pos); };
-          btn.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); btn.click(); }});
-        });
-        // Initial preview
-        applyPreview(current);
-      }
-    }catch{}
-
-    // External config controls
-    try{
-      const persistChk = document.getElementById('cfgPersistConfig'); if(persistChk){ persistChk.checked = !!PERSIST_CONFIG; persistChk.onchange = ()=>{ PERSIST_CONFIG = !!persistChk.checked; try{ localStorage.setItem('slideapp.config.persist', PERSIST_CONFIG ? '1':'0'); showToast(PERSIST_CONFIG? 'Persist: on':'Persist: off'); }catch{} }; }
-      const urlInput = document.getElementById('cfgConfigUrl');
-      const btnLoad = document.getElementById('cfgLoadUrl'); if(btnLoad){ btnLoad.onclick = async ()=>{ const u=(urlInput?.value||'').trim(); if(!u){ try{ showToast('Enter a URL'); }catch{} return; } await loadConfigFromUrl(u); } }
-      const fileInput = document.getElementById('cfgImportFile');
-      const importBtn = document.getElementById('cfgImportBtn');
-      if(importBtn && fileInput){ importBtn.onclick = ()=>{ try{ fileInput.click(); }catch{} }; }
-      if(fileInput){ fileInput.onchange = async (e)=>{ try{ const f=e.target.files && e.target.files[0]; if(!f) return; if(f.size > 2*1024*1024){ alert('File too large (max 2MB)'); e.target.value=''; return; } const text = await f.text(); const data = JSON.parse(text); mergeConfig(data, 'merge'); if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} } try{ showToast('Config imported'); }catch{} e.target.value=''; }catch(err){ console.error('Import failed',err); alert('Import failed: '+(err?.message||err)); e.target.value=''; } } }
-      const btnExport = document.getElementById('cfgExport'); if(btnExport){ btnExport.onclick = ()=>{ try{ exportConfigBlob(); }catch(e){ alert('Export failed: '+(e?.message||e)); } } }
-    }catch(e){ console.error('External config controls failed', e); }
-
-    // Ensure Save button is in view for small viewports/tests
-    try{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }catch{}
-  }); document.getElementById('cfgClose').addEventListener('click',()=>{ cfgOverlay.style.display=cfgModal.style.display='none'; try{ delete window.__tempOverlayPos; }catch{} try{ rebuildOverlays(); }catch{} }); document.getElementById('cfgSave').addEventListener('click',()=>{ CONFIG.brand=document.getElementById('cfgName').value.trim(); CONFIG.primary=document.getElementById('cfgPrimary').value; CONFIG.accent=document.getElementById('cfgAccent').value; // persist slide opacity
-    const slider=document.getElementById('cfgSlideOpacity'); let pct=Number(slider.value); if(!Number.isFinite(pct)) pct=100; pct=Math.round(Math.max(0, Math.min(100, pct))); CONFIG.slideOpacity = pct/100;
-  // Save under new key appName (keep legacy brand for compatibility)
-  const nm = document.getElementById('cfgName').value.trim();
-  CONFIG.appName = nm; if(!CONFIG.brand) CONFIG.brand = nm; // keep brand populated once for older versions
-  // Persist background pickers (normalize hex values)
-  try{
-    const ra = (document.getElementById('cfgAppBg1')?.value || '').toString(); const na = normalizeHex(ra);
-    const rb = (document.getElementById('cfgAppBg2')?.value || '').toString(); const nb = normalizeHex(rb);
-    if(na) CONFIG.appBg1 = na; else delete CONFIG.appBg1;
-    if(nb) CONFIG.appBg2 = nb; else delete CONFIG.appBg2;
-    const rs1 = (document.getElementById('cfgSlideBg1')?.value || '').toString(); const ns1 = normalizeHex(rs1);
-    const rs2 = (document.getElementById('cfgSlideBg2')?.value || '').toString(); const ns2 = normalizeHex(rs2);
-    if(ns1) CONFIG.slideBg1 = ns1; else delete CONFIG.slideBg1;
-    if(ns2) CONFIG.slideBg2 = ns2; else delete CONFIG.slideBg2;
-  // text color
-  try{ const rt = (document.getElementById('cfgTextColor')?.value || '').toString(); const nt = normalizeHex(rt); if(nt) CONFIG.textColor = nt; else delete CONFIG.textColor; }catch{}
-  // Button text color mode/value
-  try{
-    const modeSel = document.getElementById('cfgBtnTextMode');
-    const btnClr = document.getElementById('cfgBtnTextColor');
-    if(modeSel && btnClr){
-      if(modeSel.value==='auto'){ CONFIG.btnTextColor = 'auto'; }
-      else { const n = normalizeHex(String(btnClr.value||'')); if(n) CONFIG.btnTextColor = n; else delete CONFIG.btnTextColor; }
-    }
-  }catch{}
-  // Button fill
-  try{ const bf=document.getElementById('cfgBtnFill'); const v=(bf?.value||'').toString().toLowerCase(); CONFIG.btnFill = (v==='outline'?'outline':'solid'); }catch{}
-  }catch(e){}
-  // Save UI visibility checkboxes
-  CONFIG.hideSlidesWithUi = document.getElementById('cfgHideSlidesWithUi').checked;
-  CONFIG.hideProgressWithUi = document.getElementById('cfgHideProgressWithUi').checked;
-  // Save outline checkbox
-  CONFIG.slideBorderOn = document.getElementById('cfgSlideOutline').checked;
-  // Save outline width
-  const owSave = document.getElementById('cfgOutlineWidth');
-  let px = Math.max(0, Math.min(8, Math.round(Number(owSave.value)||0)));
-  CONFIG.slideBorderWidth = px;
-  // Remember last deck toggle
-  CONFIG.rememberLastDeck = document.getElementById('cfgRememberDeck').checked;
-  // Overlay & typography saves
-  CONFIG.overlayOn = document.getElementById('cfgOverlayTitleOn').checked;
-  CONFIG.overlaySubtitleOn = document.getElementById('cfgOverlaySubtitleOn').checked;
-  const ts = Math.max(12, Math.min(64, Math.round(Number(document.getElementById('cfgTitleSize').value)||22)));
-  const ss = Math.max(10, Math.min(48, Math.round(Number(document.getElementById('cfgSubtitleSize').value)||16)));
-  CONFIG.overlayTitleSize = ts; CONFIG.overlaySubtitleSize = ss;
-  CONFIG.overlaySubtitleColor = (document.getElementById('cfgSubtitleColor').value === 'accent') ? 'accent' : 'primary';
-  const fp = document.getElementById('cfgFontPrimary').value.trim(); const fs = document.getElementById('cfgFontSecondary').value.trim(); if(fp) CONFIG.fontPrimary = fp; if(fs) CONFIG.fontSecondary = fs;
-  // Persist a temporary overlay position preview if present
-  try{ if(window.__tempOverlayPos){ CONFIG.overlayPos = window.__tempOverlayPos; delete window.__tempOverlayPos; } }catch{}
-  // Persist content position selection if previewed
-  try{ if(window.__tempContentPos){ CONFIG.contentPos = window.__tempContentPos; delete window.__tempContentPos; } }catch{}
-  // Persist only if enabled
-  if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} } else { try{ localStorage.removeItem('slideapp.config'); }catch{} }
-  try{ if(window.Theme && typeof window.Theme.applyConfig === 'function'){ try{ window.Theme.applyConfig(CONFIG); }catch{} } else { applyConfig(); } }catch{}
-  // Ensure brand label reflects saved name immediately even when Theme.applyConfig handled CSS only
-  try{ const el=document.getElementById('appName'); if(el){ el.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp'); } }catch{}
-  // Update tab title only if deck did not provide a name (deck takes precedence)
-  try{ if(!(window.__deckAppName && String(window.__deckAppName).trim())){ const nm=(CONFIG.appName||CONFIG.brand||'SlideApp'); if(nm && nm.trim()) document.title = nm.trim(); } }catch{}
-  try{ updateActiveThumbGradient(); }catch{}
-  cfgOverlay.style.display=cfgModal.style.display='none';
-  // Notify with a summary of settings
-  try{ const app=CONFIG.appName||CONFIG.brand||'SlideApp'; const primary=CONFIG.primary||'#01B4E1'; const accent=CONFIG.accent||'#64FFFC'; const outline=CONFIG.slideBorderOn!==false?'on':'off'; showToast(`Saved: ${app} • ${primary} / ${accent} • Opacity ${pct}% • Outline ${outline} ${px}px`);}catch{}
-  // Update baseline after save so T toggles to the saved value
-  BASE_OPACITY = CONFIG.slideOpacity;
-  // Rebuild overlays on existing slides according to new settings
-  try{
-    if(Array.isArray(slidesHTML) && slidesHTML.length){
-      const slides = [...document.querySelectorAll('.slide')];
-      slides.forEach(s=>{ const old=s.querySelector('.slide-overlay'); if(old) old.remove(); });
-      if(CONFIG.overlayOn===true){
-        slides.forEach((slideEl, idx)=>{
-          const fm = slidesHTML[idx]?.fm || {};
-          const slideOverlayFlag = (typeof fm.overlay !== 'undefined') ? /^(1|on|true)$/i.test(String(fm.overlay).trim()) : true;
-          if(!slideOverlayFlag) return;
-          const pos = (fm.overlaypos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
-          const tSize = isFinite(Number(fm.titlesize)) ? Math.max(12, Math.min(64, Math.round(Number(fm.titlesize)))) : CONFIG.overlayTitleSize;
-          const sSize = isFinite(Number(fm.subtitlesize)) ? Math.max(10, Math.min(48, Math.round(Number(fm.subtitlesize)))) : CONFIG.overlaySubtitleSize;
-          const titleTxt = (fm.title||'').toString().trim() || `Slide ${idx+1}`;
-          const subtitleTxt = (fm.subtitle||'').toString().trim();
-          const wrap = document.createElement('div');
-          wrap.className = `slide-overlay pos-${pos}`;
-          if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
-          if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
-          const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-    if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
-          wrap.setAttribute('aria-hidden','true');
-          slideEl.appendChild(wrap);
-        });
-      }
-    }
-  }catch{}
-  // Update content position across slides using per-slide FM or new CONFIG default
-  try{
-    if(Array.isArray(slidesHTML) && slidesHTML.length){
-      const slides = [...document.querySelectorAll('.slide')];
-      slides.forEach((slideEl, idx)=>{
-        const sc = slideEl.querySelector('.content-scroll');
-        if(!sc) return;
-        const fm = slidesHTML[idx]?.fm || {};
-        const raw = String(fm['content-pos'] || fm.contentpos || CONFIG.contentPos || 'tl').toLowerCase();
-        const mapRow = { t:'flex-start', m:'center', b:'flex-end' };
-        const mapCol = { l:'flex-start', m:'center', r:'flex-end' };
-        if(/^[tmb][lmr]$/.test(raw)){
-          sc.style.setProperty('--content-y', mapRow[raw[0]]);
-          sc.style.setProperty('--content-x', mapCol[raw[1]]);
-        } else {
-          sc.style.setProperty('--content-y', 'flex-start');
-          sc.style.setProperty('--content-x', 'flex-start');
-        }
-      });
-    }
-  }catch{}
-  }); document.getElementById('cfgReset').addEventListener('click',()=>{ 
-    // Clear saved style config (keep persist preference for backward compatibility)
-    try{ localStorage.removeItem('slideapp.config'); }catch{}
-    // Also forget any remembered decks (session + persistent)
-    try{ sessionStorage.removeItem('slideapp.session.deck'); }catch{}
-    try{ localStorage.removeItem('slideapp.persist.deck'); }catch{}
-    // Reset opacity baseline
-    BASE_OPACITY = 1; 
-    try{ showToast('Settings reset to defaults', 1000);}catch{} 
-    setTimeout(()=>location.reload(), 400); 
-  });
+  if (window.StyleModal && typeof window.StyleModal.init === 'function') {
+    window.StyleModal.init();
+  }
 
   // File loader
   document.getElementById('fileInput').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; try{
     // Test-only deterministic guard: if tests opt-in, clear persisted bgMode and prefer gradient
     try{ if(typeof window.__isDeterministicTestMode === 'function' && window.__isDeterministicTestMode()){ try{ localStorage.removeItem('bgMode'); }catch{} bgMode = 'gradient'; setBackgroundMode('gradient'); } }catch{}
   // debug hooks removed
-    if(f.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; } const valid=['text/markdown','text/plain','application/octet-stream']; if(!valid.includes(f.type) && !/\.(md|markdown|txt)$/i.test(f.name)){ alert('Please select a Markdown file (.md/.markdown/.txt)'); return; } const text=await f.text(); if(!text.trim()){ alert('File appears empty.'); return; } slidesHTML=splitSlides(text); if(!slidesHTML.length){ alert('No slides found. Separate slides with a line containing only ---'); return; } renderSlides(slidesHTML);
+    if(f.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; } const valid=['text/markdown','text/plain','application/octet-stream']; if(!valid.includes(f.type) && !/\.(md|markdown|txt)$/i.test(f.name)){ alert('Please select a Markdown file (.md/.markdown/.txt)'); return; } const text=await f.text(); if(!text.trim()){ alert('File appears empty.'); return; } slidesHTML=splitSlides(text); try{ window.slidesHTML = slidesHTML; }catch{} if(!slidesHTML.length){ alert('No slides found. Separate slides with a line containing only ---'); return; } renderSlides(slidesHTML);
     // Apply deck-level frontmatter settings
     try{
   const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {}));
@@ -2259,7 +1593,7 @@
       if(raw){
         const data = JSON.parse(raw);
         if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
-          slidesHTML = splitSlides(data.deckContent);
+      slidesHTML = splitSlides(data.deckContent); try{ window.slidesHTML = slidesHTML; }catch{}
           renderSlides(slidesHTML);
           try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
           try{ showToast('Restored last deck (session)'); }catch{}
@@ -2274,7 +1608,7 @@
         if(raw){
           const data = JSON.parse(raw);
           if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
-            slidesHTML = splitSlides(data.deckContent);
+            slidesHTML = splitSlides(data.deckContent); try{ window.slidesHTML = slidesHTML; }catch{}
             renderSlides(slidesHTML);
             try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
             try{ showToast('Restored last deck'); }catch{}
@@ -2288,7 +1622,7 @@
       const res = await fetch('sample_presentation.md');
   if(res.ok){
     const text = await res.text();
-    slidesHTML = splitSlides(text);
+    slidesHTML = splitSlides(text); try{ window.slidesHTML = slidesHTML; }catch{}
   renderSlides(slidesHTML);
   // Apply deck-level frontmatter (sample)
   try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); try{ if(!fm.background && !fm.bg){ if(typeof __isDeterministicTestMode === 'function' && __isDeterministicTestMode()){ setBackgroundMode('gradient'); } } }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
@@ -2631,7 +1965,7 @@ Notes:
 - Values outside ranges are clamped to the stated mins/maxes
 
 Everything else in front matter is ignored by the app.`;
-    slidesHTML = splitSlides(DEMO_MD);
+    slidesHTML = splitSlides(DEMO_MD); try{ window.slidesHTML = slidesHTML; }catch{}
     renderSlides(slidesHTML);
   // Apply deck-level frontmatter if present
   try{ const fm = slidesHTML[0]?.fm || {}; applyDeckFrontmatter(fm); }catch{}
@@ -2639,7 +1973,7 @@ Everything else in front matter is ignored by the app.`;
 
   // Initialize everything
   // Toast helper
-  let toastTimer=null; function showToast(msg, ms=1800){ const t=document.getElementById('toast'); if(!t) return; t.textContent=msg; if(prefersReduced) t.classList.add('no-anim'); t.style.display='block'; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ t.classList.remove('show'); const hideDelay=prefersReduced?0:220; setTimeout(()=>{ t.style.display='none'; }, hideDelay); }, ms); }
+  // showToast moved to src/ui/toast.js; global showToast kept for back-compat
 
   // Announce fullscreen changes
   document.addEventListener('fullscreenchange',()=>{ showToast(document.fullscreenElement?'Entered fullscreen':'Exited fullscreen'); });
@@ -2673,7 +2007,7 @@ Everything else in front matter is ignored by the app.`;
       const res = await fetch(path, { credentials: 'omit' });
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
-      slidesHTML = splitSlides(text);
+      slidesHTML = splitSlides(text); try{ window.slidesHTML = slidesHTML; }catch{}
       // Apply deck-level frontmatter BEFORE rendering so initial UI + active thumb use correct theme
       try{
         const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {}));
@@ -3135,30 +2469,7 @@ Everything else in front matter is ignored by the app.`;
     try{ setDocumentTitle(); }catch{}
   // Rebuild overlays for current slides
     try{
-      if(Array.isArray(slidesHTML) && slidesHTML.length){
-        const slides = [...document.querySelectorAll('.slide')];
-        slides.forEach(s=>{ const old=s.querySelector('.slide-overlay'); if(old) old.remove(); });
-    if(CONFIG.overlayOn===true){
-          slides.forEach((slideEl, idx)=>{
-            const fm2 = slidesHTML[idx]?.fm || {};
-      const slideOverlayFlag = (typeof fm2.overlay !== 'undefined') ? /^(1|on|true)$/i.test(String(fm2.overlay).trim()) : true;
-      if(!slideOverlayFlag) return;
-      const pos = (fm2.overlaypos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
-      const tSize = isFinite(Number(fm2.titlesize)) ? Math.max(12, Math.min(64, Math.round(Number(fm2.titlesize)))) : CONFIG.overlayTitleSize;
-      const sSize = isFinite(Number(fm2.subtitlesize)) ? Math.max(10, Math.min(48, Math.round(Number(fm2.subtitlesize)))) : CONFIG.overlaySubtitleSize;
-      const titleTxt = (fm2.title||'').toString().trim() || `Slide ${idx+1}`;
-      const subtitleTxt = (fm2.subtitle||'').toString().trim();
-      const wrap = document.createElement('div');
-      wrap.className = `slide-overlay pos-${pos}`;
-      if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
-      if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
-      const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-  if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
-            wrap.setAttribute('aria-hidden','true');
-            slideEl.appendChild(wrap);
-          });
-        }
-      }
+  rebuildOverlays();
     }catch{}
     // UI mode (on/off, show/hide, 1/0, true/false)
     try{

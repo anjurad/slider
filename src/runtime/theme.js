@@ -1,10 +1,15 @@
-/* Lightweight runtime theming helpers (no build step). */
+/* Lightweight runtime theming helpers (no build step).
+   Uses shared core helpers from window.ThemeCore when available
+   to keep logic consistent with src/app/theme.ts.
+*/
 (function initThemeRuntime(){
+  var Core = (typeof window !== 'undefined' && window.ThemeCore) ? window.ThemeCore : null;
   function clamp01(n){ return Math.min(1, Math.max(0, n)); }
   function normalizeHex(hex){
-  if(!hex) return '';
-  // strip surrounding quotes if present and normalize
-  let s = String(hex).trim().replace(/^['"]|['"]$/g, '').toLowerCase();
+    if(Core && Core.normalizeHex) return Core.normalizeHex(hex);
+    if(!hex) return '';
+    // strip surrounding quotes if present and normalize
+    let s = String(hex).trim().replace(/^['"]|['"]$/g, '').toLowerCase();
     const m3 = /^#?([0-9a-f]{3})$/i.exec(s);
     if(m3){ const h=m3[1]; return '#'+h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; }
     const m6 = /^#?([0-9a-f]{6})$/i.exec(s);
@@ -12,6 +17,7 @@
     return '';
   }
   function hexToRgb(hex){
+    if(Core && Core.hexToRgb) return Core.hexToRgb(hex);
     const h = normalizeHex(hex).slice(1);
     const r = parseInt(h.slice(0,2),16);
     const g = parseInt(h.slice(2,4),16);
@@ -21,6 +27,19 @@
   function toRgbString(hex){
     const {r,g,b} = hexToRgb(hex);
     return `rgb(${r}, ${g}, ${b})`;
+  }
+  function clamp01(n){ return Math.max(0, Math.min(1, n)); }
+  function mixColors(rgbA, rgbB, t){
+    const r = Math.round(rgbA.r*(1-t) + rgbB.r*t);
+    const g = Math.round(rgbA.g*(1-t) + rgbB.g*t);
+    const b = Math.round(rgbA.b*(1-t) + rgbB.b*t);
+    return { r, g, b };
+  }
+  function rgbToLuminance(rgb){
+    const srgb = [rgb.r, rgb.g, rgb.b].map(c=>{
+      const s = c/255; return s <= 0.03928 ? s/12.92 : Math.pow((s+0.055)/1.055, 2.4);
+    });
+    return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
   }
   function computeThemeCssVars(cfg){
   const rawPrimary = (cfg && cfg.primary) ? String(cfg.primary).trim() : '';
@@ -95,12 +114,37 @@
           const accent = (cfg.accent && String(cfg.accent).trim()) ? normalizeHex(String(cfg.accent)) : '';
           if (primary) cssVars['--primary'] = primary;
           if (accent) cssVars['--accent'] = accent;
-          // Button background fill
+          // Button background fill + outline border styling
           const btnFill = (cfg.btnFill && String(cfg.btnFill).trim().toLowerCase()) || '';
           if (btnFill === 'outline') {
             cssVars['--btn-bg'] = 'transparent';
+            // Border thickness (user-configurable)
+            const bw = (typeof cfg.btnBorderWidth === 'number' && isFinite(cfg.btnBorderWidth)) ? Math.round(cfg.btnBorderWidth) : 2;
+            const clamped = Math.max(1, Math.min(6, bw));
+            const hoverW = Math.min(8, clamped + 1);
+            cssVars['--btn-border-width'] = `${clamped}px`;
+            cssVars['--btn-border-width-hover'] = `${hoverW}px`;
+            // Border color = accent (fallback to primary)
+            const base = (accent || primary || '#64fffc');
+            cssVars['--btn-border-color'] = base;
+            // Theme-aware hover color: lighten on dark, darken on light
+            try{
+              const baseRgb = hexToRgb(base);
+              const bgTextHex = (cfg.textColor && String(cfg.textColor).trim()) ? normalizeHex(String(cfg.textColor)) : '';
+              const bgTextRgb = bgTextHex ? hexToRgb(bgTextHex) : { r: 226, g: 232, b: 240 };
+              const lum = rgbToLuminance(bgTextRgb);
+              const hoverRgb = lum < 0.5 ? mixColors(baseRgb, {r:255,g:255,b:255}, 0.15) : mixColors(baseRgb, {r:0,g:0,b:0}, 0.15);
+              cssVars['--btn-border-color-hover'] = `rgb(${hoverRgb.r}, ${hoverRgb.g}, ${hoverRgb.b})`;
+            }catch(e){ cssVars['--btn-border-color-hover'] = cssVars['--btn-border-color']; }
           } else if (primary && accent) {
             cssVars['--btn-bg'] = `linear-gradient(90deg, ${primary}, ${accent})`;
+            const bw = (typeof cfg.btnBorderWidth === 'number' && isFinite(cfg.btnBorderWidth)) ? Math.round(cfg.btnBorderWidth) : 1;
+            const clamped = Math.max(1, Math.min(6, bw));
+            const hoverW = Math.min(8, clamped + 1);
+            cssVars['--btn-border-width'] = `${clamped}px`;
+            cssVars['--btn-border-width-hover'] = `${hoverW}px`;
+            cssVars['--btn-border-color'] = 'rgba(255,255,255,0.06)';
+            cssVars['--btn-border-color-hover'] = cssVars['--btn-border-color'];
           }
           // btn-text and text
           // Accept raw color strings (hex quoted, shorthand, or rgb()).
@@ -141,18 +185,25 @@
           // compute slide opacity CSS if provided as decimal 0..1
           if (typeof cfg.slideOpacity === 'number' && isFinite(cfg.slideOpacity)) {
             var pct = Math.round(Math.max(0, Math.min(100, cfg.slideOpacity * 100)));
-            // light-weight opacity handling: compute rgba from slideBg1/slideBg2 if present
-            var fallbackRgb = { r: 17, g: 24, b: 39 };
-            var s1 = (cfg.slideBg1 && normalizeHex(String(cfg.slideBg1))) || null;
-            var s2 = (cfg.slideBg2 && normalizeHex(String(cfg.slideBg2))) || null;
-            var c1 = s1 ? hexToRgb(s1) : fallbackRgb;
-            var c2 = s2 ? hexToRgb(s2) : fallbackRgb;
-            var o1 = (0.75 * (pct/100)).toFixed(3);
-            var o2 = (0.55 * (pct/100)).toFixed(3);
-            cssVars['--slide-bg1'] = `rgba(${c1.r},${c1.g},${c1.b},${o1})`;
-            cssVars['--slide-bg2'] = `rgba(${c2.r},${c2.g},${c2.b},${o2})`;
-            cssVars['--slide-blur'] = `${(8 * (pct/100)).toFixed(2)}px`;
-            cssVars['--slide-shadow'] = `0 10px 30px rgba(0,0,0,${(0.25 * (pct/100)).toFixed(3)})`;
+            var built = (Core && Core.buildSlideOpacityCss) ? Core.buildSlideOpacityCss(pct, cfg.slideBg1, cfg.slideBg2) : null;
+            if (built){
+              cssVars['--slide-bg1'] = built.slideBg1Rgba;
+              cssVars['--slide-bg2'] = built.slideBg2Rgba;
+              cssVars['--slide-blur'] = built.blurPx;
+              cssVars['--slide-shadow'] = built.shadow;
+            } else {
+              var fallbackRgb = { r: 17, g: 24, b: 39 };
+              var s1 = (cfg.slideBg1 && normalizeHex(String(cfg.slideBg1))) || null;
+              var s2 = (cfg.slideBg2 && normalizeHex(String(cfg.slideBg2))) || null;
+              var c1 = s1 ? hexToRgb(s1) : fallbackRgb;
+              var c2 = s2 ? hexToRgb(s2) : fallbackRgb;
+              var o1 = (0.75 * (pct/100)).toFixed(3);
+              var o2 = (0.55 * (pct/100)).toFixed(3);
+              cssVars['--slide-bg1'] = `rgba(${c1.r},${c1.g},${c1.b},${o1})`;
+              cssVars['--slide-bg2'] = `rgba(${c2.r},${c2.g},${c2.b},${o2})`;
+              cssVars['--slide-blur'] = `${(8 * (pct/100)).toFixed(2)}px`;
+              cssVars['--slide-shadow'] = `0 10px 30px rgba(0,0,0,${(0.25 * (pct/100)).toFixed(3)})`;
+            }
           }
 
           const classes = { 'border-off': cfg.slideBorderOn === false };
