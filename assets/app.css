@@ -157,14 +157,24 @@
     #cfgModal .row{display:flex;gap:10px;align-items:center}
   #cfgModal footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12));backdrop-filter:blur(4px)}
   /* Active state for overlay position buttons */
-  #cfgOverlayPos .btn{ min-width:44px; height:32px; box-sizing:border-box; text-align:center; padding:8px 10px; line-height:1; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; font-weight:600; }
+  #cfgOverlayPos .btn{
+    min-width:44px; height:32px; box-sizing:border-box; text-align:center; padding:8px 10px; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center; white-space:nowrap; font-weight:600;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: var(--btn-border-width, 1px) solid var(--btn-border-color, rgba(255,255,255,0.06));
+  }
+  #cfgOverlayPos .btn:hover,
+  #cfgOverlayPos .btn:focus-visible{
+    border-width: var(--btn-border-width-hover, var(--btn-border-width));
+    border-color: var(--btn-border-color-hover, var(--btn-border-color));
+  }
   #cfgOverlayPos .btn.active,
   #cfgOverlayPos .btn[aria-pressed="true"]{
     border-color: var(--accent);
     box-shadow: 0 0 0 1px var(--accent) inset;
-  /* Fallback then accent-derived tint for better theme consistency */
-  background: rgba(255,255,255,0.04);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--btn-text);
   }
   /* Base style for preset buttons should match other small controls (no gradient) */
   .preset-btn{

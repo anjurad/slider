@@ -121,7 +121,8 @@
         const darkGroup = makeGroup('Dark presets');
         const lightGroup = makeGroup('Light presets');
         const setActivePreset = (idx)=>{ [...row.querySelectorAll('button.preset-btn')].forEach(b=>{ const on = b.dataset.presetIndex===String(idx); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); }); };
-        ((w.PRESETS)||[]).forEach((p,idx)=>{
+        const presets = (w.PRESETS || (typeof PRESETS !== 'undefined' && PRESETS) || []);
+        presets.forEach((p,idx)=>{
           const b=document.createElement('button'); b.className='btn preset-btn'; b.textContent=p.name; b.title = `Apply ${p.name}`; b.dataset.presetIndex = String(idx); b.setAttribute('aria-pressed','false');
           withSafe(()=>{ b.style.removeProperty('color'); });
           withSafe(()=>{ b.style.borderColor = 'rgba(255,255,255,0.06)'; });
@@ -155,7 +156,7 @@
         });
         if(darkGroup.group.children.length){ row.appendChild(darkGroup.container); }
         if(lightGroup.group.children.length){ row.appendChild(lightGroup.container); }
-        withSafe(()=>{ const raw = localStorage.getItem('slideapp.config'); if(!raw){ const defaultIdx = (w.PRESETS||[]).findIndex(p=>p.name && p.name.toLowerCase()==='default'); if(defaultIdx>=0) setActivePreset(defaultIdx); } });
+        withSafe(()=>{ const raw = localStorage.getItem('slideapp.config'); if(!raw){ const defaultIdx = presets.findIndex(p=>p.name && p.name.toLowerCase()==='default'); if(defaultIdx>=0) setActivePreset(defaultIdx); } });
       });
       // opacity slider
       withSafe(()=>{
@@ -165,6 +166,26 @@
         slider.value = String(val);
         readout.textContent = `(${val}%)`;
         slider.oninput = (e)=>{ const pct = Number(e.target.value)||0; readout.textContent = `(${pct}%)`; w.setSlideOpacity && w.setSlideOpacity(pct); };
+      });
+      // UI toggles & outline width
+      withSafe(()=>{
+        const hideSlides = document.getElementById('cfgHideSlidesWithUi');
+        const hideProg = document.getElementById('cfgHideProgressWithUi');
+        const remember = document.getElementById('cfgRememberDeck');
+        const outlineChk = document.getElementById('cfgSlideOutline');
+        const owEl = document.getElementById('cfgOutlineWidth');
+        const owRead = document.getElementById('cfgOutlineWidthVal');
+        if(hideSlides) hideSlides.checked = !!w.CONFIG.hideSlidesWithUi;
+        if(hideProg) hideProg.checked = !!w.CONFIG.hideProgressWithUi;
+        if(remember) remember.checked = !!w.CONFIG.rememberLastDeck;
+        if(outlineChk) outlineChk.checked = (w.CONFIG.slideBorderOn !== false);
+        if(owEl){
+          const n = (typeof w.CONFIG.slideBorderWidth === 'number' && isFinite(w.CONFIG.slideBorderWidth))
+            ? Math.max(0, Math.min(8, Math.round(w.CONFIG.slideBorderWidth)))
+            : 3;
+          owEl.value = String(n);
+          if(owRead) owRead.textContent = `(${n}px)`;
+        }
       });
       // overlay title/subtitle & fonts
   withSafe(()=>{
@@ -177,7 +198,11 @@
         const sc     = document.getElementById('cfgSubtitleColor');
         const setPosDisabled=(d)=>{ [...posWrap.querySelectorAll('button')].forEach(b=>{ if(d){ b.setAttribute('disabled',''); b.setAttribute('aria-disabled','true'); } else { b.removeAttribute('disabled'); b.setAttribute('aria-disabled','false'); } }); if(posHint){ posHint.style.display = d ? 'inline' : 'none'; } };
         const setSizeDisabled=(d)=>{ tSize.disabled = d; };
-        const setSubtitleControlsDisabled=(d)=>{ sSize.disabled = d; cbSub.disabled = d; sc.disabled = d; };
+        // Disable subtitle checkbox only when overlay itself is off, but
+        // keep it enabled when toggling subtitle visibility so users can
+        // re-enable it without re-opening the modal.
+        const setSubtitleOptionsDisabled=(d)=>{ sSize.disabled = d; sc.disabled = d; };
+        const setSubtitleControlsDisabled=(d)=>{ cbSub.disabled = d; setSubtitleOptionsDisabled(d); };
         const cur = ((w.CONFIG?.overlayPos)||'tl').toLowerCase();
         const setActive=(p)=>{ [...posWrap.querySelectorAll('button')].forEach(btn=>{ const on = (btn.dataset.pos===p); btn.classList.toggle('active', on); btn.setAttribute('aria-pressed', on? 'true':'false'); }); };
         setPosDisabled(!(w.CONFIG?.overlayOn===true));
@@ -202,11 +227,13 @@
             w.CONFIG.overlayOn = on;
             setPosDisabled(!on);
             setSizeDisabled(!on);
+            // Subtitle controls follow the overlay on/off state as well
+            setSubtitleControlsDisabled(!on);
             // Rebuild overlays live so the change is visible immediately
             withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(w.__tempOverlayPos || cur) : (w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur)); });
           };
         }
-        cb.onchange = ()=>{ const on = cb.checked; setSubtitleControlsDisabled(!on); w.CONFIG.overlaySubtitleOn = on; withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(w.__tempOverlayPos || cur) : (w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur)); }); };
+        cb.onchange = ()=>{ const on = cb.checked; setSubtitleOptionsDisabled(!on); w.CONFIG.overlaySubtitleOn = on; withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(w.__tempOverlayPos || cur) : (w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur)); }); };
         posWrap.querySelectorAll('button').forEach(btn=>{
           btn.setAttribute('aria-pressed', btn.dataset.pos===cur ? 'true' : 'false');
           btn.onclick=()=>{ const pos = btn.dataset.pos; setActive(pos); withSafe(()=>{ w.__tempOverlayPos = pos; }); withSafe(()=>{ w.showToast && w.showToast(`Title position: ${pos.toUpperCase()}`); }); if(w.CONFIG?.overlayOn===true){ withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(pos) : (w.rebuildOverlays && w.rebuildOverlays(pos)); }); } };
@@ -305,7 +332,10 @@
       cfgOverlay.style.display=cfgModal.style.display='none';
       withSafe(()=>{ w.showToast && w.showToast(`Saved: ${(w.CONFIG.appName||w.CONFIG.brand||'SlideApp')} • ${(w.CONFIG.primary||'#01B4E1')} / ${(w.CONFIG.accent||'#64FFFC')} • Opacity ${Math.round(w.CONFIG.slideOpacity*100)}% • Outline ${(w.CONFIG.slideBorderOn!==false?'on':'off')} ${w.CONFIG.slideBorderWidth}px`); });
       // Update baseline for T toggle
-      withSafe(()=>{ w.BASE_OPACITY = w.CONFIG.slideOpacity; });
+      withSafe(()=>{
+        w.BASE_OPACITY = w.CONFIG.slideOpacity;
+        try { BASE_OPACITY = w.CONFIG.slideOpacity; } catch {}
+      });
       // Rebuild overlays & content positions across slides
   withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays() : (w.rebuildOverlays && w.rebuildOverlays()); });
       withSafe(()=>{
@@ -334,7 +364,7 @@
       withSafe(()=>{ localStorage.removeItem('slideapp.config'); });
       withSafe(()=>{ sessionStorage.removeItem('slideapp.session.deck'); });
       withSafe(()=>{ localStorage.removeItem('slideapp.persist.deck'); });
-      withSafe(()=>{ w.BASE_OPACITY = 1; });
+      withSafe(()=>{ w.BASE_OPACITY = 1; try { BASE_OPACITY = 1; } catch {}; });
       withSafe(()=>{ w.showToast && w.showToast('Settings reset to defaults', 1000); });
       setTimeout(()=>location.reload(), 400);
     }
