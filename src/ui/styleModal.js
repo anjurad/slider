@@ -311,7 +311,10 @@
       cfgOverlay.style.display=cfgModal.style.display='none';
       withSafe(()=>{ w.showToast && w.showToast(`Saved: ${(w.CONFIG.appName||w.CONFIG.brand||'SlideApp')} • ${(w.CONFIG.primary||'#01B4E1')} / ${(w.CONFIG.accent||'#64FFFC')} • Opacity ${Math.round(w.CONFIG.slideOpacity*100)}% • Outline ${(w.CONFIG.slideBorderOn!==false?'on':'off')} ${w.CONFIG.slideBorderWidth}px`); });
       // Update baseline for T toggle
-      withSafe(()=>{ w.BASE_OPACITY = w.CONFIG.slideOpacity; });
+      withSafe(()=>{
+        w.BASE_OPACITY = w.CONFIG.slideOpacity;
+        try { BASE_OPACITY = w.CONFIG.slideOpacity; } catch {}
+      });
       // Rebuild overlays & content positions across slides
   withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays() : (w.rebuildOverlays && w.rebuildOverlays()); });
       withSafe(()=>{
@@ -340,7 +343,7 @@
       withSafe(()=>{ localStorage.removeItem('slideapp.config'); });
       withSafe(()=>{ sessionStorage.removeItem('slideapp.session.deck'); });
       withSafe(()=>{ localStorage.removeItem('slideapp.persist.deck'); });
-      withSafe(()=>{ w.BASE_OPACITY = 1; });
+      withSafe(()=>{ w.BASE_OPACITY = 1; try { BASE_OPACITY = 1; } catch {}; });
       withSafe(()=>{ w.showToast && w.showToast('Settings reset to defaults', 1000); });
       setTimeout(()=>location.reload(), 400);
     }
