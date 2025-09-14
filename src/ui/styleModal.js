@@ -6,7 +6,7 @@
   function normalizeHexLocal(s){
     try{
       if(w.ThemeCore && typeof w.ThemeCore.normalizeHex === 'function') return w.ThemeCore.normalizeHex(s);
-    }catch(e){ /* ignore */ }
+    }catch(e){ /* ignore */ /* empty */ }
     const str = String(s||'').trim();
     if(!str) return '';
     const m = str.match(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
@@ -107,7 +107,7 @@
   modeSel.onchange = ()=>{ if(modeSel.value==='auto'){ w.CONFIG.btnTextColor = 'auto'; } else { const n=normalizeHexLocal(btnClr.value||''); if(n) w.CONFIG.btnTextColor = n; } withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ typeof w.applyConfig==='function' && w.applyConfig(); }); };
         const fillSel = document.getElementById('cfgBtnFill');
   fillSel.onchange = ()=>{ const v=String(fillSel.value||'solid').toLowerCase(); w.CONFIG.btnFill = (v==='outline'?'outline':'solid');
-    try{ const bwEl = document.getElementById('cfgBtnBorderWidth'); const bwRead = document.getElementById('cfgBtnBorderWidthVal'); if(bwEl){ let n = Math.max(1, Math.min(6, Math.round(Number(bwEl.value)|| (v==='outline'?2:1)))); if(!(typeof w.CONFIG.btnBorderWidth==='number')){ n = (v==='outline'?2:1); bwEl.value = String(n); } if(bwRead) bwRead.textContent = `(${n}px)`; w.CONFIG.btnBorderWidth = n; } }catch{}
+    try{ const bwEl = document.getElementById('cfgBtnBorderWidth'); const bwRead = document.getElementById('cfgBtnBorderWidthVal'); if(bwEl){ let n = Math.max(1, Math.min(6, Math.round(Number(bwEl.value)|| (v==='outline'?2:1)))); if(!(typeof w.CONFIG.btnBorderWidth==='number')){ n = (v==='outline'?2:1); bwEl.value = String(n); } if(bwRead) bwRead.textContent = `(${n}px)`; w.CONFIG.btnBorderWidth = n; } }catch(e){ /* eslint-disable no-empty */ }
     withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ typeof w.applyConfig==='function' && w.applyConfig(); }); withSafe(()=>{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }); };
         bindLive('cfgAppBg1','appBg1', true);
         bindLive('cfgAppBg2','appBg2', true);
@@ -121,7 +121,7 @@
         const darkGroup = makeGroup('Dark presets');
         const lightGroup = makeGroup('Light presets');
         const setActivePreset = (idx)=>{ [...row.querySelectorAll('button.preset-btn')].forEach(b=>{ const on = b.dataset.presetIndex===String(idx); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); }); };
-        const presets = (w.PRESETS || (typeof PRESETS !== 'undefined' && PRESETS) || []);
+        const presets = (w.PRESETS || []);
         presets.forEach((p,idx)=>{
           const b=document.createElement('button'); b.className='btn preset-btn'; b.textContent=p.name; b.title = `Apply ${p.name}`; b.dataset.presetIndex = String(idx); b.setAttribute('aria-pressed','false');
           withSafe(()=>{ b.style.removeProperty('color'); });
@@ -166,6 +166,22 @@
         slider.value = String(val);
         readout.textContent = `(${val}%)`;
         slider.oninput = (e)=>{ const pct = Number(e.target.value)||0; readout.textContent = `(${pct}%)`; w.setSlideOpacity && w.setSlideOpacity(pct); };
+      });
+      // Clear opacity button
+      withSafe(()=>{
+        const clearBtn = document.getElementById('btnClearOpacity');
+        if(clearBtn){
+          clearBtn.onclick = ()=>{
+            const slider = document.getElementById('cfgSlideOpacity');
+            const readout = document.getElementById('cfgSlideOpacityVal');
+            if(slider && readout){
+              slider.value = '0';
+              readout.textContent = '(0%)';
+              w.setSlideOpacity && w.setSlideOpacity(0);
+              withSafe(()=>{ w.showToast && w.showToast('Background fully transparent'); });
+            }
+          };
+        }
       });
       // UI toggles & outline width
       withSafe(()=>{
@@ -218,8 +234,8 @@
         const cb = document.getElementById('cfgOverlaySubtitleOn'); cb.checked = (w.CONFIG?.overlaySubtitleOn !== false);
         sc.value = ((w.CONFIG?.overlaySubtitleColor)==='accent' ? 'accent' : 'primary');
         if(cbTitle) cbTitle.checked = (w.CONFIG?.overlayOn===true);
-        document.getElementById('cfgTitleSize').oninput = (e)=>{ const px=Math.max(12, Math.min(64, Math.round(Number(e.target.value)||22))); document.getElementById('cfgTitleSizeVal').textContent = `(${px}px)`; w.CONFIG.overlayTitleSize = px; withSafe(()=>{ w.Theme && w.Theme.applyFontOutline && w.Theme.applyFontOutline({ overlayTitleSize: px }); }); };
-        document.getElementById('cfgSubtitleSize').oninput = (e)=>{ const px=Math.max(10, Math.min(48, Math.round(Number(e.target.value)||16))); document.getElementById('cfgSubtitleSizeVal').textContent = `(${px}px)`; w.CONFIG.overlaySubtitleSize = px; withSafe(()=>{ w.Theme && w.Theme.applyFontOutline && w.Theme.applyFontOutline({ overlaySubtitleSize: px }); }); };
+        document.getElementById('cfgTitleSize').oninput = (e)=>{ const px=Math.max(12, Math.min(64, Math.round(Number(e.target.value)||22))); document.getElementById('cfgTitleSizeVal').textContent = `(${px}px)`; w.CONFIG.overlayTitleSize = px; withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(w.__tempOverlayPos || cur) : (w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur)); }); };
+        document.getElementById('cfgSubtitleSize').oninput = (e)=>{ const px=Math.max(10, Math.min(48, Math.round(Number(e.target.value)||16))); document.getElementById('cfgSubtitleSizeVal').textContent = `(${px}px)`; w.CONFIG.overlaySubtitleSize = px; withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(w.__tempOverlayPos || cur) : (w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur)); }); };
         // Title on/off inside Style UI: enable/disable position and sizes immediately
         if(cbTitle){
           cbTitle.onchange = ()=>{
@@ -276,8 +292,8 @@
     }
 
     function save(ev){
+      /* eslint-disable no-empty */
       try{ if(ev && typeof ev.preventDefault==='function') ev.preventDefault(); }catch(e){}
-      let hadError = false;
       try{
       w.CONFIG.brand=document.getElementById('cfgName').value.trim();
       w.CONFIG.primary=document.getElementById('cfgPrimary').value;
@@ -327,14 +343,13 @@
       withSafe(()=>{ const el=document.getElementById('appName'); if(el){ el.textContent = (w.CONFIG.appName||w.CONFIG.brand||'SlideApp'); } });
       withSafe(()=>{ if(!(w.__deckAppName && String(w.__deckAppName).trim())){ const nm=(w.CONFIG.appName||w.CONFIG.brand||'SlideApp'); if(nm && nm.trim()) document.title = nm.trim(); } });
       withSafe(()=>{ w.updateActiveThumbGradient && w.updateActiveThumbGradient(); });
-      }catch(e){ hadError = true; try{ console.error('Save failed', e); }catch(_){} }
+      }catch(e){ try{ console.error('Save failed', e); }catch(_){ /* eslint-disable no-empty */ } }
       // Always close the modal even if a non-critical field failed, to avoid trapping the UI
       cfgOverlay.style.display=cfgModal.style.display='none';
       withSafe(()=>{ w.showToast && w.showToast(`Saved: ${(w.CONFIG.appName||w.CONFIG.brand||'SlideApp')} • ${(w.CONFIG.primary||'#01B4E1')} / ${(w.CONFIG.accent||'#64FFFC')} • Opacity ${Math.round(w.CONFIG.slideOpacity*100)}% • Outline ${(w.CONFIG.slideBorderOn!==false?'on':'off')} ${w.CONFIG.slideBorderWidth}px`); });
       // Update baseline for T toggle
       withSafe(()=>{
         w.BASE_OPACITY = w.CONFIG.slideOpacity;
-        try { BASE_OPACITY = w.CONFIG.slideOpacity; } catch {}
       });
       // Rebuild overlays & content positions across slides
   withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays() : (w.rebuildOverlays && w.rebuildOverlays()); });
@@ -364,7 +379,7 @@
       withSafe(()=>{ localStorage.removeItem('slideapp.config'); });
       withSafe(()=>{ sessionStorage.removeItem('slideapp.session.deck'); });
       withSafe(()=>{ localStorage.removeItem('slideapp.persist.deck'); });
-      withSafe(()=>{ w.BASE_OPACITY = 1; try { BASE_OPACITY = 1; } catch {}; });
+      withSafe(()=>{ w.BASE_OPACITY = 1; });
       withSafe(()=>{ w.showToast && w.showToast('Settings reset to defaults', 1000); });
       setTimeout(()=>location.reload(), 400);
     }
@@ -374,7 +389,7 @@
   withSafe(()=>{ const el=document.getElementById('cfgClose'); el && el.addEventListener('click', close); });
   // Bind directly and also via delegation to make Save resilient
   withSafe(()=>{ const el=document.getElementById('cfgSave'); el && el.addEventListener('click', save); });
-  withSafe(()=>{ cfgModal.addEventListener('click', (e)=>{ try{ const t=e.target && (e.target.id==='cfgSave' || e.target.closest && e.target.closest('#cfgSave')); if(t){ e.preventDefault(); save(e); } }catch(_){ /* ignore */ } }, true); });
+  withSafe(()=>{ cfgModal.addEventListener('click', (e)=>{ try{ const t=e.target && (e.target.id==='cfgSave' || e.target.closest && e.target.closest('#cfgSave')); if(t){ e.preventDefault(); save(e); } }catch(_){ /* eslint-disable no-empty */ } }, true); });
   // Keyboard activation on focused Save button
   withSafe(()=>{ const el=document.getElementById('cfgSave'); if(el){ el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); save(e); } }); } });
   withSafe(()=>{ const el=document.getElementById('cfgReset'); el && el.addEventListener('click', reset); });
