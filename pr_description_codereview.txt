@@ -1,0 +1,23 @@
+Title: Theme: btnTextColor support, text color preservation, SSR safety + runtime hardening
+
+Summary
+Implements small, focused fixes from code review to align TS and runtime behavior, preserve user-specified colors, and improve SSR safety. Adds unit coverage for new precedence rules.
+
+Changes
+- TS (src/app/theme.ts):
+  - Respect `btnTextColor` with `'auto'` and explicit string forms in `computeThemeCssVars`.
+  - Preserve `rgb(...)` and other non-hex values for `--text` instead of dropping them.
+  - Guard `setColorProperty` and `setPixelProperty` for SSR/non-DOM environments.
+  - Prefer `Number.isFinite` where applicable.
+- Runtime (src/runtime/theme.js):
+  - Fix `hexToRgb` to avoid `NaN` channel values for invalid input; returns `{0,0,0}` fallback when normalization fails.
+  - Remove duplicate `clamp01` definition.
+- Tests: Add `unit/theme.config-btntext.spec.ts` covering `btnTextColor` precedence and `textColor` RGB preservation.
+
+Validation
+- Unit: PASS (28 tests) via `npm run test:unit`.
+
+Notes
+- This PR keeps changes minimal and backward-compatible.
+- Follow-up recommended to centralize normalization/contrast logic in `src/shared/theme-core.js` to avoid drift between TS and runtime.
+
