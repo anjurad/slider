@@ -1,6 +1,6 @@
 # Slider - HTML5 Slide Presentation Application
 
-Slider is a single-file HTML5 slide presentation application that renders Markdown content as interactive slides. The main application is entirely contained in `slide_app_v_0_91.html` (2,342 lines) with embedded CSS, JavaScript, and HTML.
+Slider is a single-file HTML5 slide presentation application that renders Markdown content as interactive slides. The main application is entirely contained in `slider.html` (2,342 lines) with embedded CSS, JavaScript, and HTML.
 
 **ALWAYS reference these instructions first and only fallback to additional search and bash commands when you encounter unexpected information that does not match the information provided here.**
 
@@ -80,13 +80,13 @@ Note: If you see a TypeScript parser warning from ESLint (about incompatible ver
 
 ### Running the Application
 - **No build step required** - the application runs directly in any modern web browser
-- Open `slide_app_v_0_91.html` directly in a browser:
+- Open `slider.html` directly in a browser:
   ```bash
   # Start local HTTP server to serve files
   python3 -m http.server 8000
-  # Then navigate to: http://localhost:8000/slide_app_v_0_91.html
+  # Then navigate to: http://localhost:8000/slider.html
   ```
-- **Alternative**: Open `file:///path/to/slide_app_v_0_91.html` directly in browser
+- **Alternative**: Open `file:///path/to/slider.html` directly in browser
 - Loads sample presentation (`sample_presentation.md`) automatically on first run
 
 ## Manual Validation Requirements
@@ -129,7 +129,7 @@ Note: If you see a TypeScript parser warning from ESLint (about incompatible ver
 ## Key Repository Structure
 
 ### Main Files
-- `slide_app_v_0_91.html` - Main application (2,342 lines, single-file HTML/CSS/JS)
+- `slider.html` - Main application (2,342 lines, single-file HTML/CSS/JS)
 - `sample_presentation.md` - Sample Markdown content for testing
 - `package.json` - npm scripts and dependencies
 - `playwright.config.ts` - E2E test configuration
@@ -161,7 +161,7 @@ Note: If you see a TypeScript parser warning from ESLint (about incompatible ver
 If browser installation fails, use this validation approach:
 1. **Unit tests**: `npm run test:unit` (21 tests, ~3s)
 2. **Linting**: `npm run lint` (required for CI)
-3. **Manual browser testing**: Open `slide_app_v_0_91.html` and test all core scenarios
+3. **Manual browser testing**: Open `slider.html` and test all core scenarios
 4. **Code review**: Focus on unit test coverage and code quality
 5. **CI validation**: GitHub Actions will run full E2E test suite
 
@@ -194,7 +194,7 @@ npm run test:e2e        # E2E tests (~20s)
 
 # Development server for manual testing
 python3 -m http.server 8000         # Serve files locally
-# Then open: http://localhost:8000/slide_app_v_0_91.html
+# Then open: http://localhost:8000/slider.html
 ```
 
 ## Critical Warnings
@@ -203,7 +203,7 @@ python3 -m http.server 8000         # Serve files locally
 - **ALWAYS run `npm run lint`** before committing - CI will fail without this
 - **ALWAYS manually test core user scenarios** after making changes
 - **Set timeouts of 30+ minutes** for any command involving browser installation or E2E tests
-- **The application has no build step** - changes to `slide_app_v_0_91.html` are immediately live
+- **The application has no build step** - changes to `slider.html` are immediately live
 
 ## Application Features Summary
 
