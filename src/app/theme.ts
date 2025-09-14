@@ -1,8 +1,20 @@
 /**
  * Theme helpers (extracted, not wired yet).
- * NOTE: These functions are copies from inline logic in slider.html.
- * They are exported for future refactors but currently unused to avoid behavior changes.
+ * Delegates core color utilities to shared ThemeCore to avoid drift.
  */
+
+// Import shared ThemeCore (UMD/CommonJS)
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const ThemeCore: {
+  normalizeHex: (s: string) => string;
+  hexToRgb: (s: string) => RGB | null;
+  computeBtnTextColor: (p: string, a: string, t?: string) => string;
+  buildSlideOpacityCss: (
+    pct: number,
+    s1?: string,
+    s2?: string
+  ) => { dec: number; slideBg1Rgba: string; slideBg2Rgba: string; blurPx: string; shadow: string };
+} = require('../shared/theme-core.js');
 
 /**
  * Get CSS custom property value from document root with fallback.
@@ -52,35 +64,12 @@ export type RGB = { r: number; g: number; b: number };
 
 /** Normalize a hex string to #rrggbb, or return empty string if invalid. */
 export function normalizeHex(input: string): string {
-  try {
-    if (!input) return '';
-    let s = String(input).trim().replace(/['"]/g, '');
-    if (!s) return '';
-    if (!s.startsWith('#')) s = '#' + s;
-    const m = s.slice(1);
-    if (/^[0-9a-f]{3}$/i.test(m)) return '#' + m.split('').map(c => c + c).join('').toLowerCase();
-    if (/^[0-9a-f]{6}$/i.test(m)) return '#' + m.toLowerCase();
-  } catch {
-    // ignore parsing errors
-  }
-  return '';
+  return ThemeCore.normalizeHex(input);
 }
 
 /** Convert #rrggbb to RGB components, or null if invalid. */
 export function hexToRgb(hex: string): RGB | null {
-  try {
-    const h = normalizeHex(hex);
-    if (!h) return null;
-    const v = h.slice(1);
-    return {
-      r: parseInt(v.slice(0, 2), 16),
-      g: parseInt(v.slice(2, 4), 16),
-      b: parseInt(v.slice(4, 6), 16),
-    };
-  } catch {
-    // ignore runtime errors
-    return null;
-  }
+  return ThemeCore.hexToRgb(hex);
 }
 
 /**
@@ -119,17 +108,7 @@ export function computeSlideOpacityVars(pct: number, options?: { base1?: number;
 
 /** Compute a readable button text color given primary/accent and optional explicit textColor. */
 export function computeBtnTextColor(primary: string, accent: string, explicitTextColor?: string): string {
-  const explicit = explicitTextColor && normalizeHex(explicitTextColor);
-  if (explicit) return explicit;
-  try {
-    const p = hexToRgb(primary) || { r: 0, g: 0, b: 0 };
-    const a = hexToRgb(accent) || { r: 0, g: 0, b: 0 };
-    const avg = { r: Math.round((p.r + a.r) / 2), g: Math.round((p.g + a.g) / 2), b: Math.round((p.b + a.b) / 2) };
-    const avgHex = `#${((1 << 24) + (avg.r << 16) + (avg.g << 8) + avg.b).toString(16).slice(1)}`;
-    return bestContrastForHex(avgHex);
-  } catch {
-    return '#000000';
-  }
+  return ThemeCore.computeBtnTextColor(primary, accent, explicitTextColor);
 }
 
 /** Compute a muted color suggestion based on current text hex luminance. */
@@ -148,15 +127,7 @@ export function computeMutedFromText(textHex: string): string | null {
  * optional slideBg1/slideBg2 hex strings (fallback to dark rgba when invalid).
  */
 export function buildSlideOpacityCss(pct: number, slideBg1?: string, slideBg2?: string) {
-  const { o1, o2, blurPx, shadow, dec } = computeSlideOpacityVars(pct);
-  const fallback = { r: 17, g: 24, b: 39 };
-  const s1 = normalizeHex(slideBg1 || '') || '';
-  const s2 = normalizeHex(slideBg2 || '') || '';
-  const c1 = hexToRgb(s1) || fallback;
-  const c2 = hexToRgb(s2) || fallback;
-  const slideBg1Rgba = `rgba(${c1.r},${c1.g},${c1.b},${o1})`;
-  const slideBg2Rgba = `rgba(${c2.r},${c2.g},${c2.b},${o2})`;
-  return { dec, slideBg1Rgba, slideBg2Rgba, blurPx, shadow };
+  return ThemeCore.buildSlideOpacityCss(pct, slideBg1, slideBg2);
 }
 
 /**
