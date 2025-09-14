@@ -84,190 +84,211 @@
       <button class="btn" id="cfgClose" aria-label="Close" type="button">✕</button>
     </header>
     <main>
-      <label for="cfgName">App name</label>
-      <input id="cfgName" type="text" placeholder="SlideApp" />
-      <label>Presets</label>
-      <div id="presetRow" class="row" style="margin-bottom:6px"></div>
-      <div class="row">
-        <div style="flex:1">
-          <label for="cfgPrimary">Primary color</label>
-          <input id="cfgPrimary" type="color" />
-        </div>
-        <div style="flex:1">
-          <label for="cfgAccent">Accent color</label>
-          <input id="cfgAccent" type="color" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:6px; gap:12px; align-items:flex-end;">
-        <div style="flex:1">
-          <label for="cfgTextColor">General text color</label>
-          <input id="cfgTextColor" type="color" />
-        </div>
-        <div style="flex:1">
-          <label>Buttons</label>
-          <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap;">
-            <label style="font-size:12px;">Text</label>
-            <select id="cfgBtnTextMode" class="btn" style="padding:6px 8px; min-width:96px;">
-              <option value="auto">Auto</option>
-              <option value="custom">Custom</option>
-            </select>
-            <input id="cfgBtnTextColor" type="color" />
-            <label style="font-size:12px; margin-left:8px;">Fill</label>
-            <select id="cfgBtnFill" class="btn" style="padding:6px 8px; min-width:120px;">
-              <option value="solid">Solid</option>
-              <option value="outline">Outline</option>
-            </select>
-            <label style="font-size:12px; margin-left:8px;" for="cfgBtnBorderWidth">Border width <span id="cfgBtnBorderWidthVal" aria-hidden="true"></span></label>
-            <input id="cfgBtnBorderWidth" type="range" min="1" max="6" step="1" style="width:140px;" />
-          </div>
-        </div>
-      </div>
-      <div class="row" style="margin-top:8px; gap:8px;">
-        <div style="flex:1">
-          <label for="cfgAppBg1">App background start</label>
-          <input id="cfgAppBg1" type="color" />
-        </div>
-        <div style="flex:1">
-          <label for="cfgAppBg2">App background end</label>
-          <input id="cfgAppBg2" type="color" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:8px; gap:8px;">
-        <div style="flex:1">
-          <label for="cfgSlideBg1">Slide background start</label>
-          <input id="cfgSlideBg1" type="color" />
-        </div>
-        <div style="flex:1">
-          <label for="cfgSlideBg2">Slide background end</label>
-          <input id="cfgSlideBg2" type="color" />
-        </div>
-      </div>
-      <div class="row" style="margin-top:8px; align-items: flex-end; gap: 10px;">
-        <div style="flex:1">
-          <label for="cfgSlideOpacity">Slide background opacity <span id="cfgSlideOpacityVal" aria-hidden="true"></span></label>
-          <input id="cfgSlideOpacity" type="range" min="0" max="100" step="1" />
-        </div>
-        <div>
-          <button class="btn" id="btnClearOpacity" title="Make background fully transparent">Clear</button>
-        </div>
-      </div>
+      <div class="cfg-grid">
+        <div class="cfg-col">
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">App & Presets</h3>
+            <label for="cfgName">App name</label>
+            <input id="cfgName" type="text" placeholder="SlideApp" />
+            <label>Presets</label>
+            <div id="presetRow" class="row" style="margin-bottom:6px"></div>
+          </section>
 
-      <label style="margin-top:10px">Config (external)</label>
-      <div class="row" style="gap:8px; align-items:center; flex-wrap:nowrap; overflow-x:auto;">
-        <div style="flex:0 0 auto;">
-          <label for="cfgConfigUrl" style="display:block; font-size:12px;">Load from URL</label>
-          <input id="cfgConfigUrl" type="text" placeholder="https://example.com/slideapp-config.json" style="width:360px; max-width:60vw;" />
-        </div>
-        <div style="flex:0 0 auto;">
-          <button class="btn" id="cfgLoadUrl">Load</button>
-        </div>
-        <div style="flex:0 0 auto;">
-          <button class="btn" id="cfgImportBtn">Import JSON</button>
-          <input id="cfgImportFile" type="file" accept="application/json,.json" style="display:none" />
-        </div>
-        <div style="flex:0 0 auto;">
-          <button class="btn" id="cfgExport">Export</button>
-        </div>
-      </div>
-      <div class="row" style="gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px;">
-        <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-          <input id="cfgPersistConfig" type="checkbox" /> Persist config to this browser
-        </label>
-        <span style="font-size:12px; opacity:.85;">When off, changes apply for this session only.</span>
-      </div>
-
-      <div class="row" style="margin-top:8px; gap: 12px; align-items:center; flex-wrap: wrap;">
-    <label style="margin:0; font-size:12px;">UI visibility when OFF</label>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input id="cfgHideSlidesWithUi" type="checkbox" /> Hide slides panel
-          </label>
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input id="cfgHideProgressWithUi" type="checkbox" /> Hide progress bar
-          </label>
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input id="cfgSlideOutline" type="checkbox" /> Slide outline
-          </label>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:8px; gap: 12px; align-items:center; flex-wrap: wrap;">
-        <div style="flex:1">
-          <label for="cfgOutlineWidth">Outline width <span id="cfgOutlineWidthVal" aria-hidden="true"></span></label>
-          <input id="cfgOutlineWidth" type="range" min="0" max="8" step="1" />
-        </div>
-        <div style="flex:1">
-          <label style="display:block; font-size:12px;">Deck restore</label>
-          <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
-            <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-              <input id="cfgRememberDeck" type="checkbox" /> Remember last deck (persist)
-            </label>
-            <button class="btn" id="cfgForgetDeck" title="Forget stored deck">Forget deck</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:8px; gap: 12px; align-items:flex-end; flex-wrap: wrap;">
-        <div style="flex:1; min-width:210px;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input id="cfgOverlayTitleOn" type="checkbox" /> Show slide title (overlay)
-          </label>
-          <div style="display:flex; gap:6px; align-items:center; margin-top:6px; flex-wrap: wrap;">
-            <label style="font-size:12px;">Position</label>
-            <span id="cfgOverlayPosHint" style="display:none; font-size:12px; opacity:.8;">Enable overlay to change</span>
-            <div id="cfgOverlayPos" role="group" aria-label="Title position" style="display:flex; gap:6px;">
-              <button type="button" class="btn" data-pos="tl">TL</button>
-              <button type="button" class="btn" data-pos="tr">TR</button>
-              <button type="button" class="btn" data-pos="bl">BL</button>
-              <button type="button" class="btn" data-pos="br">BR</button>
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Colors</h3>
+            <div class="field-grid">
+              <div>
+                <label for="cfgPrimary">Primary color</label>
+                <input id="cfgPrimary" type="color" />
+              </div>
+              <div>
+                <label for="cfgAccent">Accent color</label>
+                <input id="cfgAccent" type="color" />
+              </div>
+              <div>
+                <label for="cfgTextColor">General text color</label>
+                <input id="cfgTextColor" type="color" />
+              </div>
             </div>
-          </div>
-          <label for="cfgTitleSize">Title size <span id="cfgTitleSizeVal" aria-hidden="true"></span></label>
-          <input id="cfgTitleSize" type="range" min="12" max="64" step="1" />
-        </div>
-        <div style="flex:1; min-width:210px;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input id="cfgOverlaySubtitleOn" type="checkbox" /> Show subtitle (if present)
-          </label>
-          <label for="cfgSubtitleSize">Subtitle size <span id="cfgSubtitleSizeVal" aria-hidden="true"></span></label>
-          <input id="cfgSubtitleSize" type="range" min="10" max="48" step="1" />
-          <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-            <label style="font-size:12px;">Subtitle color</label>
-            <select id="cfgSubtitleColor" class="btn" style="padding:6px 8px;">
-              <option value="primary">Primary</option>
-              <option value="accent">Accent</option>
-            </select>
-          </div>
-        </div>
-      </div>
+          </section>
 
-      <div class="row" style="margin-top:8px; gap: 12px; align-items:flex-start; flex-wrap: wrap;">
-        <div style="flex:1; min-width:210px;">
-          <label style="display:block; font-size:12px;">Content position</label>
-          <div id="cfgContentPos" role="group" aria-label="Content position" style="display:grid; grid-template-columns: repeat(3, auto); gap:6px; width:max-content;">
-            <button type="button" class="btn" data-pos="tl">TL</button>
-            <button type="button" class="btn" data-pos="tm">TM</button>
-            <button type="button" class="btn" data-pos="tr">TR</button>
-            <button type="button" class="btn" data-pos="ml">ML</button>
-            <button type="button" class="btn" data-pos="mm">MM</button>
-            <button type="button" class="btn" data-pos="mr">MR</button>
-            <button type="button" class="btn" data-pos="bl">BL</button>
-            <button type="button" class="btn" data-pos="bm">BM</button>
-            <button type="button" class="btn" data-pos="br">BR</button>
-          </div>
-          <span style="display:block; font-size:12px; opacity:.8; margin-top:4px;">Affects Markdown block position inside the slide.</span>
-        </div>
-      </div>
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Backgrounds</h3>
+            <div class="field-grid">
+              <div>
+                <label for="cfgAppBg1">App background start</label>
+                <input id="cfgAppBg1" type="color" />
+              </div>
+              <div>
+                <label for="cfgAppBg2">App background end</label>
+                <input id="cfgAppBg2" type="color" />
+              </div>
+              <div>
+                <label for="cfgSlideBg1">Slide background start</label>
+                <input id="cfgSlideBg1" type="color" />
+              </div>
+              <div>
+                <label for="cfgSlideBg2">Slide background end</label>
+                <input id="cfgSlideBg2" type="color" />
+              </div>
+            </div>
+            <div class="inline" style="margin-top:6px;">
+              <label for="cfgSlideOpacity">Slide background opacity <span id="cfgSlideOpacityVal" aria-hidden="true"></span></label>
+              <input id="cfgSlideOpacity" type="range" min="0" max="100" step="1" />
+              <button class="btn" id="btnClearOpacity" title="Make background fully transparent">Clear</button>
+            </div>
+          </section>
 
-      <div class="row" style="margin-top:8px; gap: 12px; align-items:flex-start; flex-wrap: wrap;">
-        <div style="flex:1; min-width:210px;">
-          <label for="cfgFontPrimary">Primary font (headings/title)</label>
-          <input id="cfgFontPrimary" type="text" placeholder="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" />
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Overlay</h3>
+            <div class="field-grid">
+              <div>
+                <label class="inline" style="gap:6px;">
+                  <input id="cfgOverlayTitleOn" type="checkbox" /> Show slide title (overlay)
+                </label>
+                <div class="inline" style="margin-top:6px;">
+                  <label style="font-size:12px;">Position</label>
+                  <span id="cfgOverlayPosHint" class="subtle" style="display:none;">Enable overlay to change</span>
+                  <div id="cfgOverlayPos" role="group" aria-label="Title position" class="inline">
+                    <button type="button" class="btn" data-pos="tl">TL</button>
+                    <button type="button" class="btn" data-pos="tr">TR</button>
+                    <button type="button" class="btn" data-pos="bl">BL</button>
+                    <button type="button" class="btn" data-pos="br">BR</button>
+                  </div>
+                </div>
+                <label for="cfgTitleSize">Title size <span id="cfgTitleSizeVal" aria-hidden="true"></span></label>
+                <input id="cfgTitleSize" type="range" min="12" max="64" step="1" />
+              </div>
+              <div>
+                <label class="inline" style="gap:6px;">
+                  <input id="cfgOverlaySubtitleOn" type="checkbox" /> Show subtitle (if present)
+                </label>
+                <div class="inline" style="margin-top:6px;">
+                  <label for="cfgSubtitleSize" style="font-size:12px;">Subtitle size <span id="cfgSubtitleSizeVal" aria-hidden="true"></span></label>
+                  <input id="cfgSubtitleSize" type="range" min="10" max="48" step="1" style="width:160px;" />
+                  <label for="cfgSubtitleColor" style="font-size:12px;">Subtitle color</label>
+                  <select id="cfgSubtitleColor" class="btn" style="padding:6px 8px; min-width:120px;">
+                    <option value="primary">Primary</option>
+                    <option value="accent">Accent</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Content Position</h3>
+            <div id="cfgContentPos" role="group" aria-label="Content position" class="inline" style="flex-wrap:wrap;">
+              <div class="inline">
+                <div style="font-size:12px; opacity:.9;">TL</div>
+                <button class="btn" data-pos="tl">TL</button>
+                <button class="btn" data-pos="tm">TM</button>
+                <button class="btn" data-pos="tr">TR</button>
+              </div>
+              <div class="inline">
+                <div style="font-size:12px; opacity:.9;">ML</div>
+                <button class="btn" data-pos="ml">ML</button>
+                <button class="btn" data-pos="mm">MM</button>
+                <button class="btn" data-pos="mr">MR</button>
+              </div>
+              <div class="inline">
+                <div style="font-size:12px; opacity:.9;">BL</div>
+                <button class="btn" data-pos="bl">BL</button>
+                <button class="btn" data-pos="bm">BM</button>
+                <button class="btn" data-pos="br">BR</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Fonts</h3>
+            <div class="field-grid">
+              <div>
+                <label for="cfgFontPrimary">Primary font (headings/title)</label>
+                <input id="cfgFontPrimary" type="text" placeholder="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" />
+              </div>
+              <div>
+                <label for="cfgFontSecondary">Secondary font (body/subtitle)</label>
+                <input id="cfgFontSecondary" type="text" placeholder="Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" />
+              </div>
+            </div>
+          </section>
         </div>
-        <div style="flex:1; min-width:210px;">
-          <label for="cfgFontSecondary">Secondary font (body/subtitle)</label>
-          <input id="cfgFontSecondary" type="text" placeholder="Arial, Helvetica, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" />
-        </div>
+
+        <aside class="cfg-col">
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Buttons</h3>
+            <div class="inline">
+              <label style="font-size:12px;">Text</label>
+              <select id="cfgBtnTextMode" class="btn" style="padding:6px 8px; min-width:96px;">
+                <option value="auto">Auto</option>
+                <option value="custom">Custom</option>
+              </select>
+              <input id="cfgBtnTextColor" type="color" />
+            </div>
+            <div class="inline" style="margin-top:6px;">
+              <label style="font-size:12px;">Fill</label>
+              <select id="cfgBtnFill" class="btn" style="padding:6px 8px; min-width:120px;">
+                <option value="solid">Solid</option>
+                <option value="outline">Outline</option>
+              </select>
+              <label style="font-size:12px;" for="cfgBtnBorderWidth">Border width <span id="cfgBtnBorderWidthVal" aria-hidden="true"></span></label>
+              <input id="cfgBtnBorderWidth" type="range" min="1" max="6" step="1" style="width:140px;" />
+            </div>
+          </section>
+
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Outline & Visibility</h3>
+            <div class="inline" style="flex-wrap:wrap;">
+              <label style="margin:0; font-size:12px;">UI visibility when OFF</label>
+              <label class="inline" style="font-size:12px;">
+                <input id="cfgHideSlidesWithUi" type="checkbox" /> Hide slides panel
+              </label>
+              <label class="inline" style="font-size:12px;">
+                <input id="cfgHideProgressWithUi" type="checkbox" /> Hide progress bar
+              </label>
+              <label class="inline" style="font-size:12px;">
+                <input id="cfgSlideOutline" type="checkbox" /> Slide outline
+              </label>
+            </div>
+            <div class="inline" style="margin-top:6px;">
+              <label for="cfgOutlineWidth">Outline width <span id="cfgOutlineWidthVal" aria-hidden="true"></span></label>
+              <input id="cfgOutlineWidth" type="range" min="0" max="8" step="1" />
+            </div>
+          </section>
+
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Config & Persistence</h3>
+            <div class="inline" style="flex-wrap:nowrap; overflow-x:auto;">
+              <div style="flex:1 1 auto; min-width:260px;">
+                <label for="cfgConfigUrl" style="display:block; font-size:12px;">Load from URL</label>
+                <input id="cfgConfigUrl" type="text" placeholder="https://example.com/slideapp-config.json" style="width:100%;" />
+              </div>
+              <button class="btn" id="cfgLoadUrl">Load</button>
+              <div>
+                <button class="btn" id="cfgImportBtn">Import JSON</button>
+                <input id="cfgImportFile" type="file" accept="application/json,.json" style="display:none" />
+              </div>
+              <button class="btn" id="cfgExport">Export</button>
+            </div>
+            <div class="inline" style="margin-top:6px; flex-wrap:wrap;">
+              <label class="inline" style="font-size:12px;">
+                <input id="cfgPersistConfig" type="checkbox" /> Persist config to this browser
+              </label>
+              <span class="subtle">When off, changes apply for this session only.</span>
+            </div>
+          </section>
+
+          <section class="cfg-section">
+            <h3 class="cfg-section-title">Deck Restore</h3>
+            <div class="inline" style="flex-wrap:wrap;">
+              <label class="inline" style="font-size:12px;">
+                <input id="cfgRememberDeck" type="checkbox" /> Remember last deck (persist)
+              </label>
+              <button class="btn" id="cfgForgetDeck" title="Forget stored deck">Forget deck</button>
+            </div>
+          </section>
+        </aside>
       </div>
     </main>
     <footer>
