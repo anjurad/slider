@@ -255,8 +255,20 @@ export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResu
   const primary = cfg.primary && normalizeHex(cfg.primary) || cfg.primary || '';
   const accent = cfg.accent && normalizeHex(cfg.accent) || cfg.accent || '';
 
-  // Button text prefers explicit textColor, else contrast of average(primary, accent)
-  const btnText = computeBtnTextColor(primary || '#000000', accent || '#000000', cfg.textColor);
+  // Button text precedence:
+  // 1) cfg.btnTextColor === 'auto' -> contrast of avg(primary, accent)
+  // 2) cfg.btnTextColor (string) -> normalized hex or raw (allow rgb(...))
+  // 3) fallback -> compute from primary/accent, allowing cfg.textColor as explicit override
+  let btnText: string;
+  const btnPref = cfg.btnTextColor;
+  if (typeof btnPref === 'string' && btnPref.toLowerCase() === 'auto') {
+    // compute automatically ignoring explicit textColor
+    btnText = computeBtnTextColor(primary || '#000000', accent || '#000000');
+  } else if (typeof btnPref === 'string' && btnPref.trim()) {
+    btnText = normalizeHex(btnPref) || btnPref.trim();
+  } else {
+    btnText = computeBtnTextColor(primary || '#000000', accent || '#000000', cfg.textColor);
+  }
   const muted = computeMutedFromText(btnText);
 
   const cssVars: Record<string, string> = {};
@@ -265,7 +277,8 @@ export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResu
   if (primary && accent) cssVars['--btn-bg'] = `linear-gradient(90deg, ${primary}, ${accent})`;
   // Apply global text color
   cssVars['--btn-text'] = btnText;
-  cssVars['--text'] = cfg.textColor && normalizeHex(cfg.textColor) || btnText;
+  // Preserve non-hex values like rgb(...); normalize when possible
+  cssVars['--text'] = cfg.textColor ? (normalizeHex(cfg.textColor) || cfg.textColor) : btnText;
   if (cfg.appBg1) cssVars['--app-bg1'] = normalizeHex(cfg.appBg1) || cfg.appBg1;
   if (cfg.appBg2) cssVars['--app-bg2'] = normalizeHex(cfg.appBg2) || cfg.appBg2;
   if (cfg.effectColor) cssVars['--effect-color'] = normalizeHex(cfg.effectColor) || cfg.effectColor;
@@ -491,7 +504,7 @@ export function computeApplyConfigOutcome(cfg: Partial<ThemeConfig>): ApplyOutco
   const { cssVars, derived } = computeThemeCssVars(cfg);
 
   // Compute slide opacity CSS vars if provided (decimal 0..1)
-  if (typeof cfg.slideOpacity === 'number' && isFinite(cfg.slideOpacity)) {
+  if (typeof cfg.slideOpacity === 'number' && Number.isFinite(cfg.slideOpacity)) {
     const pct = Math.round(Math.max(0, Math.min(100, cfg.slideOpacity * 100)));
     const built = buildSlideOpacityCss(pct, cfg.slideBg1, cfg.slideBg2);
     cssVars['--slide-bg1'] = built.slideBg1Rgba;
@@ -518,8 +531,13 @@ export function computeApplyConfigOutcome(cfg: Partial<ThemeConfig>): ApplyOutco
  * @param value The value to set (checked for string type and non-empty)
  */
 export function setColorProperty(property: string, value: unknown): void {
-  if (typeof value === 'string' && value.trim()) {
-    document.documentElement.style.setProperty(property, value.trim());
+  try {
+    if (typeof document === 'undefined' || !document.documentElement) return;
+    if (typeof value === 'string' && value.trim()) {
+      document.documentElement.style.setProperty(property, value.trim());
+    }
+  } catch {
+    // noop for SSR / non-DOM environments
   }
 }
 
@@ -531,9 +549,14 @@ export function setColorProperty(property: string, value: unknown): void {
  * @param max Maximum allowed value
  */
 export function setPixelProperty(property: string, value: unknown, min: number, max: number): void {
-  if (typeof value === 'number' && isFinite(value)) {
-    const clamped = Math.max(min, Math.min(max, Math.round(value)));
-    document.documentElement.style.setProperty(property, `${clamped}px`);
+  try {
+    if (typeof document === 'undefined' || !document.documentElement) return;
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      const clamped = Math.max(min, Math.min(max, Math.round(value)));
+      document.documentElement.style.setProperty(property, `${clamped}px`);
+    }
+  } catch {
+    // noop for SSR / non-DOM environments
   }
 }
 
