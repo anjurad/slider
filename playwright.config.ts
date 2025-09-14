@@ -15,7 +15,9 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      // Use the full Playwright Chromium build instead of the lightweight
+      // headless shell that can crash in CI environments.
+      use: { ...devices['Desktop Chrome'], channel: 'chromium' },
     },
     {
       name: 'firefox',

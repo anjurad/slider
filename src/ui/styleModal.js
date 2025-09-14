@@ -202,6 +202,8 @@
             w.CONFIG.overlayOn = on;
             setPosDisabled(!on);
             setSizeDisabled(!on);
+            // Subtitle controls follow the overlay on/off state as well
+            setSubtitleControlsDisabled(!on);
             // Rebuild overlays live so the change is visible immediately
             withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(w.__tempOverlayPos || cur) : (w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur)); });
           };
