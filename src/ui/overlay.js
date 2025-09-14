@@ -35,10 +35,11 @@
           if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
           if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
           const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-          if(CONFIG.overlaySubtitleOn===true && subtitleTxt){
+          if(CONFIG.overlaySubtitleOn===true){
             const sEl = document.createElement('div');
             sEl.className = 'slide-subtitle';
             sEl.textContent = subtitleTxt;
+            if(!subtitleTxt) sEl.style.display = 'none';
             if((CONFIG.overlaySubtitleColor||'primary')==='accent') sEl.classList.add('accent-subtitle');
             wrap.appendChild(sEl);
           }

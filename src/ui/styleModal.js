@@ -121,7 +121,8 @@
         const darkGroup = makeGroup('Dark presets');
         const lightGroup = makeGroup('Light presets');
         const setActivePreset = (idx)=>{ [...row.querySelectorAll('button.preset-btn')].forEach(b=>{ const on = b.dataset.presetIndex===String(idx); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); }); };
-        ((w.PRESETS)||[]).forEach((p,idx)=>{
+        const presets = (w.PRESETS || (typeof PRESETS !== 'undefined' && PRESETS) || []);
+        presets.forEach((p,idx)=>{
           const b=document.createElement('button'); b.className='btn preset-btn'; b.textContent=p.name; b.title = `Apply ${p.name}`; b.dataset.presetIndex = String(idx); b.setAttribute('aria-pressed','false');
           withSafe(()=>{ b.style.removeProperty('color'); });
           withSafe(()=>{ b.style.borderColor = 'rgba(255,255,255,0.06)'; });
@@ -155,7 +156,7 @@
         });
         if(darkGroup.group.children.length){ row.appendChild(darkGroup.container); }
         if(lightGroup.group.children.length){ row.appendChild(lightGroup.container); }
-        withSafe(()=>{ const raw = localStorage.getItem('slideapp.config'); if(!raw){ const defaultIdx = (w.PRESETS||[]).findIndex(p=>p.name && p.name.toLowerCase()==='default'); if(defaultIdx>=0) setActivePreset(defaultIdx); } });
+        withSafe(()=>{ const raw = localStorage.getItem('slideapp.config'); if(!raw){ const defaultIdx = presets.findIndex(p=>p.name && p.name.toLowerCase()==='default'); if(defaultIdx>=0) setActivePreset(defaultIdx); } });
       });
       // opacity slider
       withSafe(()=>{
@@ -165,6 +166,26 @@
         slider.value = String(val);
         readout.textContent = `(${val}%)`;
         slider.oninput = (e)=>{ const pct = Number(e.target.value)||0; readout.textContent = `(${pct}%)`; w.setSlideOpacity && w.setSlideOpacity(pct); };
+      });
+      // UI toggles & outline width
+      withSafe(()=>{
+        const hideSlides = document.getElementById('cfgHideSlidesWithUi');
+        const hideProg = document.getElementById('cfgHideProgressWithUi');
+        const remember = document.getElementById('cfgRememberDeck');
+        const outlineChk = document.getElementById('cfgSlideOutline');
+        const owEl = document.getElementById('cfgOutlineWidth');
+        const owRead = document.getElementById('cfgOutlineWidthVal');
+        if(hideSlides) hideSlides.checked = !!w.CONFIG.hideSlidesWithUi;
+        if(hideProg) hideProg.checked = !!w.CONFIG.hideProgressWithUi;
+        if(remember) remember.checked = !!w.CONFIG.rememberLastDeck;
+        if(outlineChk) outlineChk.checked = (w.CONFIG.slideBorderOn !== false);
+        if(owEl){
+          const n = (typeof w.CONFIG.slideBorderWidth === 'number' && isFinite(w.CONFIG.slideBorderWidth))
+            ? Math.max(0, Math.min(8, Math.round(w.CONFIG.slideBorderWidth)))
+            : 3;
+          owEl.value = String(n);
+          if(owRead) owRead.textContent = `(${n}px)`;
+        }
       });
       // overlay title/subtitle & fonts
   withSafe(()=>{
