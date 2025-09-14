@@ -6,7 +6,7 @@
   // Keys accepted by ThemeConfig
   const KEY_SET = new Set([
     'appName','brand',
-    'primary','accent','textColor','btnTextColor','btnFill',
+    'primary','accent','textColor','btnTextColor','btnFill','btnBorderWidth',
     'appBg1','appBg2','slideBg1','slideBg2','slideOpacity',
     'slideBorderOn','slideBorderWidth',
     'overlayOn','overlayPos','overlayTitleSize','overlaySubtitleOn','overlaySubtitleSize','overlaySubtitleColor',
@@ -49,6 +49,7 @@
     }
     // enums
     if(typeof obj.btnFill==='string' && /^(solid|outline)$/i.test(obj.btnFill)) out.btnFill = obj.btnFill.toLowerCase();
+    if(typeof obj.btnBorderWidth!=='undefined'){ const n = Math.round(Number(obj.btnBorderWidth)); if(Number.isFinite(n)) out.btnBorderWidth = Math.max(1, Math.min(6, n)); }
     if(typeof obj.overlaySubtitleColor==='string' && /^(primary|accent)$/i.test(obj.overlaySubtitleColor)) out.overlaySubtitleColor = obj.overlaySubtitleColor.toLowerCase();
     if(typeof obj.contentPos==='string' && /^(t[mlr]|m[mlr]|b[mlr])$/i.test(obj.contentPos)) out.contentPos = obj.contentPos.toLowerCase();
     // numbers

@@ -52,12 +52,13 @@
     .brand-name{font-weight:700}
     .deck-tools{display:flex;gap:8px;align-items:center}
   /* Buttons use a subtle translucent overlay so text remains readable on light and dark app backgrounds */
-  .btn{cursor:pointer;padding:6px 10px;border-radius:12px;color:var(--text);background:linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04));border:1px solid rgba(255,255,255,.06);backdrop-filter:blur(6px);font-size:12px;line-height:1;display:inline-flex;align-items:center;min-height:32px}
+  .btn{cursor:pointer;padding:6px 10px;border-radius:12px;color:var(--text);background:linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04));border:var(--btn-border-width, 1px) solid var(--btn-border-color, rgba(255,255,255,.06));backdrop-filter:blur(6px);font-size:12px;line-height:1;display:inline-flex;align-items:center;min-height:32px}
   /* Keep header buttons stable regardless of drawer state */
   .deck-header .btn{ border-radius:12px; padding:8px 12px; min-height:32px; }
   /* Use CSS variables for button background so themes can update them consistently */
-  :root{ --btn-bg: linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04)); --btn-text: var(--text); }
+  :root{ --btn-bg: linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04)); --btn-text: var(--text); --btn-border-width: 1px; --btn-border-color: rgba(255,255,255,.06); --btn-border-width-hover: 2px; --btn-border-color-hover: var(--btn-border-color); }
   .btn{ background: var(--btn-bg); color: var(--btn-text); }
+  .btn:hover, .btn:focus-visible{ border-width: var(--btn-border-width-hover, var(--btn-border-width)); border-color: var(--btn-border-color-hover, var(--btn-border-color)); }
 
     /* Reserve space using CSS vars so we can position the frame precisely */
     :root{ --pad-top:96px; --pad-bottom:120px; --pad-side:72px }
@@ -76,7 +77,7 @@
   .slide .slide-overlay .slide-subtitle{color:var(--primary);font-family:var(--font-secondary);font-weight:400;font-size:var(--subtitle-size);line-height:1.2;opacity:.95}
   .slide .slide-overlay .accent-subtitle{ color: var(--accent); }
   /* Theme outline around the active slide, uses accent; width configurable via --outline-w; can be disabled via body.border-off */
-  .slide.active::before{content:"";position:absolute;inset:0;border-radius:var(--radius);pointer-events:none;box-shadow:inset 0 0 0 var(--outline-w, 3px) var(--accent)}
+  .slide.active::before{content:"";position:absolute;inset:0;border-radius:var(--radius);pointer-events:none;z-index:40;box-shadow:inset 0 0 0 var(--outline-w, 3px) var(--accent)}
   body.border-off .slide.active::before{box-shadow:none}
     .slide.active{opacity:1;transform:translate3d(0,0,0) scale(1);z-index:2}
     .slide.prev{opacity:0;transform:translate3d(-50px,0,0) scale(.98);z-index:1}
@@ -131,7 +132,8 @@
   #cfgModal { color: var(--text); }
   #cfgModal label{ color: var(--text); }
   /* Ensure modal buttons reflect the same button styling as the app */
-  #cfgModal .btn{ color: var(--btn-text) !important; background: var(--btn-bg); }
+  #cfgModal .btn{ color: var(--btn-text) !important; background: var(--btn-bg); border-color: var(--btn-border-color); border-width: var(--btn-border-width); }
+  #cfgModal .btn:hover, #cfgModal .btn:focus-visible{ border-width: var(--btn-border-width-hover, var(--btn-border-width)); border-color: var(--btn-border-color-hover, var(--btn-border-color)); }
   :root { --admon-note:#60a5fa; --admon-tip:#34d399; --admon-warning:#fbbf24; }
   /* Admonitions */
   .admonition{border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin:12px 0;overflow:hidden;background:rgba(255,255,255,0.02)}
@@ -172,8 +174,9 @@
     border-radius:12px;
     background: var(--btn-bg);
     color: var(--btn-text);
-    border: 2px solid rgba(255,255,255,0.06);
+    border: var(--btn-border-width, 1px) solid var(--btn-border-color, rgba(255,255,255,0.06));
   }
+  .preset-btn:hover, .preset-btn:focus-visible{ border-width: var(--btn-border-width-hover, var(--btn-border-width)); border-color: var(--btn-border-color-hover, var(--btn-border-color)); }
   /* Active state for preset buttons (compact segmented control)
      Place after base block so it overrides background consistently */
   #cfgModal .preset-btn.active,

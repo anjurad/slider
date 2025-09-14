@@ -9,6 +9,7 @@ export type ThemeConfig = {
   textColor?: string;
   btnTextColor?: string; // 'auto' or hex
   btnFill?: 'solid' | 'outline';
+  btnBorderWidth?: number; // px (for outline)
   appBg1?: string;
   appBg2?: string;
   slideBg1?: string;
@@ -74,6 +75,7 @@ export function sanitizeConfig(input: unknown): Partial<ThemeConfig> {
   if (typeof obj.overlaySubtitleColor === 'string' && /^(primary|accent)$/i.test(String(obj.overlaySubtitleColor))) out.overlaySubtitleColor = String(obj.overlaySubtitleColor).toLowerCase() as any;
   // numbers
   setNum('slideOpacity', 0, 1);
+  setNum('btnBorderWidth', 1, 6);
   setNum('slideBorderWidth', 0, 8);
   setNum('overlayTitleSize', 12, 64);
   setNum('overlaySubtitleSize', 10, 48);

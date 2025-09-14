@@ -38,6 +38,8 @@
   <script src="src/ui/notes.js"></script>
   <!-- Drawer controller -->
   <script src="src/ui/drawer.js"></script>
+  <!-- Overlay controller -->
+  <script src="src/ui/overlay.js"></script>
   <script src="src/ui/styleModal.js"></script>
   <div class="bg-gradient"></div>
   <canvas id="bg-canvas"></canvas>
@@ -79,7 +81,7 @@
   <div id="cfgModal" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
     <header>
       <strong id="cfgTitle">Style Settings</strong>
-      <button class="btn" id="cfgClose" aria-label="Close">✕</button>
+      <button class="btn" id="cfgClose" aria-label="Close" type="button">✕</button>
     </header>
     <main>
       <label for="cfgName">App name</label>
@@ -115,6 +117,8 @@
               <option value="solid">Solid</option>
               <option value="outline">Outline</option>
             </select>
+            <label style="font-size:12px; margin-left:8px;" for="cfgBtnBorderWidth">Border width <span id="cfgBtnBorderWidthVal" aria-hidden="true"></span></label>
+            <input id="cfgBtnBorderWidth" type="range" min="1" max="6" step="1" style="width:140px;" />
           </div>
         </div>
       </div>
@@ -267,8 +271,8 @@
       </div>
     </main>
     <footer>
-      <button class="btn" id="cfgReset" title="Reset to defaults">↺ Reset</button>
-      <button class="btn" id="cfgSave">Save</button>
+      <button class="btn" id="cfgReset" title="Reset to defaults" type="button">↺ Reset</button>
+      <button class="btn" id="cfgSave" type="button">Save</button>
     </footer>
   </div>
   <!-- Validation modal -->
@@ -316,29 +320,15 @@
   // Helper to rebuild overlays on all current slides using CONFIG and per-slide frontmatter
   function rebuildOverlays(tempPos){
     try{
-      const slides = [...document.querySelectorAll('.slide')];
-        slides.forEach(s => { s.querySelector('.slide-overlay')?.remove(); });
-      if(CONFIG.overlayOn===true && Array.isArray(slidesHTML) && slidesHTML.length){
-          slides.forEach((slideEl, idx) => {
-          const fm = slidesHTML[idx]?.fm || {};
-          const slideOverlayFlag = (typeof fm.overlay !== 'undefined') ? /^(1|on|true)$/i.test(String(fm.overlay).trim()) : true;
-          if(!slideOverlayFlag) return;
-          const pos = (fm.overlaypos || tempPos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
-          const tSize = isFinite(Number(fm.titlesize)) ? Math.max(12, Math.min(64, Math.round(Number(fm.titlesize)))) : CONFIG.overlayTitleSize;
-          const sSize = isFinite(Number(fm.subtitlesize)) ? Math.max(10, Math.min(48, Math.round(Number(fm.subtitlesize)))) : CONFIG.overlaySubtitleSize;
-          const titleTxt = (fm.title||'').toString().trim() || `Slide ${idx+1}`;
-          const subtitleTxt = (fm.subtitle||'').toString().trim();
-          const wrap = document.createElement('div');
-          wrap.className = `slide-overlay pos-${pos}`;
-          if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
-          if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
-          const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-            if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
-          wrap.setAttribute('aria-hidden','true');
-          slideEl.appendChild(wrap);
-        });
+      if(window.OverlayCtrl && typeof window.OverlayCtrl.rebuildOverlays==='function'){
+        return window.OverlayCtrl.rebuildOverlays(tempPos);
       }
-    }catch{}
+    }catch(e){}
+    // Fallback (should rarely run): no-op if controller missing
+    try{
+      const slides = [...document.querySelectorAll('.slide')];
+      slides.forEach(s => { s.querySelector('.slide-overlay')?.remove(); });
+    }catch(e){}
   }
 
   // Particle lifecycle is implemented in `src/runtime/particles.js` and exposed via window.Particles
@@ -386,10 +376,14 @@
 
   // ===== Config & Theme =====
   const CONFIG = JSON.parse(localStorage.getItem('slideapp.config')||'{}');
+  // Expose CONFIG globally so UI modules (e.g., Style modal) operate on the same object
+  try{ window.CONFIG = CONFIG; }catch{}
   // Whether to persist config changes to localStorage (default: true for backward-compat)
   let PERSIST_CONFIG = (()=>{ try{ const v = localStorage.getItem('slideapp.config.persist'); if(v===null) return true; return v==='1' || String(v).toLowerCase()==='true'; }catch{} return true; })();
+  try{ window.PERSIST_CONFIG = PERSIST_CONFIG; }catch{}
   // Baseline opacity for T-key toggle: use last saved value from persisted config; fallback to 1 (100%).
   let BASE_OPACITY = (()=>{ try{ const saved=JSON.parse(localStorage.getItem('slideapp.config')||'{}'); const v=saved && typeof saved.slideOpacity==='number' ? saved.slideOpacity : undefined; if(typeof v==='number' && isFinite(v)) return Math.max(0, Math.min(1, v)); }catch{} return 1; })();
+  try{ window.BASE_OPACITY = BASE_OPACITY; }catch{}
   // Back-compat: migrate legacy brand -> appName if needed (do not delete brand to avoid breaking older versions)
   if(typeof CONFIG.appName !== 'string' && typeof CONFIG.brand === 'string'){
     CONFIG.appName = CONFIG.brand;
@@ -1176,6 +1170,7 @@
 
   // ===== Render & Navigation =====
   let current=0, slidesHTML=[];
+  try{ window.slidesHTML = slidesHTML; }catch{}
   function renderSlides(list){ slidesRoot.innerHTML=''; thumbsRoot.innerHTML=''; if(!Array.isArray(list)||!list.length){ current=0; document.getElementById('progress').style.width='0%'; document.getElementById('slideNo').textContent='0/0'; return; } list.forEach((obj,i)=>{ const node=document.createElement('section'); node.className='slide';
     // Per-slide background override via front matter: slidebg1/slidebg2 (hex)
     try{
@@ -1268,37 +1263,8 @@
         }
       }catch(e){}
     }
-    // Build overlays if enabled
-    try{
-      const slides = [...document.querySelectorAll('.slide')];
-      slides.forEach(s=>{ const old=s.querySelector('.slide-overlay'); if(old) old.remove(); });
-      if(CONFIG.overlayOn===true){
-        slides.forEach((slideEl, idx)=>{
-          const fm = list[idx]?.fm || {};
-          // per-slide overrides
-          const slideOverlayFlagVal = (typeof fm.overlay !== 'undefined') ? String(fm.overlay).trim()
-            : (typeof fm['overlay-pos'] !== 'undefined' || typeof fm['title-size'] !== 'undefined' || typeof fm['subtitle-size'] !== 'undefined') ? 'on' : undefined;
-          const slideOverlayFlag = (typeof slideOverlayFlagVal !== 'undefined') ? /^(1|on|true)$/i.test(slideOverlayFlagVal) : true;
-          if(!slideOverlayFlag) return;
-          const pos = (fm['overlay-pos'] || fm.overlaypos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
-          const tSizeRaw = (typeof fm['title-size'] !== 'undefined') ? fm['title-size'] : fm.titlesize;
-          const sSizeRaw = (typeof fm['subtitle-size'] !== 'undefined') ? fm['subtitle-size'] : fm.subtitlesize;
-          const tSize = isFinite(Number(tSizeRaw)) ? Math.max(12, Math.min(64, Math.round(Number(tSizeRaw)))) : CONFIG.overlayTitleSize;
-          const sSize = isFinite(Number(sSizeRaw)) ? Math.max(10, Math.min(48, Math.round(Number(sSizeRaw)))) : CONFIG.overlaySubtitleSize;
-          const titleTxt = (fm.title||'').toString().trim() || `Slide ${idx+1}`;
-          const subtitleTxt = (fm.subtitle||'').toString().trim();
-          const wrap = document.createElement('div');
-          wrap.className = `slide-overlay pos-${pos}`;
-          // per-slide size overrides via inline style
-          if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
-          if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
-          const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-          if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
-          wrap.setAttribute('aria-hidden','true');
-          slideEl.appendChild(wrap);
-        });
-      }
-    }catch{}
+  // Build overlays via controller
+  try{ rebuildOverlays(); }catch(e){}
   }
 
   function setActive(i, direction = 'none'){
@@ -1586,7 +1552,7 @@
     // Test-only deterministic guard: if tests opt-in, clear persisted bgMode and prefer gradient
     try{ if(typeof window.__isDeterministicTestMode === 'function' && window.__isDeterministicTestMode()){ try{ localStorage.removeItem('bgMode'); }catch{} bgMode = 'gradient'; setBackgroundMode('gradient'); } }catch{}
   // debug hooks removed
-    if(f.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; } const valid=['text/markdown','text/plain','application/octet-stream']; if(!valid.includes(f.type) && !/\.(md|markdown|txt)$/i.test(f.name)){ alert('Please select a Markdown file (.md/.markdown/.txt)'); return; } const text=await f.text(); if(!text.trim()){ alert('File appears empty.'); return; } slidesHTML=splitSlides(text); if(!slidesHTML.length){ alert('No slides found. Separate slides with a line containing only ---'); return; } renderSlides(slidesHTML);
+    if(f.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; } const valid=['text/markdown','text/plain','application/octet-stream']; if(!valid.includes(f.type) && !/\.(md|markdown|txt)$/i.test(f.name)){ alert('Please select a Markdown file (.md/.markdown/.txt)'); return; } const text=await f.text(); if(!text.trim()){ alert('File appears empty.'); return; } slidesHTML=splitSlides(text); try{ window.slidesHTML = slidesHTML; }catch{} if(!slidesHTML.length){ alert('No slides found. Separate slides with a line containing only ---'); return; } renderSlides(slidesHTML);
     // Apply deck-level frontmatter settings
     try{
   const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {}));
@@ -1627,7 +1593,7 @@
       if(raw){
         const data = JSON.parse(raw);
         if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
-          slidesHTML = splitSlides(data.deckContent);
+      slidesHTML = splitSlides(data.deckContent); try{ window.slidesHTML = slidesHTML; }catch{}
           renderSlides(slidesHTML);
           try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
           try{ showToast('Restored last deck (session)'); }catch{}
@@ -1642,7 +1608,7 @@
         if(raw){
           const data = JSON.parse(raw);
           if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
-            slidesHTML = splitSlides(data.deckContent);
+            slidesHTML = splitSlides(data.deckContent); try{ window.slidesHTML = slidesHTML; }catch{}
             renderSlides(slidesHTML);
             try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
             try{ showToast('Restored last deck'); }catch{}
@@ -1656,7 +1622,7 @@
       const res = await fetch('sample_presentation.md');
   if(res.ok){
     const text = await res.text();
-    slidesHTML = splitSlides(text);
+    slidesHTML = splitSlides(text); try{ window.slidesHTML = slidesHTML; }catch{}
   renderSlides(slidesHTML);
   // Apply deck-level frontmatter (sample)
   try{ const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {})); try{ if(!fm.background && !fm.bg){ if(typeof __isDeterministicTestMode === 'function' && __isDeterministicTestMode()){ setBackgroundMode('gradient'); } } }catch{}; applyDeckFrontmatter(fm); try{ setBgButtonLabel(); }catch{} }catch{}
@@ -1999,7 +1965,7 @@ Notes:
 - Values outside ranges are clamped to the stated mins/maxes
 
 Everything else in front matter is ignored by the app.`;
-    slidesHTML = splitSlides(DEMO_MD);
+    slidesHTML = splitSlides(DEMO_MD); try{ window.slidesHTML = slidesHTML; }catch{}
     renderSlides(slidesHTML);
   // Apply deck-level frontmatter if present
   try{ const fm = slidesHTML[0]?.fm || {}; applyDeckFrontmatter(fm); }catch{}
@@ -2041,7 +2007,7 @@ Everything else in front matter is ignored by the app.`;
       const res = await fetch(path, { credentials: 'omit' });
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
-      slidesHTML = splitSlides(text);
+      slidesHTML = splitSlides(text); try{ window.slidesHTML = slidesHTML; }catch{}
       // Apply deck-level frontmatter BEFORE rendering so initial UI + active thumb use correct theme
       try{
         const fm = (slidesHTML && slidesHTML.deckFM && Object.keys(slidesHTML.deckFM||{}).length ? slidesHTML.deckFM : (slidesHTML[0]?.fm || {}));
@@ -2503,30 +2469,7 @@ Everything else in front matter is ignored by the app.`;
     try{ setDocumentTitle(); }catch{}
   // Rebuild overlays for current slides
     try{
-      if(Array.isArray(slidesHTML) && slidesHTML.length){
-        const slides = [...document.querySelectorAll('.slide')];
-        slides.forEach(s=>{ const old=s.querySelector('.slide-overlay'); if(old) old.remove(); });
-    if(CONFIG.overlayOn===true){
-          slides.forEach((slideEl, idx)=>{
-            const fm2 = slidesHTML[idx]?.fm || {};
-      const slideOverlayFlag = (typeof fm2.overlay !== 'undefined') ? /^(1|on|true)$/i.test(String(fm2.overlay).trim()) : true;
-      if(!slideOverlayFlag) return;
-      const pos = (fm2.overlaypos || CONFIG.overlayPos || 'tl').toString().toLowerCase();
-      const tSize = isFinite(Number(fm2.titlesize)) ? Math.max(12, Math.min(64, Math.round(Number(fm2.titlesize)))) : CONFIG.overlayTitleSize;
-      const sSize = isFinite(Number(fm2.subtitlesize)) ? Math.max(10, Math.min(48, Math.round(Number(fm2.subtitlesize)))) : CONFIG.overlaySubtitleSize;
-      const titleTxt = (fm2.title||'').toString().trim() || `Slide ${idx+1}`;
-      const subtitleTxt = (fm2.subtitle||'').toString().trim();
-      const wrap = document.createElement('div');
-      wrap.className = `slide-overlay pos-${pos}`;
-      if(tSize) wrap.style.setProperty('--title-size', `${tSize}px`);
-      if(sSize) wrap.style.setProperty('--subtitle-size', `${sSize}px`);
-      const tEl = document.createElement('div'); tEl.className='slide-title'; tEl.textContent = titleTxt; wrap.appendChild(tEl);
-  if(CONFIG.overlaySubtitleOn===true && subtitleTxt){ const sEl=document.createElement('div'); sEl.className='slide-subtitle'; sEl.textContent=subtitleTxt; if((CONFIG.overlaySubtitleColor||'primary')==='accent'){ sEl.classList.add('accent-subtitle'); } wrap.appendChild(sEl);} 
-            wrap.setAttribute('aria-hidden','true');
-            slideEl.appendChild(wrap);
-          });
-        }
-      }
+  rebuildOverlays();
     }catch{}
     // UI mode (on/off, show/hide, 1/0, true/false)
     try{

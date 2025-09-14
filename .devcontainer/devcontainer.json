@@ -1,0 +1,28 @@
+{
+  "name": "Slider E2E (Playwright)",
+  "image": "mcr.microsoft.com/playwright:v1.55.0-jammy",
+  "remoteUser": "pwuser",
+  "workspaceFolder": "/work",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached",
+  "runArgs": [
+    "--init",
+    "--shm-size=1g"
+  ],
+  "forwardPorts": [9323],
+  "portsAttributes": {
+    "9323": {
+      "label": "Playwright Report",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "npm ci && npx playwright install chromium",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-playwright.playwright",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

@@ -80,19 +80,35 @@
           }
         });
         const bf=document.getElementById('cfgBtnFill'); bf.value = (w.CONFIG?.btnFill==='outline'?'outline':'solid');
+        const bwElInit = document.getElementById('cfgBtnBorderWidth');
+        const bwReadInit = document.getElementById('cfgBtnBorderWidthVal');
+        if(bwElInit){
+          const chosen = (typeof w.CONFIG?.btnBorderWidth==='number' && isFinite(w.CONFIG?.btnBorderWidth))
+            ? Math.max(1, Math.min(6, Math.round(w.CONFIG.btnBorderWidth)))
+            : (bf.value==='outline' ? 2 : 1);
+          bwElInit.value = String(chosen);
+          if(bwReadInit) bwReadInit.textContent = `(${chosen}px)`;
+          bwElInit.oninput = (e)=>{ const n=Math.max(1, Math.min(6, Math.round(Number(e.target.value)||chosen))); if(bwReadInit) bwReadInit.textContent = `(${n}px)`; w.CONFIG.btnBorderWidth = n; withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ typeof w.applyConfig==='function' && w.applyConfig(); }); };
+        }
       });
       // live bindings
       withSafe(()=>{
-        const bindLive=(id,key,norm)=>{ const el=document.getElementById(id); if(!el) return; el.oninput=(ev)=>{ const v=(ev.target.value||'').toString(); withSafe(()=>{ if(norm){ const n=normalizeHexLocal(v); if(n) w.CONFIG[key]=n; else delete w.CONFIG[key]; } else { w.CONFIG[key]=v; } }); withSafe(()=>{ if(w.Theme && typeof w.Theme.applyConfig === 'function'){ try{ w.Theme.applyConfig(w.CONFIG); }catch(e){ /* ignore */ } } else if (typeof w.applyConfig==='function'){ w.applyConfig(); } }); }; };
+        const bindLive=(id,key,norm)=>{ const el=document.getElementById(id); if(!el) return; el.oninput=(ev)=>{ const v=(ev.target.value||'').toString(); withSafe(()=>{ if(norm){ const n=normalizeHexLocal(v); if(n) w.CONFIG[key]=n; else delete w.CONFIG[key]; } else { w.CONFIG[key]=v; } });
+          // Apply via runtime helper and page helper for full UI refresh
+          withSafe(()=>{ if(w.Theme && typeof w.Theme.applyConfig === 'function'){ try{ w.Theme.applyConfig(w.CONFIG); }catch(e){ /* ignore */ } } });
+          withSafe(()=>{ if (typeof w.applyConfig==='function'){ try{ w.applyConfig(); }catch(e){ /* ignore */ } } });
+        }; };
         bindLive('cfgPrimary','primary', false);
         bindLive('cfgAccent','accent', false);
         bindLive('cfgTextColor','textColor', true);
         const modeSel = document.getElementById('cfgBtnTextMode');
         const btnClr = document.getElementById('cfgBtnTextColor');
-        btnClr.oninput = ()=>{ if(modeSel.value==='custom'){ const n=normalizeHexLocal(btnClr.value||''); if(n) w.CONFIG.btnTextColor = n; withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); } };
-        modeSel.onchange = ()=>{ if(modeSel.value==='auto'){ w.CONFIG.btnTextColor = 'auto'; } else { const n=normalizeHexLocal(btnClr.value||''); if(n) w.CONFIG.btnTextColor = n; } withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); };
+  btnClr.oninput = ()=>{ if(modeSel.value==='custom'){ const n=normalizeHexLocal(btnClr.value||''); if(n) w.CONFIG.btnTextColor = n; withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ typeof w.applyConfig==='function' && w.applyConfig(); }); } };
+  modeSel.onchange = ()=>{ if(modeSel.value==='auto'){ w.CONFIG.btnTextColor = 'auto'; } else { const n=normalizeHexLocal(btnClr.value||''); if(n) w.CONFIG.btnTextColor = n; } withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ typeof w.applyConfig==='function' && w.applyConfig(); }); };
         const fillSel = document.getElementById('cfgBtnFill');
-        fillSel.onchange = ()=>{ const v=String(fillSel.value||'solid').toLowerCase(); w.CONFIG.btnFill = (v==='outline'?'outline':'solid'); withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }); };
+  fillSel.onchange = ()=>{ const v=String(fillSel.value||'solid').toLowerCase(); w.CONFIG.btnFill = (v==='outline'?'outline':'solid');
+    try{ const bwEl = document.getElementById('cfgBtnBorderWidth'); const bwRead = document.getElementById('cfgBtnBorderWidthVal'); if(bwEl){ let n = Math.max(1, Math.min(6, Math.round(Number(bwEl.value)|| (v==='outline'?2:1)))); if(!(typeof w.CONFIG.btnBorderWidth==='number')){ n = (v==='outline'?2:1); bwEl.value = String(n); } if(bwRead) bwRead.textContent = `(${n}px)`; w.CONFIG.btnBorderWidth = n; } }catch{}
+    withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ typeof w.applyConfig==='function' && w.applyConfig(); }); withSafe(()=>{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }); };
         bindLive('cfgAppBg1','appBg1', true);
         bindLive('cfgAppBg2','appBg2', true);
         bindLive('cfgSlideBg1','slideBg1', true);
@@ -127,7 +143,9 @@
               if(p.appBg2) w.CONFIG.appBg2 = normalizeHexLocal(p.appBg2) || p.appBg2; else delete w.CONFIG.appBg2;
               if(p.slideBg1) w.CONFIG.slideBg1 = normalizeHexLocal(p.slideBg1) || p.slideBg1; else delete w.CONFIG.slideBg1;
               if(p.slideBg2) w.CONFIG.slideBg2 = normalizeHexLocal(p.slideBg2) || p.slideBg2; else delete w.CONFIG.slideBg2;
-              withSafe(()=>{ if(w.Theme && typeof w.Theme.applyConfig === 'function'){ try{ w.Theme.applyConfig(w.CONFIG); }catch(e){ /* ignore */ } } else if (typeof w.applyConfig==='function'){ w.applyConfig(); } });
+              // Apply via both paths for consistency with page-level side effects
+              withSafe(()=>{ if(w.Theme && typeof w.Theme.applyConfig === 'function'){ try{ w.Theme.applyConfig(w.CONFIG); }catch(e){ /* ignore */ } } });
+              withSafe(()=>{ if (typeof w.applyConfig==='function'){ try{ w.applyConfig(); }catch(e){ /* ignore */ } } });
               w.setSlideOpacity && w.setSlideOpacity(typeof w.CONFIG.slideOpacity==='number' ? Math.round(w.CONFIG.slideOpacity*100) : 100, false);
             });
             setActivePreset(idx);
@@ -154,6 +172,7 @@
         const posHint = document.getElementById('cfgOverlayPosHint');
         const tSize = document.getElementById('cfgTitleSize');
         const sSize = document.getElementById('cfgSubtitleSize');
+        const cbTitle = document.getElementById('cfgOverlayTitleOn');
         const cbSub  = document.getElementById('cfgOverlaySubtitleOn');
         const sc     = document.getElementById('cfgSubtitleColor');
         const setPosDisabled=(d)=>{ [...posWrap.querySelectorAll('button')].forEach(b=>{ if(d){ b.setAttribute('disabled',''); b.setAttribute('aria-disabled','true'); } else { b.removeAttribute('disabled'); b.setAttribute('aria-disabled','false'); } }); if(posHint){ posHint.style.display = d ? 'inline' : 'none'; } };
@@ -173,13 +192,24 @@
         document.getElementById('cfgSubtitleSizeVal').textContent = `(${ss}px)`;
         const cb = document.getElementById('cfgOverlaySubtitleOn'); cb.checked = (w.CONFIG?.overlaySubtitleOn !== false);
         sc.value = ((w.CONFIG?.overlaySubtitleColor)==='accent' ? 'accent' : 'primary');
-        document.getElementById('cfgOverlayTitleOn').checked = (w.CONFIG?.overlayOn===true);
+        if(cbTitle) cbTitle.checked = (w.CONFIG?.overlayOn===true);
         document.getElementById('cfgTitleSize').oninput = (e)=>{ const px=Math.max(12, Math.min(64, Math.round(Number(e.target.value)||22))); document.getElementById('cfgTitleSizeVal').textContent = `(${px}px)`; w.CONFIG.overlayTitleSize = px; withSafe(()=>{ w.Theme && w.Theme.applyFontOutline && w.Theme.applyFontOutline({ overlayTitleSize: px }); }); };
         document.getElementById('cfgSubtitleSize').oninput = (e)=>{ const px=Math.max(10, Math.min(48, Math.round(Number(e.target.value)||16))); document.getElementById('cfgSubtitleSizeVal').textContent = `(${px}px)`; w.CONFIG.overlaySubtitleSize = px; withSafe(()=>{ w.Theme && w.Theme.applyFontOutline && w.Theme.applyFontOutline({ overlaySubtitleSize: px }); }); };
-        cb.onchange = ()=>{ const on = cb.checked; setSubtitleControlsDisabled(!on); w.CONFIG.overlaySubtitleOn = on; withSafe(()=>{ w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur); }); };
+        // Title on/off inside Style UI: enable/disable position and sizes immediately
+        if(cbTitle){
+          cbTitle.onchange = ()=>{
+            const on = !!cbTitle.checked;
+            w.CONFIG.overlayOn = on;
+            setPosDisabled(!on);
+            setSizeDisabled(!on);
+            // Rebuild overlays live so the change is visible immediately
+            withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(w.__tempOverlayPos || cur) : (w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur)); });
+          };
+        }
+        cb.onchange = ()=>{ const on = cb.checked; setSubtitleControlsDisabled(!on); w.CONFIG.overlaySubtitleOn = on; withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(w.__tempOverlayPos || cur) : (w.rebuildOverlays && w.rebuildOverlays(w.__tempOverlayPos || cur)); }); };
         posWrap.querySelectorAll('button').forEach(btn=>{
           btn.setAttribute('aria-pressed', btn.dataset.pos===cur ? 'true' : 'false');
-          btn.onclick=()=>{ const pos = btn.dataset.pos; setActive(pos); withSafe(()=>{ w.__tempOverlayPos = pos; }); withSafe(()=>{ w.showToast && w.showToast(`Title position: ${pos.toUpperCase()}`); }); if(w.CONFIG?.overlayOn===true){ withSafe(()=>{ w.rebuildOverlays && w.rebuildOverlays(pos); }); } };
+          btn.onclick=()=>{ const pos = btn.dataset.pos; setActive(pos); withSafe(()=>{ w.__tempOverlayPos = pos; }); withSafe(()=>{ w.showToast && w.showToast(`Title position: ${pos.toUpperCase()}`); }); if(w.CONFIG?.overlayOn===true){ withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays(pos) : (w.rebuildOverlays && w.rebuildOverlays(pos)); }); } };
         });
         const fp = document.getElementById('cfgFontPrimary');
         const fs = document.getElementById('cfgFontSecondary');
@@ -215,15 +245,18 @@
       cfgOverlay.style.display='none';
       cfgModal.style.display='none';
       withSafe(()=>{ delete w.__tempOverlayPos; });
-      withSafe(()=>{ w.rebuildOverlays && w.rebuildOverlays(); });
+  withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays() : (w.rebuildOverlays && w.rebuildOverlays()); });
     }
 
-    function save(){
+    function save(ev){
+      try{ if(ev && typeof ev.preventDefault==='function') ev.preventDefault(); }catch(e){}
+      let hadError = false;
+      try{
       w.CONFIG.brand=document.getElementById('cfgName').value.trim();
       w.CONFIG.primary=document.getElementById('cfgPrimary').value;
       w.CONFIG.accent=document.getElementById('cfgAccent').value;
       // slide opacity
-      const slider=document.getElementById('cfgSlideOpacity'); let pct=Number(slider.value); if(!Number.isFinite(pct)) pct=100; pct=Math.round(Math.max(0, Math.min(100, pct))); w.CONFIG.slideOpacity = pct/100;
+      const slider=document.getElementById('cfgSlideOpacity'); let pct=Number(slider && slider.value); if(!Number.isFinite(pct)) pct=100; pct=Math.round(Math.max(0, Math.min(100, pct))); w.CONFIG.slideOpacity = pct/100;
       const nm = document.getElementById('cfgName').value.trim();
       w.CONFIG.appName = nm; if(!w.CONFIG.brand) w.CONFIG.brand = nm;
       withSafe(()=>{
@@ -240,12 +273,14 @@
         const btnClr = document.getElementById('cfgBtnTextColor');
         if(modeSel && btnClr){ if(modeSel.value==='auto'){ w.CONFIG.btnTextColor = 'auto'; } else { const n = normalizeHexLocal(String(btnClr.value||'')); if(n) w.CONFIG.btnTextColor = n; else delete w.CONFIG.btnTextColor; } }
         const bf=document.getElementById('cfgBtnFill'); const v=(bf?.value||'').toString().toLowerCase(); w.CONFIG.btnFill = (v==='outline'?'outline':'solid');
+        const bwSaveEl = document.getElementById('cfgBtnBorderWidth');
+        if(bwSaveEl){ const n = Math.max(1, Math.min(6, Math.round(Number(bwSaveEl.value)|| (w.CONFIG.btnFill==='outline'?2:1)))); w.CONFIG.btnBorderWidth = n; }
       });
       // UI toggles & widths
       w.CONFIG.hideSlidesWithUi = document.getElementById('cfgHideSlidesWithUi').checked;
       w.CONFIG.hideProgressWithUi = document.getElementById('cfgHideProgressWithUi').checked;
       w.CONFIG.slideBorderOn = document.getElementById('cfgSlideOutline').checked;
-      const owSave = document.getElementById('cfgOutlineWidth'); let px = Math.max(0, Math.min(8, Math.round(Number(owSave.value)||0))); CONFIG.slideBorderWidth = px;
+  const owSave = document.getElementById('cfgOutlineWidth'); let px = Math.max(0, Math.min(8, Math.round(Number(owSave.value)||0))); w.CONFIG.slideBorderWidth = px;
       // remember deck
       w.CONFIG.rememberLastDeck = document.getElementById('cfgRememberDeck').checked;
       // overlay saves
@@ -255,20 +290,24 @@
       const ss = Math.max(10, Math.min(48, Math.round(Number(document.getElementById('cfgSubtitleSize').value)||16)));
       w.CONFIG.overlayTitleSize = ts; w.CONFIG.overlaySubtitleSize = ss;
       w.CONFIG.overlaySubtitleColor = (document.getElementById('cfgSubtitleColor').value === 'accent') ? 'accent' : 'primary';
-      const fp = document.getElementById('cfgFontPrimary').value.trim(); const fs = document.getElementById('cfgFontSecondary').value.trim(); if(fp) CONFIG.fontPrimary = fp; if(fs) CONFIG.fontSecondary = fs;
+  const fp = document.getElementById('cfgFontPrimary').value.trim(); const fs = document.getElementById('cfgFontSecondary').value.trim(); if(fp) w.CONFIG.fontPrimary = fp; if(fs) w.CONFIG.fontSecondary = fs;
       withSafe(()=>{ if(w.__tempOverlayPos){ w.CONFIG.overlayPos = w.__tempOverlayPos; delete w.__tempOverlayPos; } });
       withSafe(()=>{ if(w.__tempContentPos){ w.CONFIG.contentPos = w.__tempContentPos; delete w.__tempContentPos; } });
       if(w.PERSIST_CONFIG){ withSafe(()=>{ localStorage.setItem('slideapp.config', JSON.stringify(w.CONFIG)); }); } else { withSafe(()=>{ localStorage.removeItem('slideapp.config'); }); }
-      withSafe(()=>{ if(w.Theme && typeof w.Theme.applyConfig === 'function'){ try{ w.Theme.applyConfig(w.CONFIG); }catch(e){ /* ignore */ } } else if (typeof w.applyConfig==='function'){ w.applyConfig(); } });
+  // Apply via runtime helper and then page helper for any additional UI updates
+  withSafe(()=>{ if(w.Theme && typeof w.Theme.applyConfig === 'function'){ try{ w.Theme.applyConfig(w.CONFIG); }catch(e){ /* ignore */ } } });
+  withSafe(()=>{ if (typeof w.applyConfig==='function'){ try{ w.applyConfig(); }catch(e){ /* ignore */ } } });
       withSafe(()=>{ const el=document.getElementById('appName'); if(el){ el.textContent = (w.CONFIG.appName||w.CONFIG.brand||'SlideApp'); } });
       withSafe(()=>{ if(!(w.__deckAppName && String(w.__deckAppName).trim())){ const nm=(w.CONFIG.appName||w.CONFIG.brand||'SlideApp'); if(nm && nm.trim()) document.title = nm.trim(); } });
       withSafe(()=>{ w.updateActiveThumbGradient && w.updateActiveThumbGradient(); });
+      }catch(e){ hadError = true; try{ console.error('Save failed', e); }catch(_){} }
+      // Always close the modal even if a non-critical field failed, to avoid trapping the UI
       cfgOverlay.style.display=cfgModal.style.display='none';
       withSafe(()=>{ w.showToast && w.showToast(`Saved: ${(w.CONFIG.appName||w.CONFIG.brand||'SlideApp')} • ${(w.CONFIG.primary||'#01B4E1')} / ${(w.CONFIG.accent||'#64FFFC')} • Opacity ${Math.round(w.CONFIG.slideOpacity*100)}% • Outline ${(w.CONFIG.slideBorderOn!==false?'on':'off')} ${w.CONFIG.slideBorderWidth}px`); });
       // Update baseline for T toggle
       withSafe(()=>{ w.BASE_OPACITY = w.CONFIG.slideOpacity; });
       // Rebuild overlays & content positions across slides
-      withSafe(()=>{ w.rebuildOverlays && w.rebuildOverlays(); });
+  withSafe(()=>{ (w.OverlayCtrl && w.OverlayCtrl.rebuildOverlays) ? w.OverlayCtrl.rebuildOverlays() : (w.rebuildOverlays && w.rebuildOverlays()); });
       withSafe(()=>{
         if(Array.isArray(w.slidesHTML) && w.slidesHTML.length){
           const slides = [...document.querySelectorAll('.slide')];
@@ -303,7 +342,11 @@
     // wire buttons
   openBtn.addEventListener('click', open);
   withSafe(()=>{ const el=document.getElementById('cfgClose'); el && el.addEventListener('click', close); });
+  // Bind directly and also via delegation to make Save resilient
   withSafe(()=>{ const el=document.getElementById('cfgSave'); el && el.addEventListener('click', save); });
+  withSafe(()=>{ cfgModal.addEventListener('click', (e)=>{ try{ const t=e.target && (e.target.id==='cfgSave' || e.target.closest && e.target.closest('#cfgSave')); if(t){ e.preventDefault(); save(e); } }catch(_){ /* ignore */ } }, true); });
+  // Keyboard activation on focused Save button
+  withSafe(()=>{ const el=document.getElementById('cfgSave'); if(el){ el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); save(e); } }); } });
   withSafe(()=>{ const el=document.getElementById('cfgReset'); el && el.addEventListener('click', reset); });
   }
 

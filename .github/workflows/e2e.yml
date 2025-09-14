@@ -1,0 +1,94 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test-chromium:
+    name: Fast path (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium browser + deps
+        run: |
+          npx playwright install-deps chromium
+          npx playwright install chromium
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run Playwright (Chromium only)
+        run: npm run test:chromium
+
+      - name: Upload Playwright HTML report (Chromium)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-chromium
+          path: playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload test results (Chromium)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-chromium
+          path: test-results
+          if-no-files-found: ignore
+
+  test-all:
+    name: Full matrix (Chromium, Firefox, WebKit)
+    runs-on: ubuntu-latest
+    needs: test-chromium
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers + deps (all)
+        run: npx playwright install --with-deps
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run Playwright tests (all browsers)
+        run: npx playwright test
+
+      - name: Upload Playwright HTML report (all)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-all
+          path: playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload test results (all)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-all
+          path: test-results
+          if-no-files-found: ignore

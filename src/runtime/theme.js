@@ -28,6 +28,19 @@
     const {r,g,b} = hexToRgb(hex);
     return `rgb(${r}, ${g}, ${b})`;
   }
+  function clamp01(n){ return Math.max(0, Math.min(1, n)); }
+  function mixColors(rgbA, rgbB, t){
+    const r = Math.round(rgbA.r*(1-t) + rgbB.r*t);
+    const g = Math.round(rgbA.g*(1-t) + rgbB.g*t);
+    const b = Math.round(rgbA.b*(1-t) + rgbB.b*t);
+    return { r, g, b };
+  }
+  function rgbToLuminance(rgb){
+    const srgb = [rgb.r, rgb.g, rgb.b].map(c=>{
+      const s = c/255; return s <= 0.03928 ? s/12.92 : Math.pow((s+0.055)/1.055, 2.4);
+    });
+    return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
+  }
   function computeThemeCssVars(cfg){
   const rawPrimary = (cfg && cfg.primary) ? String(cfg.primary).trim() : '';
   const rawAccent = (cfg && cfg.accent) ? String(cfg.accent).trim() : '';
@@ -101,12 +114,37 @@
           const accent = (cfg.accent && String(cfg.accent).trim()) ? normalizeHex(String(cfg.accent)) : '';
           if (primary) cssVars['--primary'] = primary;
           if (accent) cssVars['--accent'] = accent;
-          // Button background fill
+          // Button background fill + outline border styling
           const btnFill = (cfg.btnFill && String(cfg.btnFill).trim().toLowerCase()) || '';
           if (btnFill === 'outline') {
             cssVars['--btn-bg'] = 'transparent';
+            // Border thickness (user-configurable)
+            const bw = (typeof cfg.btnBorderWidth === 'number' && isFinite(cfg.btnBorderWidth)) ? Math.round(cfg.btnBorderWidth) : 2;
+            const clamped = Math.max(1, Math.min(6, bw));
+            const hoverW = Math.min(8, clamped + 1);
+            cssVars['--btn-border-width'] = `${clamped}px`;
+            cssVars['--btn-border-width-hover'] = `${hoverW}px`;
+            // Border color = accent (fallback to primary)
+            const base = (accent || primary || '#64fffc');
+            cssVars['--btn-border-color'] = base;
+            // Theme-aware hover color: lighten on dark, darken on light
+            try{
+              const baseRgb = hexToRgb(base);
+              const bgTextHex = (cfg.textColor && String(cfg.textColor).trim()) ? normalizeHex(String(cfg.textColor)) : '';
+              const bgTextRgb = bgTextHex ? hexToRgb(bgTextHex) : { r: 226, g: 232, b: 240 };
+              const lum = rgbToLuminance(bgTextRgb);
+              const hoverRgb = lum < 0.5 ? mixColors(baseRgb, {r:255,g:255,b:255}, 0.15) : mixColors(baseRgb, {r:0,g:0,b:0}, 0.15);
+              cssVars['--btn-border-color-hover'] = `rgb(${hoverRgb.r}, ${hoverRgb.g}, ${hoverRgb.b})`;
+            }catch(e){ cssVars['--btn-border-color-hover'] = cssVars['--btn-border-color']; }
           } else if (primary && accent) {
             cssVars['--btn-bg'] = `linear-gradient(90deg, ${primary}, ${accent})`;
+            const bw = (typeof cfg.btnBorderWidth === 'number' && isFinite(cfg.btnBorderWidth)) ? Math.round(cfg.btnBorderWidth) : 1;
+            const clamped = Math.max(1, Math.min(6, bw));
+            const hoverW = Math.min(8, clamped + 1);
+            cssVars['--btn-border-width'] = `${clamped}px`;
+            cssVars['--btn-border-width-hover'] = `${hoverW}px`;
+            cssVars['--btn-border-color'] = 'rgba(255,255,255,0.06)';
+            cssVars['--btn-border-color-hover'] = cssVars['--btn-border-color'];
           }
           // btn-text and text
           // Accept raw color strings (hex quoted, shorthand, or rgb()).
