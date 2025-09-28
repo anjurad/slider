@@ -17,7 +17,7 @@ test('debug inspect slides', async ({ page }) => {
     return { idx, title, hasOverride: n.getAttribute('data-slide-bg-override'), dataSlideBg1: n.getAttribute('data-slidebg1'), dataSlideBg2: n.getAttribute('data-slidebg2'), html: n.querySelector('.md')?.innerHTML?.slice(0,200) };
   }));
   console.log(JSON.stringify(slides, null, 2));
-  const codeSlides = await page.$$eval('.slide', nodes => nodes.map((n,i)=> ({ idx:i, hasCode: /(function greet)/i.test(n.innerText) }))); 
+  const codeSlides = await page.$$eval('.slide', nodes => nodes.map((n,i)=> ({ idx:i, hasCode: /(window\.postMessage)/i.test(n.innerText) })));
   console.log('codeSlides:', JSON.stringify(codeSlides, null, 2));
   const preCount = await page.$$eval('pre', nodes => nodes.length);
   const codeCount = await page.$$eval('pre code', nodes => nodes.length);
@@ -27,7 +27,7 @@ test('debug inspect slides', async ({ page }) => {
     const snippet = await page.evaluate(()=>{ const s=document.body.innerHTML; const i=s.indexOf('<pre><code'); return s.slice(Math.max(0,i-120), i+120); });
     console.log('snippet around pre:', snippet);
   }
-  const parsed = await page.evaluate(()=> parseMarkdown('```js\nfunction greet(name){\n  return `Hello, ${name}!`;\n}\nconsole.log(greet(\'World\'));\n```'));
+  const parsed = await page.evaluate(()=> parseMarkdown('```js\nwindow.postMessage({\n  type: \'slider.config\',\n  action: \'merge\',\n  config: {\n    primary: \'#007ACC\',\n    btnFill: \'outline\',\n    slideOpacity: 0.85\n  }\n}, \'*\');\n```'));
   console.log('parsed sample markdown:', parsed.slice(0,200));
   // Fetch raw sample file and run splitSlides to inspect raw bodies
   const rawSlides = await page.evaluate(async ()=>{

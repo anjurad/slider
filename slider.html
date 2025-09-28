@@ -1127,8 +1127,17 @@
           if(fence || hComment || hBlock) continue;
           if(tj==='---' || tj==='...'){ return sawKeyLine; }
           if(!tj) continue;
-          // a simple key: value detector (no leading indentation required)
-          if(/^[^\s][^:]*:\s*.*$/.test(tj)) sawKeyLine = true;
+          const colonIdx = tj.indexOf(':');
+          if(colonIdx === -1) continue;
+          const keyPart = tj.slice(0, colonIdx).trim();
+          const valPart = tj.slice(colonIdx + 1).trim();
+          const validKey = /^[A-Za-z0-9_-]+$/.test(keyPart);
+          const hasHtmlChars = /[<>]/.test(tj) || keyPart.includes('=');
+          if(!validKey || hasHtmlChars) continue;
+          const valueLooksLikeAttr = /[<>]/.test(valPart) && /\w=/.test(valPart);
+          if(!valueLooksLikeAttr){
+            sawKeyLine = true;
+          }
         }
         return false;
       }
@@ -1665,341 +1674,130 @@
   }
     }catch{}
 const DEMO_MD = `---
-app-name: Slider
+app-name: Slider Launchpad
 theme-primary: "#007ACC"
 theme-accent: "#3C9DFF"
 theme-text: "#d4d4d4"
-background: particles
+background: gradient
 ui: on
 ---
-
-# Slider
-Super‑jazzy demos + user guide
-
-## Quick Controls
-
-- 🎨 Style: colors, overlays, backgrounds, content position (3×3)
-- Keys: B (background) · T (opacity) · U (UI) · O (outline) · S (slides) · N (notes)
-- Presets: fast theme swaps · Reset restores defaults
-
 ---
-
-title: Content Position — Deck Default (MM)
-subtitle: Centered by default (deck)
+title: Slider Launchpad
+subtitle: Six fast slides that show what Slider can do
+notes: Arrow keys navigate • Press B for backgrounds • Try O to toggle slide outlines
 ---
-
-## Centered Content
-The Markdown block is anchored to the middle (MM).
-
-Use frontmatter <code>content-pos: mm</code> (deck) or the Style UI to change.
-
----
-
-title: Content Position — TL
-content-pos: tl
----
-
-## Top‑Left (TL)
-Per‑slide override via <code>content-pos: tl</code>.
-
----
-
-title: Content Position — MR
-content-pos: mr
----
-
-## Middle‑Right (MR)
-Great for balancing text with visuals.
-
----
-
-title: Content Position — BR
-content-pos: br
----
-
-## Bottom‑Right (BR)
-Perfect for quick callouts.
-
----
-
-title: Overlays — Deck ON
-overlay: on
-overlay-pos: tr
-title-size: 30
-overlay-subtitle: true
-overlay-subtitle-size: 16
-overlay-subtitle-color: accent
----
-
-## Title & Subtitle Overlay
-Overlay ON by default from here. Subtitle uses accent color.
-
----
-
-title: Overlays — Per‑Slide BL
-overlay-pos: bl
-title-size: 28
-overlay-subtitle-size: 14
----
-
-## Bottom‑Left Overlay
-Per‑slide overlay position + sizes.
-
----
-
-title: Overlay OFF here
-overlay: off
----
-
-## No Overlay
-Per‑slide override hides the overlay.
-
----
-
-## Markdown Goodies
-
-- Strikethrough: ~~deprecated~~ → modern
-- Task lists:
-  - [ ] Collect feedback
-  - [x] Ship 1.2.0
-- Autolink: https://example.com
-
-::: note
-Heads up: Admonitions render with a clean style.
-:::
-
-::: tip
-Pro tip: Use the TOC (📑) to jump between sections.
-:::
-
-::: warning
-Warning: Don’t overuse effects; clarity wins.
-:::
-
-## Headings & Anchors
-
-### Getting Started
-Click the “#” to copy a direct link to this heading.
-
-## Columns
-
-::: columns
-
-### Column A
-- Alpha
-- Beta
-
-:::col
-
-### Column B
-1. One
-2. Two
-
-:::col
-
-### Column C
-- One
-- Two
-
-:::
-
-## Tables
-
-| Feature        | Basic | Pro |
-|----------------|:-----:|:---:|
-| Bullet Support | ✅    | ✅  |
-| Code Blocks    | ✅    | ✅  |
-| Tables         | ❌    | ✅  |
-
-## Shortcuts (One‑hand friendly)
-
-- Background: B cycles modes; label shows current
-- Slides drawer: S toggles thumbnails (works with UI off)
-- Notes panel: N toggles speaker notes
-- Fullscreen: F on/off
-- UI mode: U hide/show header & footer
-- Progress: P toggles bar/arrows/count
-- Opacity: T toggles 0% ⇄ saved baseline
-- Outline: O toggles accent outline
-- Title overlay: Y toggles title/subtitle overlay
-
-## Image + Text (Example)
-<p class="muted-lead">A clean visual + talking points layout.</p>
-
-<div style="display:flex; gap:24px; align-items:center;">
-  <div style="flex:1; min-width:0;">
-    <img src="https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?w=1000" alt="Dashboard preview" style="width:100%;height:auto;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);" />
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:28px;padding:3rem 1rem;text-align:center;">
+  <h1 style="margin:0;font-size:clamp(3.5rem,8vw,5.5rem);font-weight:800;background:linear-gradient(120deg,var(--primary),var(--accent));-webkit-background-clip:text;color:transparent;">
+    Build presentations that make an entrance
+  </h1>
+  <p style="max-width:680px;font-size:1.35rem;line-height:1.5;color:var(--text);opacity:.88;">
+    Slider mixes Markdown, HTML, and live theming so you can move from idea to polished deck in minutes—no pipeline or build step required.
+  </p>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;">
+    <a class="btn" href="https://github.com/anjurad/slider" style="padding:14px 28px;font-size:1rem;">View on GitHub</a>
+    <a class="btn" href="#workflow" style="padding:14px 28px;font-size:1rem;border-color:rgba(255,255,255,.32);">Jump to workflow</a>
   </div>
-  <div style="flex:1; min-width:0;">
-    <h3>Why this layout works</h3>
-    <ul>
-      <li>Even balance between image and copy</li>
-      <li>Great for highlights and callouts</li>
-      <li>Responsive: stacks on small screens</li>
-    </ul>
-  </div>
-
 </div>
 
 ---
+## Style controls that respond instantly
 
-title: Columns Shortcode Demo
-subtitle: Markdown-only columns
-notes: Use ::: columns with :::col separators. Pure Markdown authoring.
----
-
-# Columns Shortcode
-## Another way to do columns
-
-::: columns
-
-### Column A
-- Alpha
-- Beta
-- Gamma
-
-:::col
-
-### Column B
-1. One
-2. Two
-3. Three
-
-:::col
-
-### Column C
-- One
-- Two
-- Three
-- Four
-
-:::
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;align-items:start;">
+  <div>
+    <p>Open the 🎨 Style modal and everything reacts live: presets, button fill, contrast detection, and slide opacity.</p>
+    <ul>
+      <li>Toggle between outline + solid buttons without losing readability.</li>
+      <li>Presets ship with curated palettes and accessible contrasts.</li>
+      <li>Use <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>S</kbd> to save and persist the config.</li>
+    </ul>
+  </div>
+  <div style="background:var(--card);padding:24px;border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:18px;">
+    <div style="display:flex;gap:12px;">
+      <button class="btn" style="padding:10px 18px;border-color:var(--accent);">Outline</button>
+      <button class="btn" style="padding:10px 18px;opacity:.5;">Solid</button>
+    </div>
+    <div style="display:grid;gap:12px;font-size:0.95rem;">
+      <div><strong>Preset</strong>: Arctic Daylight<div style="height:6px;border-radius:999px;background:linear-gradient(90deg,#5E81AC,#88C0D0);"></div></div>
+      <div><strong>Auto contrast</strong>: Button text switched to <code>#2E3440</code></div>
+      <div><strong>Keyboard</strong>: <kbd>O</kbd> toggles outlines · <kbd>B</kbd> cycles backgrounds</div>
+    </div>
+  </div>
+</div>
 
 ---
+## Layouts love Markdown + HTML
 
-title: Table Example
-subtitle: GFM tables with alignment
-notes: Demonstrates table rendering with alignment.
----
+<figure style="margin:0;background:var(--card);padding:24px;border-radius:16px;box-shadow:var(--shadow);display:grid;gap:18px;">
+  <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200" alt="Team collaborating" style="width:100%;border-radius:12px;object-fit:cover;">
+  <figcaption style="font-size:0.95rem;opacity:.8;">Use Markdown for structure and sprinkle HTML for layout tweaks, captions, or responsive embeds.</figcaption>
+</figure>
 
-## Feature Comparison
-
-| Feature        | Basic | Pro | Enterprise |
-|----------------|:-----:|:---:|:----------:|
-| Bullet Support | ✅    | ✅  | ✅         |
-| Code Blocks    | ✅    | ✅  | ✅         |
-| Tables         | ❌    | ✅  | ✅         |
-| Notes Panel    | ✅    | ✅  | ✅         |
-
----
-
-title: Embedded SVG (Offline)
-subtitle: Inline SVG data URI
-notes: Inline SVG data URI for offline testing.
----
-
-![Embedded SVG](data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='120'><rect width='100%25' height='100%25' rx='12' fill='%230ea5e9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='18'>Embedded SVG</text></svg>)
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:20px;">
+  <div>
+    <h3>Column blocks</h3>
+    <p>Use ::: columns shortcodes or simple flexbox to compare features side by side.</p>
+  </div>
+  <div>
+    <h3>Media ready</h3>
+    <p>Drop in videos, diagrams, or code sandboxes—Slider doesn’t purge your HTML.</p>
+  </div>
+  <div>
+    <h3>Custom overlays</h3>
+    <p>Overlay title/subtitle positions snap to a 3×3 grid with per-slide overrides.</p>
+  </div>
+</div>
 
 ---
+## Developer workflow, simplified {#workflow}
 
-title: Code & Formatting
-subtitle: Blocks, inline, and emphasis
-notes: Demo of code blocks and emphasis styles.
----
+\`\`\`js
+window.postMessage({
+  type: 'slider.config',
+  action: 'merge',
+  config: {
+    primary: '#007ACC',
+    btnFill: 'outline',
+    slideOpacity: 0.85
+  }
+}, '*');
+\`\`\`
 
-## Code Sample
-
-<pre><code>function greet(name){
-  return 'Hello, ' + name + '!';
-}
-console.log(greet('World'));</code></pre>
-
-- Supports <strong>bold</strong> and <em>italic</em> and <code>inline code</code>
-
----
-
-title: Print & Accessibility
-subtitle: Clean PDFs and reduced motion
-notes: Print strips backgrounds and UI for clean PDFs; reduced motion is respected.
----
-
-## Print & Accessibility
-
-- Print to PDF via the 📄 PDF button
-- Print removes backgrounds and UI for clarity
-- Respects “Reduce motion” and falls back to Gradient
+<aside style="margin-top:18px;background:var(--card);padding:20px;border-radius:14px;box-shadow:0 12px 24px rgba(0,0,0,.18);">
+  <strong>Tooling perks</strong>
+  <ul>
+    <li>Hotkeys for outline, opacity, notes, thumbnails, and UI.</li>
+    <li>Persist configs in \`localStorage['slider.config']\`.</li>
+    <li>CLI validation via <code>npm run validate:deck</code>.</li>
+  </ul>
+</aside>
 
 ---
+## Accessibility baked in
 
-title: Title & Subtitle Overlay
-subtitle: Titles on slides, your way
-notes: Overlay shows the slide title (frontmatter or fallback) and an optional subtitle. Toggle globally via toolbar, hotkey, or Style. Override per slide with frontmatter.
----
-
-## Overlay quick guide
-
-- Toggle overlay: Toolbar "🏷️ Title" button or press Y
-- Style options: Position TL/TR/BL/BR; Title size; Subtitle on/off; Subtitle size; Subtitle color (Primary/Accent); Fonts (primary/secondary)
-- Per-slide overrides (frontmatter):
-  - overlay: on|off — show/hide overlay
-  - overlaypos: tl|tr|bl|br — position
-  - titlesize: 12..64 · subtitlesize: 10..48
-  - title: and subtitle: values
-- Deck-level defaults (frontmatter):
-  - overlay, overlaypos, overlaysubtitle, overlaysubtitlesize, overlaysubtitlecolor, primaryfont, secondaryfont
-
-Pro tip: Keep subtitles concise; they’re intentionally thinner for hierarchy.
-
-Tip: Subtitle is intentionally thinner than the title for hierarchy.
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;align-items:center;">
+  <div>
+    <meter min="0" max="100" value="96" style="width:100%;height:20px;">96</meter>
+    <p style="margin-top:12px;">The default presets clear WCAG AA contrast checks (96% score in internal testing).</p>
+  </div>
+  <ul>
+    <li>Respect <strong>prefers-reduced-motion</strong> and fall back to gradients.</li>
+    <li>Outline and button borders default to <strong>1&nbsp;px</strong> for crisp focus states.</li>
+    <li>Auto contrast adjusts button text when you choose outline fills.</li>
+  </ul>
+</div>
 
 ---
+## Ready to build your deck?
 
-title: Front matter reference
-subtitle: Deck-level and per-slide keys
-notes: Quick reference listing all supported front matter keys, including aliases and accepted ranges. Boolean-like values are case-insensitive; strings are trimmed; numeric values are clamped to valid ranges.
----
-::: columns
-
-### Deck-level (whole deck)
-
-- background | bg: gradient | particles | off
-- appname | app-name | brand: string (sets app/brand label)
-- primary | color: hex color (#RGB or #RRGGBB)
-- accent: hex color (#RGB or #RRGGBB)
-- appbg1 | app-bg1 | app-bg-1: hex color — app background start
-- appbg2 | app-bg2 | app-bg-2: hex color — app background end
-- effectcolor | effect-color: hex color — particles/efffect accent
-- opacity | slideopacity: percentage (e.g., 75 or "75%") or decimal 0..1 (e.g., 0.75)
-- primaryfont: string (font family name)
-- secondaryfont: string (font family name)
-- overlay | titleoverlay: on | off | true | false | 1 | 0
-- overlaypos | titleposition: tl | tr | bl | br
-- titlesize: integer, clamped 12..64 (px)
-- overlaysubtitle | subtitleenabled: on | off | true | false | 1 | 0
-- overlaysubtitlesize | subtitlesize: integer, clamped 10..48 (px)
-- overlaysubtitlecolor: primary | accent
-- ui: on | show | true | 1 (show UI) or off | hide | false | 0 (hide UI)
-
-:::col
-
-### Per-slide (single slide)
-
-- overlay: on | off | true | false | 1 | 0
-- overlaypos: tl | tr | bl | br
-- titlesize: integer, clamped 12..64 (px)
-- subtitlesize: integer, clamped 10..48 (px)
-- title: string (used for overlay and thumbnails)
-- subtitle: string (shown if non-empty and subtitle is enabled)
-- slidebg1 | slide-bg1: hex color — slide background start (overrides)
-- slidebg2 | slide-bg2: hex color — slide background end (overrides)
-
-:::
-
-Notes:
-- Boolean-like values are case-insensitive; strings are trimmed
-- Values outside ranges are clamped to the stated mins/maxes
-
-Everything else in front matter is ignored by the app.`;
+<div style="display:flex;flex-direction:column;gap:20px;max-width:680px;">
+  <p>Clone the repo, drop Markdown into <code>content/</code>, update <code>slides.json</code>, and publish straight from GitHub Pages.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;">
+    <a class="btn" href="https://github.com/anjurad/slider#readme" style="padding:12px 24px;">Read the docs</a>
+    <a class="btn" href="https://github.com/anjurad/slider/tree/main/content" style="padding:12px 24px;">See example decks</a>
+    <a class="btn" href="https://github.com/anjurad/slider/issues/new" style="padding:12px 24px;">Share feedback</a>
+  </div>
+  <small style="opacity:.7;">Tip: press <kbd>?</kbd> inside Slider to open the keyboard shortcut legend.</small>
+</div>`;
     slidesHTML = splitSlides(DEMO_MD); try{ window.slidesHTML = slidesHTML; }catch{}
     renderSlides(slidesHTML);
   // Apply deck-level frontmatter if present

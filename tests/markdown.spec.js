@@ -15,76 +15,58 @@ test.describe('Slider markdown rendering (WebKit)', () => {
 
   test('loads app and renders demo slides', async ({ page }) => {
     await page.goto(toFileUrl(appPath));
-    await page.waitForSelector('.slide.active .md');
+    await page.waitForSelector('.slide.active');
     const counter = page.locator('#slideNo');
     await expect(counter).toContainText('/');
-  // First slide should contain some welcoming text (allow variations in renderer)
-  const slideText = await page.locator('.slide.active .md').textContent();
-  await expect(slideText).toBeTruthy();
+  const firstText = await page.locator('.slide.active').evaluate(el => (el.textContent || '').trim());
+  expect(firstText.length).toBeGreaterThan(0);
   });
 
   test('can load markdown file and navigate slides', async ({ page }) => {
     await page.goto(toFileUrl(appPath));
     const chooser = page.locator('#fileInput');
     await chooser.setInputFiles(mdPath);
-    await page.waitForSelector('.slide.active .md');
+    await page.waitForSelector('.slide.active');
 
   // First slide should render content; ensure the loaded deck produced slides
-  await expect(page.locator('.slide.active .md')).not.toBeEmpty();
+  const thumbCount = await page.locator('.thumb').count();
+  expect(thumbCount).toBeGreaterThanOrEqual(4);
 
-    // Try opening each thumbnail until we find the code sample with 'function greet'
-    const thumbs = await page.locator('.thumb').count();
-    let found = false;
-    for (let i = 0; i < thumbs; i++) {
+    // Try opening each thumbnail until we find the workflow code sample
+    let foundCode = false;
+    for (let i = 0; i < thumbCount; i++) {
+      await page.click(`.thumb:nth-child(${i+1})`);
+      await page.waitForTimeout(150);
+      const count = await page.locator('.slide.active pre code', { hasText: 'window.postMessage' }).count();
+      if (count > 0) { foundCode = true; break; }
+    }
+    expect(foundCode).toBeTruthy();
+    await expect(page.locator('.slide.active pre code', { hasText: 'window.postMessage' })).toHaveCount(1);
+
+    // Find the media slide with a figure/image
+    let foundFigure = false;
+    for (let i = 0; i < thumbCount; i++) {
       await page.click(`.thumb:nth-child(${i+1})`);
       await page.waitForTimeout(120);
-      const count = await page.locator('.slide.active .md pre code', { hasText: 'function greet' }).count();
-      if (count > 0) { found = true; break; }
+      const figCount = await page.locator('.slide.active figure').count();
+      if (figCount > 0) { foundFigure = true; break; }
     }
-    expect(found).toBeTruthy();
-    await expect(page.locator('.slide.active .md pre code', { hasText: 'function greet' })).toHaveCount(1);
+    expect(foundFigure).toBeTruthy();
 
-    // Find a slide that contains an image by scanning thumbnails
-    const totalThumbs = await page.locator('.thumb').count();
-    let foundImg = false;
-    for (let i = 0; i < totalThumbs; i++) {
+    // Find the accessibility slide with a meter element
+    let foundMeter = false;
+    for (let i = 0; i < thumbCount; i++) {
       await page.click(`.thumb:nth-child(${i+1})`);
       await page.waitForTimeout(120);
-      const imgCount = await page.locator('.slide.active .md img').count();
-      if (imgCount > 0) { foundImg = true; break; }
+      const meterCount = await page.locator('.slide.active meter').count();
+      if (meterCount > 0) { foundMeter = true; break; }
     }
-    expect(foundImg).toBeTruthy();
-    await expect(page.locator('.slide.active .md img')).toHaveCount(1);
+    expect(foundMeter).toBeTruthy();
 
-    // Advance until we reach the Quotes & Lists slide (2 blockquotes + 3 list items)
-    for (let i = 0; i < 5; i++) {
-      await page.click('#btnNext');
-      await page.waitForTimeout(80);
-      const bqCount = await page.locator('.slide.active .md blockquote').count();
-      if (bqCount >= 2) break;
-    }
-    await expect(page.locator('.slide.active .md blockquote')).toHaveCount(2);
-    await expect(page.locator('.slide.active .md ul li')).toHaveCount(3);
-
-    // Find table slide within next slides
-    for (let i = 0; i < 6; i++) {
-      await page.click('#btnNext');
-      await page.waitForTimeout(60);
-      const tableCount = await page.locator('.slide.active .md table').count();
-      if (tableCount > 0) break;
-    }
-  // Renderer may produce multiple small tables; ensure at least one table is present
-  const tblCount = await page.locator('.slide.active .md table').count();
-  expect(tblCount).toBeGreaterThan(0);
-
-    // Find columns shortcode
-    for (let i = 0; i < 6; i++) {
-      await page.click('#btnNext');
-      await page.waitForTimeout(60);
-      const colsCount = await page.locator('.slide.active .md .cols .col').count();
-      if (colsCount >= 2) break;
-    }
-    await expect(page.locator('.slide.active .md .cols .col')).toHaveCount(3);
+    // Ensure final slide contains CTA buttons
+    await page.click('.thumb:last-child');
+    await page.waitForTimeout(120);
+    await expect(page.locator('.slide.active a.btn', { hasText: 'Read the docs' })).toHaveCount(1);
   });
 
   test('does not split on --- inside code fences', async ({ page }) => {
