@@ -17,7 +17,7 @@ test.describe('Sample deck frontmatter application', () => {
   await page.goto(toFileUrl(appPath));
   // Ensure previous runs haven't left background mode set in localStorage
   await page.evaluate(() => {
-    localStorage.removeItem('slideapp.config');
+    localStorage.removeItem('slider.config');
     localStorage.removeItem('bgMode');
   });
   // Reload to ensure a fresh app instance, then opt-in deterministic test mode in the new page
@@ -36,7 +36,7 @@ test.describe('Sample deck frontmatter application', () => {
     // App name applied based on sample frontmatter (brand/appname)
   const md = fs.readFileSync(sampleMdPath, 'utf8');
   const fmMatch = md.trimStart().match(/^---[\s\S]*?---/);
-    let expectedName = 'SlideApp';
+    let expectedName = 'Slider';
     if(fmMatch){
       const block = fmMatch[0];
       const lines = block.split(/\r?\n/).slice(1,-1);

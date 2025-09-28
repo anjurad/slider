@@ -186,7 +186,7 @@ Project structure
 You can now load and update theme/config externally without editing code.
 
 - URL param: append `?config=<url>` to `slider.html` to fetch a JSON config.
-  - Example: `slider.html?config=https://example.com/slideapp-config.json`
+  - Example: `slider.html?config=https://example.com/slider-config.json`
   - Requires CORS on the remote origin.
 - Style modal (🎨):
   - Load from URL, Import JSON (file), Export current config.
@@ -203,8 +203,8 @@ window.postMessage({
 ```
 
 Notes
-- Storage key: `localStorage['slideapp.config']` holds the config when persist is enabled.
-- Persist preference is stored separately under `localStorage['slideapp.config.persist']`.
+- Storage key: `localStorage['slider.config']` holds the config when persist is enabled.
+- Persist preference is stored separately under `localStorage['slider.config.persist']`.
 - Unknown keys are ignored; values are validated and sanitized (colors → `#rrggbb`, ranges for numbers, allowed enums).
 
 More details: `docs/external-config.md`.

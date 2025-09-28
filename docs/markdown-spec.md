@@ -18,8 +18,8 @@ This document describes how the single-file app (`slider.html`) parses Markdown,
 
 - Upload: `#fileInput` accepts `.md/.markdown/.txt` (MIME guard). Size limit 5 MB. Empty files rejected.
 - Restore order:
-  1) Session restore from `sessionStorage['slideapp.session.deck']` (always attempted).
-  2) Persistent restore from `localStorage['slideapp.persist.deck']` if `CONFIG.rememberLastDeck` is true.
+1) Session restore from `sessionStorage['slider.session.deck']` (always attempted).
+2) Persistent restore from `localStorage['slider.persist.deck']` if `CONFIG.rememberLastDeck` is true.
   3) Fallback fetch of `sample_presentation.md`; if unavailable, an embedded demo deck is used.
 - Persistence when loading:
   - Saves `{ deckContent, fileName, loadedAt }` to sessionStorage.
@@ -227,8 +227,8 @@ Implementation notes
 
 ## Persistence and Determinism
 
-- Session key: `slideapp.session.deck` (always used when present and valid).
-- Persistent key: `slideapp.persist.deck` (used only when configured to remember).
+- Session key: `slider.session.deck` (always used when present and valid).
+- Persistent key: `slider.persist.deck` (used only when configured to remember).
 - Deterministic test mode hook (`window.__isDeterministicTestMode()`): when enabled in tests, clears stored background mode and prefers `gradient` to keep visuals stable.
 
 ## Constraints and Limits

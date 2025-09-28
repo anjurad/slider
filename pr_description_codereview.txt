@@ -1,19 +1,17 @@
-Title: Refresh preset palette and default theme
+Title: Rename app branding to Slider
 
 Summary
-Replace the dated Light/Dark presets with a curated set of nine editor-inspired themes, update Slider’s Dark+ defaults, and wire the Style modal so presets control button outline/solid states alongside colors.
+Switch the project branding from “SlideApp” to “Slider” across the codebase, documentation, and tests.
 
 Changes
-- Data (`slider.html`): redefine `PRESETS` with keys, metadata, and per-preset `btnFill`/`btnBorderWidth`; update default demo frontmatter to the VS Code Dark+ palette and ensure bootstrap config seeds outline buttons.
-- UI (`src/ui/styleModal.js`): set fill/outline mode and border width when presets are applied, keep button text color modes in sync, and allow 1 px outlines when toggling modes.
-- Styling (`assets/app.css`, `assets/preview.svg`): align root CSS variables, gradients, and backgrounds with the new Dark+ look while standardising slide/button borders to 1 px.
-- Runtime helpers (`src/app/theme.ts`, `src/runtime/particles.js`): use new fallback colors for theme computations and particle effects.
-- Content & docs (`content/welcome.md`, `docs/authoring.md`, `docs/external-config.md`, `README.md`): refresh examples/screenshots and document the new presets plus outline default.
-- Tests (`tests/*.spec.ts`): update Playwright expectations for default colors, outline width, and sample deck backgrounds.
+- HTML/JS (`slider.html`, `src/ui/styleModal.js`): update default titles, placeholders, toast strings, and data attributes; change localStorage/sessionStorage keys to `slider.*`.
+- Assets & content (`assets/preview.svg`, `content/welcome.md`, `sample_presentation.md`): swap textual references to the new name.
+- Docs (`README.md`, `docs/external-config.md`, `docs/markdown-spec.md`, `CHANGELOG.md`): reflect the new brand and config filenames.
+- Tests (`tests/*.spec.*`): align descriptions and storage-key expectations with the renamed app.
 
 Validation
 - Unit: PASS (`npm run test:unit`)
 - E2E: PASS (`npm run test:e2e`)
 
 Notes
-- Manual review of the new light/dark outline presets is still recommended to confirm subjective aesthetics.
+- Users with persisted settings under `slideapp.*` keys will need to re-save, as the keys are renamed without migration.

@@ -29,7 +29,7 @@ All notable changes to this project will be documented in this file.
   - Load via URL param `?config=<url>` (CORS required for cross‑origin).
   - Import/Export config from the Style modal.
   - Programmatic updates via `window.postMessage({ type: 'slider.config', action: 'merge|replace', config })`.
-  - Persist toggle to control saving to `localStorage` (`slideapp.config`).
+- Persist toggle to control saving to `localStorage` (`slider.config`).
 - Documentation: `README.md` External Config section and `docs/external-config.md` with schema and examples.
 
 ### UI

@@ -8,7 +8,7 @@ test('deck-level frontmatter settings are applied (transient) and honored in UI'
   await page.goto(toFileUrl(appPath));
   await page.waitForSelector('#styleBtn');
   // Ensure no persisted config interferes
-  await page.evaluate(() => localStorage.removeItem('slideapp.config'));
+  await page.evaluate(() => localStorage.removeItem('slider.config'));
 
   // Build a small deck with deck-level frontmatter for styles
   const md = `---\nappname: TestDeck\nprimary: "#ff8800"\naccent: "#00cc88"\ntextcolor: "#001122"\nappbg1: "#112233"\nappbg2: "#223344"\nopacity: 60\nbackground: gradient\n---\n# Hello\n\n---\n# Slide 2\n`;
@@ -24,8 +24,8 @@ test('deck-level frontmatter settings are applied (transient) and honored in UI'
     }catch(e){ console.error('apply fm err', e); }
   }, md);
 
-  // After frontmatter, localStorage should still be empty for slideapp.config
-  const pre = await page.evaluate(() => localStorage.getItem('slideapp.config'));
+  // After frontmatter, localStorage should still be empty for slider.config
+  const pre = await page.evaluate(() => localStorage.getItem('slider.config'));
   expect(pre).toBeNull();
 
   // Open Style modal and check inputs reflect frontmatter values

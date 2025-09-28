@@ -7,7 +7,7 @@ function toFileUrl(p) {
   return 'file://' + abs;
 }
 
-test.describe('SlideApp markdown rendering (WebKit)', () => {
+test.describe('Slider markdown rendering (WebKit)', () => {
 
   const appPath = path.resolve(__dirname, '..', 'slider.html');
   const mdPath = path.resolve(__dirname, '..', 'sample_presentation.md');

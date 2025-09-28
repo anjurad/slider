@@ -1,11 +1,11 @@
 
 ---
-title: Welcome to SlideApp
+title: Welcome to Slider
 subtitle: Quick feature tour
 notes: Quick tour of features. Try arrow keys, notes, background, drawer, and UI modes.
   ---
   ---
-  # Hello, SlideApp
+  # Hello, Slider
 
   - Welcome to the demo deck
 
@@ -47,7 +47,7 @@ console.log(greet('World'));
   ## Code Sample
 
   ```js
-  # Hello, SlideApp
+# Hello, Slider
 
   - Welcome to the demo deck
 
@@ -113,4 +113,3 @@ console.log(greet('World'));
   - Two
 
   :::
-

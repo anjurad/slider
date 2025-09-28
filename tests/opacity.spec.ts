@@ -28,7 +28,7 @@ const appPath = path.resolve(__dirname, '..', 'slider.html');
 async function clearConfig(page) {
   await page.goto(toFileUrl(appPath));
   await page.evaluate(() => {
-    localStorage.removeItem('slideapp.config');
+    localStorage.removeItem('slider.config');
   });
 }
 

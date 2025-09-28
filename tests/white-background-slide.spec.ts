@@ -56,7 +56,7 @@ test.describe.skip('White per-slide background (skipped - spec updated)', () => 
   test('sample deck has a pure white slide background (SKIPPED)', async ({ page }) => {
     // Start clean to avoid persisted config interference
     await page.goto(toFileUrl(appPath));
-    await page.evaluate(() => localStorage.removeItem('slideapp.config'));
+    await page.evaluate(() => localStorage.removeItem('slider.config'));
     await page.reload();
     await page.waitForSelector('.slide.active .md');
 

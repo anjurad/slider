@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SlideApp v0.9.1 — Optimised & Secure</title>
+  <title>Slider v0.9.1 — Optimised & Secure</title>
   <!-- Favicon (fixed stray quote) -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
   <link rel="stylesheet" href="assets/app.css">
@@ -48,7 +48,7 @@
 
   <div class="deck">
     <div class="deck-header">
-  <div class="brand"><div class="brand-badge"></div><div class="brand-name" id="appName">SlideApp</div></div>
+  <div class="brand"><div class="brand-badge"></div><div class="brand-name" id="appName">Slider</div></div>
       <div class="deck-tools">
         <button class="btn" id="uiBtn" title="Toggle UI visibility" aria-label="Toggle UI">👁️ UI</button>
         <button class="btn" id="decksBtn" style="display:none" title="Open Decks" aria-label="Open Decks">📚 Decks</button>
@@ -89,7 +89,7 @@
           <section class="cfg-section">
             <h3 class="cfg-section-title">App & Presets</h3>
             <label for="cfgName">App name</label>
-            <input id="cfgName" type="text" placeholder="SlideApp" />
+            <input id="cfgName" type="text" placeholder="Slider" />
             <label>Presets</label>
             <div id="presetRow" class="row" style="margin-bottom:6px"></div>
           </section>
@@ -262,7 +262,7 @@
             <div class="inline" style="flex-wrap:nowrap; overflow-x:auto;">
               <div style="flex:1 1 auto; min-width:260px;">
                 <label for="cfgConfigUrl" style="display:block; font-size:12px;">Load from URL</label>
-                <input id="cfgConfigUrl" type="text" placeholder="https://example.com/slideapp-config.json" style="width:100%;" />
+                <input id="cfgConfigUrl" type="text" placeholder="https://example.com/slider-config.json" style="width:100%;" />
               </div>
               <button class="btn" id="cfgLoadUrl">Load</button>
               <div>
@@ -396,14 +396,14 @@
   let resizeTimer=null; window.addEventListener('resize',()=>{ if(bgMode!=='particles') return; clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ try{ if(window && window.Particles && typeof window.Particles.resize === 'function') window.Particles.resize(); }catch{} },120); });
 
   // ===== Config & Theme =====
-  const CONFIG = JSON.parse(localStorage.getItem('slideapp.config')||'{}');
+  const CONFIG = JSON.parse(localStorage.getItem('slider.config')||'{}');
   // Expose CONFIG globally so UI modules (e.g., Style modal) operate on the same object
   try{ window.CONFIG = CONFIG; }catch{}
   // Whether to persist config changes to localStorage (default: true for backward-compat)
-  let PERSIST_CONFIG = (()=>{ try{ const v = localStorage.getItem('slideapp.config.persist'); if(v===null) return true; return v==='1' || String(v).toLowerCase()==='true'; }catch{} return true; })();
+  let PERSIST_CONFIG = (()=>{ try{ const v = localStorage.getItem('slider.config.persist'); if(v===null) return true; return v==='1' || String(v).toLowerCase()==='true'; }catch{} return true; })();
   try{ window.PERSIST_CONFIG = PERSIST_CONFIG; }catch{}
   // Baseline opacity for T-key toggle: use last saved value from persisted config; fallback to 1 (100%).
-  let BASE_OPACITY = (()=>{ try{ const saved=JSON.parse(localStorage.getItem('slideapp.config')||'{}'); const v=saved && typeof saved.slideOpacity==='number' ? saved.slideOpacity : undefined; if(typeof v==='number' && isFinite(v)) return Math.max(0, Math.min(1, v)); }catch{} return 1; })();
+  let BASE_OPACITY = (()=>{ try{ const saved=JSON.parse(localStorage.getItem('slider.config')||'{}'); const v=saved && typeof saved.slideOpacity==='number' ? saved.slideOpacity : undefined; if(typeof v==='number' && isFinite(v)) return Math.max(0, Math.min(1, v)); }catch{} return 1; })();
   try{ window.BASE_OPACITY = BASE_OPACITY; }catch{}
   // Back-compat: migrate legacy brand -> appName if needed (do not delete brand to avoid breaking older versions)
   if(typeof CONFIG.appName !== 'string' && typeof CONFIG.brand === 'string'){
@@ -494,7 +494,7 @@
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const applied = mergeConfig(data, 'merge');
-      if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} }
+      if(PERSIST_CONFIG){ try{ localStorage.setItem('slider.config', JSON.stringify(CONFIG)); }catch{} }
       try{ showToast('Config loaded'); }catch{}
       return applied;
     }catch(err){ try{ showToast('Failed to load config'); }catch{} console.error('Config load failed', err); return {}; }
@@ -504,7 +504,7 @@
     const data = sanitizeConfig(CONFIG);
     const blob = new Blob([JSON.stringify(data,null,2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href=url; a.download='slideapp-config.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 250);
+    const a = document.createElement('a'); a.href=url; a.download='slider-config.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 250);
   }
 
   // postMessage API: { type:'slider.config', action:'set|merge|replace', config:{...} }
@@ -516,7 +516,7 @@
       const cfg = msg.config || {};
       const mode = (action==='replace' || (action==='set' && msg.mode==='replace')) ? 'replace' : 'merge';
       const applied = mergeConfig(cfg, mode);
-      if(PERSIST_CONFIG){ try{ localStorage.setItem('slideapp.config', JSON.stringify(CONFIG)); }catch{} }
+      if(PERSIST_CONFIG){ try{ localStorage.setItem('slider.config', JSON.stringify(CONFIG)); }catch{} }
       ev.source && ev.source.postMessage && ev.source.postMessage({ type:'slider.config.result', ok:true, applied }, '*');
     }catch(e){ try{ ev.source && ev.source.postMessage && ev.source.postMessage({ type:'slider.config.result', ok:false, error:String(e&&e.message||e) }, '*'); }catch{} }
   });
@@ -657,12 +657,12 @@
     try{ if(window.Theme && typeof window.Theme.computeThemeCssVars === 'function'){ window.Theme.computeThemeCssVars({
       primary: CONFIG.primary, accent: CONFIG.accent, textColor: CONFIG.textColor, btnTextColor: CONFIG.btnTextColor, slideOpacity: CONFIG.slideOpacity
     }); } }catch{}
-  appNameEl.textContent = (CONFIG.appName||CONFIG.brand||'SlideApp');
+  appNameEl.textContent = (CONFIG.appName||CONFIG.brand||'Slider');
   // Keep document.title in sync; deck name takes precedence when present
   try{
     const deckNm = (window.__deckAppName && String(window.__deckAppName).trim()) || '';
-    const cfgNm = (CONFIG.appName||CONFIG.brand||'SlideApp');
-    document.title = (deckNm || cfgNm || 'SlideApp').toString();
+  const cfgNm = (CONFIG.appName||CONFIG.brand||'Slider');
+  document.title = (deckNm || cfgNm || 'Slider').toString();
   }catch{}
   // Apply app background colors and effect color if configured
     try{
@@ -1422,7 +1422,7 @@
             if(!tag){
               tag = document.createElement('style');
               tag.id = 'thumb-active-style';
-              tag.setAttribute('data-owned','slideapp');
+              tag.setAttribute('data-owned','slider');
               tag.textContent = css;
               document.head.appendChild(tag);
             } else {
@@ -1605,9 +1605,9 @@
       const payload = { deckContent: text, fileName: f.name||'', loadedAt: Date.now() };
       // Guard very large decks (~2.5MB)
       if((text||'').length <= 2.5*1024*1024){
-        sessionStorage.setItem('slideapp.session.deck', JSON.stringify(payload));
+        sessionStorage.setItem('slider.session.deck', JSON.stringify(payload));
         if(CONFIG.rememberLastDeck === true){
-          localStorage.setItem('slideapp.persist.deck', JSON.stringify(payload));
+          localStorage.setItem('slider.persist.deck', JSON.stringify(payload));
         }
       } else {
         showToast('Deck too large to remember');
@@ -1624,7 +1624,7 @@
   async function boot(){
     // Try session restore first
     try{
-      const raw = sessionStorage.getItem('slideapp.session.deck');
+      const raw = sessionStorage.getItem('slider.session.deck');
       if(raw){
         const data = JSON.parse(raw);
         if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
@@ -1639,7 +1639,7 @@
     // Then try persistent restore if enabled
     try{
       if(CONFIG.rememberLastDeck === true){
-        const raw = localStorage.getItem('slideapp.persist.deck');
+        const raw = localStorage.getItem('slider.persist.deck');
         if(raw){
           const data = JSON.parse(raw);
           if(data && typeof data.deckContent === 'string' && data.deckContent.trim()){
@@ -1665,7 +1665,7 @@
   }
     }catch{}
 const DEMO_MD = `---
-app-name: SlideApp
+app-name: Slider
 theme-primary: "#007ACC"
 theme-accent: "#3C9DFF"
 theme-text: "#d4d4d4"
@@ -1673,7 +1673,7 @@ background: particles
 ui: on
 ---
 
-# SlideApp
+# Slider
 Super‑jazzy demos + user guide
 
 ## Quick Controls
@@ -2093,7 +2093,7 @@ Everything else in front matter is ignored by the app.`;
   }
 
   (async function init() {
-    dlog('SlideApp v0.91 initializing...');
+    dlog('Slider v0.91 initializing...');
     setDrawerUI(); 
   applyUiMode();
     setBgFromPrefs(); 
@@ -2127,7 +2127,7 @@ Everything else in front matter is ignored by the app.`;
         await boot();
       }
     }catch(e){ console.warn('Static mode bootstrap failed, falling back', e); await boot(); }
-    dlog('SlideApp initialization complete.');
+    dlog('Slider initialization complete.');
   })();
 
   // Opacity toggle (T key): 0% <-> last saved opacity (baseline)
@@ -2379,7 +2379,7 @@ Everything else in front matter is ignored by the app.`;
     try{
       const deckNm = (typeof window.__deckAppName === 'string' && window.__deckAppName.trim()) ? window.__deckAppName.trim() : '';
       const cfgNm = (typeof CONFIG.appName === 'string' && CONFIG.appName.trim()) ? CONFIG.appName.trim() : '';
-      const title = deckNm || cfgNm || 'SlideApp';
+      const title = deckNm || cfgNm || 'Slider';
       document.title = title;
     }catch{}
   }
@@ -2538,10 +2538,10 @@ Everything else in front matter is ignored by the app.`;
   const o1 = getComputedStyle(document.documentElement).getPropertyValue('--slide-bg1').trim();
   const o2 = getComputedStyle(document.documentElement).getPropertyValue('--slide-bg2').trim();
       console.assert(o1 && o2, 'opacity CSS vars set');
-      console.log('[SlideApp tests] OK');
+      console.log('[Slider tests] OK');
   // Restore previous opacity so tests don't affect UI state
   setSlideOpacity(prev * 100);
-    }catch(e){ console.error('[SlideApp tests] FAIL', e); }
+    }catch(e){ console.error('[Slider tests] FAIL', e); }
   })();
   </script>
 </body>

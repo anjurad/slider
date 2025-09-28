@@ -11,14 +11,14 @@ Sources
 Persistence
 - Toggle “Persist config to this browser” in the Style modal to save to `localStorage`.
 - Keys:
-  - `localStorage['slideapp.config']`: the saved config (when persistence is on).
-  - `localStorage['slideapp.config.persist']`: `'1'|'0'` for the persist preference.
+  - `localStorage['slider.config']`: the saved config (when persistence is on).
+  - `localStorage['slider.config.persist']`: `'1'|'0'` for the persist preference.
 
 Schema (accepted keys)
 ```
 {
-  "appName": "SlideApp",
-  "brand": "SlideApp", // legacy alias for appName
+  "appName": "Slider",
+  "brand": "Slider", // legacy alias for appName
   "primary": "#569CD6", "accent": "#4FC1FF", "textColor": "#d4d4d4",
   "btnTextColor": "auto", // or "#rrggbb" for custom
   "btnFill": "outline",     // or "solid"
@@ -45,7 +45,7 @@ Title precedence
 
 Examples
 - URL param:
-  - `slider.html?config=https://example.com/slideapp-config.json`
+  - `slider.html?config=https://example.com/slider-config.json`
   - Remote origin must allow CORS.
 - Programmatic API:
 ```

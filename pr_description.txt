@@ -1,25 +1,23 @@
-Title: Refresh theme presets and defaults
+Title: Rename app branding to Slider
 
 Summary
-Introduce a new preset palette inspired by popular editor themes, update the default Slider look-and-feel to VS Code’s Dark+ palette with lean 1 px outlines, and document the refreshed options so teams can start from balanced, accessible color schemes.
+Rename the entire project branding from “SlideApp” to “Slider”, covering UI strings, storage keys, sample content, and documentation.
 
 What’s included
-- Presets: Replace legacy Light/Dark presets with nine curated themes (Dark+ (Default), Monokai Sunset, Nord Night, Solarized Twilight, High Contrast Slate, Arctic Daylight, VS Minimal Light, Solarized Day, Nimbus Mono) and capture per-preset button fill/outline preferences.
-- Defaults: Align global CSS variables, demo deck, and sample content with the Dark+ baseline; outline buttons and slides now use 1 px borders by default.
-- UI wiring: Ensure Style modal preset buttons apply `btnFill`, `btnBorderWidth`, and text-color mode without forcing thicker outlines when switching modes.
-- Docs & assets: Document the preset lineup, refresh screenshots, examples, and SVG/README/config snippets to match the new colors.
-- Tests: Adjust Playwright expectations for new defaults and ensure preset/app background regressions remain covered.
+- UI: Update titles, placeholders, toast messages, demo decks, and SVG badges to display “Slider”.
+- Storage: Rename localStorage/sessionStorage keys from `slideapp.*` to `slider.*` for persisted configs and deck restore.
+- Docs & samples: Refresh README, markdown spec, external config docs, and sample decks to reference the new name and config filenames.
+- Tests: Adjust Playwright suites and unit helpers to expect the updated branding and storage keys.
 
 Validation (local)
 - Unit: PASS (`npm run test:unit`)
 - E2E: PASS (`npm run test:e2e`)
 
 Notes
-- Manual smoke in a real browser can confirm subjective theme balance (try outline presets and button hover states).
+- Existing persisted configs under the old `slideapp.*` keys will not be migrated automatically.
 
 Checklist
-- [x] Preset palette refresh
-- [x] Default theme alignment
-- [x] Docs updated
+- [x] Branding updated in code
+- [x] Documentation refreshed
 - [x] Tests green
 - [x] PR description

@@ -20,7 +20,7 @@ async function setRangeValue(page, selector, value) {
 
 async function clearConfig(page) {
   await page.goto(toFileUrl(appPath));
-  await page.evaluate(() => localStorage.removeItem('slideapp.config'));
+  await page.evaluate(() => localStorage.removeItem('slider.config'));
 }
 
 test.describe('T key toggles 0% ⇄ saved baseline', () => {

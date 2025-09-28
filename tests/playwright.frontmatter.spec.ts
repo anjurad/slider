@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
 
-test('front-matter does not persist to slideapp.config until Save', async ({ page }) => {
+test('front-matter does not persist to slider.config until Save', async ({ page }) => {
   // Open the local file
   const filePath = 'file://' + path.resolve(process.cwd(), 'slider.html');
   await page.goto(filePath);
@@ -26,8 +26,8 @@ test('front-matter does not persist to slideapp.config until Save', async ({ pag
     }catch(e){ console.error('apply fm failed', e); }
   }, md);
 
-  // After front-matter application, check localStorage for 'slideapp.config' (should be null or unchanged)
-  const pre = await page.evaluate(() => localStorage.getItem('slideapp.config'));
+  // After front-matter application, check localStorage for 'slider.config' (should be null or unchanged)
+  const pre = await page.evaluate(() => localStorage.getItem('slider.config'));
   expect(pre).toBeNull();
 
   // Open Style modal and verify UI shows the front-matter values
@@ -47,7 +47,7 @@ test('front-matter does not persist to slideapp.config until Save', async ({ pag
   // Wait briefly for storage write
   await page.waitForTimeout(200);
 
-  const post = await page.evaluate(() => localStorage.getItem('slideapp.config'));
+  const post = await page.evaluate(() => localStorage.getItem('slider.config'));
   expect(post).not.toBeNull();
   const cfg = JSON.parse(post as string);
   expect(cfg.primary.toLowerCase()).toBe('#ff0000');
