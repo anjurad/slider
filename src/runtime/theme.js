@@ -117,20 +117,36 @@
           if (accent) cssVars['--accent'] = accent;
           // Button background fill + outline border styling
           const btnFill = (cfg.btnFill && String(cfg.btnFill).trim().toLowerCase()) || '';
+          const rawBtnBorder = (typeof cfg.btnBorderWidth === 'number' && isFinite(cfg.btnBorderWidth)) ? Math.round(cfg.btnBorderWidth) : null;
+          const baseClamped = (btnFill === 'outline')
+            ? Math.max(1, Math.min(6, rawBtnBorder ?? 2))
+            : 1;
+          const baseHover = Math.min(8, baseClamped + 1);
+          cssVars['--btn-bg'] = `linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04))`;
+          cssVars['--btn-border-width'] = `${baseClamped}px`;
+          cssVars['--btn-border-extra'] = '0px';
+          cssVars['--btn-border-extra-hover'] = `${Math.max(0, baseHover - baseClamped)}px`;
+          cssVars['--btn-border-width-hover'] = `${baseHover}px`;
+          cssVars['--btn-border-color'] = 'rgba(255,255,255,0.06)';
+          cssVars['--btn-border-color-hover'] = cssVars['--btn-border-color'];
           if (btnFill === 'outline') {
             cssVars['--btn-bg'] = 'transparent';
             // Border thickness (user-configurable)
-            const bw = (typeof cfg.btnBorderWidth === 'number' && isFinite(cfg.btnBorderWidth)) ? Math.round(cfg.btnBorderWidth) : 2;
-            const clamped = Math.max(1, Math.min(6, bw));
+            const clamped = Math.max(1, Math.min(6, rawBtnBorder ?? 2));
+            const baseWidth = 1;
             const hoverW = Math.min(8, clamped + 1);
-            cssVars['--btn-border-width'] = `${clamped}px`;
+            const extra = Math.max(0, clamped - baseWidth);
+            const extraHover = Math.max(extra, hoverW - baseWidth);
+            cssVars['--btn-border-width'] = `${baseWidth}px`;
+            cssVars['--btn-border-extra'] = `${extra}px`;
+            cssVars['--btn-border-extra-hover'] = `${extraHover}px`;
             cssVars['--btn-border-width-hover'] = `${hoverW}px`;
             // Border color = accent (fallback to primary)
-            const base = (accent || primary || '#64fffc');
-            cssVars['--btn-border-color'] = base;
+            const baseColor = (accent || primary || '#64fffc');
+            cssVars['--btn-border-color'] = baseColor;
             // Theme-aware hover color: lighten on dark, darken on light
             try{
-              const baseRgb = hexToRgb(base);
+              const baseRgb = hexToRgb(baseColor);
               const bgTextHex = (cfg.textColor && String(cfg.textColor).trim()) ? normalizeHex(String(cfg.textColor)) : '';
               const bgTextRgb = bgTextHex ? hexToRgb(bgTextHex) : { r: 226, g: 232, b: 240 };
               const lum = rgbToLuminance(bgTextRgb);
@@ -139,11 +155,6 @@
             }catch(e){ cssVars['--btn-border-color-hover'] = cssVars['--btn-border-color']; }
           } else if (primary && accent) {
             cssVars['--btn-bg'] = `linear-gradient(90deg, ${primary}, ${accent})`;
-            const bw = (typeof cfg.btnBorderWidth === 'number' && isFinite(cfg.btnBorderWidth)) ? Math.round(cfg.btnBorderWidth) : 1;
-            const clamped = Math.max(1, Math.min(6, bw));
-            const hoverW = Math.min(8, clamped + 1);
-            cssVars['--btn-border-width'] = `${clamped}px`;
-            cssVars['--btn-border-width-hover'] = `${hoverW}px`;
             cssVars['--btn-border-color'] = 'rgba(255,255,255,0.06)';
             cssVars['--btn-border-color-hover'] = cssVars['--btn-border-color'];
           }

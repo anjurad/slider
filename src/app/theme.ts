@@ -60,6 +60,23 @@ export function rgbToHex(rgb: {r: number, g: number, b: number}): string {
   return `#${((1<<24) + (rgb.r<<16) + (rgb.g<<8) + rgb.b).toString(16).slice(1)}`;
 }
 
+export function mixRgb(a: RGB, b: RGB, t: number): RGB {
+  const ratio = Math.max(0, Math.min(1, t));
+  return {
+    r: Math.round(a.r * (1 - ratio) + b.r * ratio),
+    g: Math.round(a.g * (1 - ratio) + b.g * ratio),
+    b: Math.round(a.b * (1 - ratio) + b.b * ratio)
+  };
+}
+
+export function rgbToLuminance(rgb: RGB): number {
+  const toLin = (c: number) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * toLin(rgb.r) + 0.7152 * toLin(rgb.g) + 0.0722 * toLin(rgb.b);
+}
+
 export type RGB = { r: number; g: number; b: number };
 
 /** Normalize a hex string to #rrggbb, or return empty string if invalid. */
@@ -243,6 +260,15 @@ export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResu
   const muted = computeMutedFromText(btnText);
 
   const cssVars: Record<string, string> = {};
+  const btnFill = typeof cfg.btnFill === 'string' ? cfg.btnFill.trim().toLowerCase() : '';
+  const rawBtnBorder = (typeof cfg.btnBorderWidth === 'number' && Number.isFinite(cfg.btnBorderWidth)) ? Math.round(cfg.btnBorderWidth) : null;
+  cssVars['--btn-bg'] = 'linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.04))';
+  cssVars['--btn-border-width'] = '1px';
+  cssVars['--btn-border-extra'] = '0px';
+  cssVars['--btn-border-extra-hover'] = '1px';
+  cssVars['--btn-border-width-hover'] = '2px';
+  cssVars['--btn-border-color'] = 'rgba(255,255,255,0.06)';
+  cssVars['--btn-border-color-hover'] = cssVars['--btn-border-color'];
   if (primary) cssVars['--primary'] = primary;
   if (accent) cssVars['--accent'] = accent;
   if (primary && accent) cssVars['--btn-bg'] = `linear-gradient(90deg, ${primary}, ${accent})`;
@@ -260,6 +286,27 @@ export function computeThemeCssVars(cfg: Partial<ThemeConfig>): ThemeComputeResu
   if (cfg.fontSecondary) cssVars['--font-secondary'] = cfg.fontSecondary;
   if (typeof cfg.overlayTitleSize === 'number' && Number.isFinite(cfg.overlayTitleSize)) cssVars['--title-size'] = `${Math.max(12, Math.min(64, Math.round(cfg.overlayTitleSize)))}px`;
   if (typeof cfg.overlaySubtitleSize === 'number' && Number.isFinite(cfg.overlaySubtitleSize)) cssVars['--subtitle-size'] = `${Math.max(10, Math.min(48, Math.round(cfg.overlaySubtitleSize)))}px`;
+
+  if (btnFill === 'outline') {
+    cssVars['--btn-bg'] = 'transparent';
+    const clamped = Math.max(1, Math.min(6, rawBtnBorder ?? 2));
+    const baseWidth = 1;
+    const hoverWidth = Math.min(8, clamped + 1);
+    const extra = Math.max(0, clamped - baseWidth);
+    const hoverExtra = Math.max(extra, hoverWidth - baseWidth);
+    cssVars['--btn-border-width'] = `${baseWidth}px`;
+    cssVars['--btn-border-extra'] = `${extra}px`;
+    cssVars['--btn-border-extra-hover'] = `${hoverExtra}px`;
+    cssVars['--btn-border-width-hover'] = `${hoverWidth}px`;
+    const borderBase = accent || primary || '#64fffc';
+    cssVars['--btn-border-color'] = borderBase;
+    const borderRgb = hexToRgb(borderBase) || { r: 100, g: 255, b: 252 };
+    const textSource = cssVars['--text'] || cssVars['--btn-text'] || '#e2e8f0';
+    const textRgb = hexToRgb(textSource) || { r: 226, g: 232, b: 240 };
+    const lum = rgbToLuminance(textRgb);
+    const hoverRgb = lum < 0.5 ? mixRgb(borderRgb, { r: 255, g: 255, b: 255 }, 0.15) : mixRgb(borderRgb, { r: 0, g: 0, b: 0 }, 0.15);
+    cssVars['--btn-border-color-hover'] = `rgb(${hoverRgb.r}, ${hoverRgb.g}, ${hoverRgb.b})`;
+  }
 
   const activeThumbGradient = (primary && accent) ? `linear-gradient(135deg, ${primary}, ${accent})` : null;
 

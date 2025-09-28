@@ -74,6 +74,22 @@ Open `slider.html` (Pages or local server). If `slides.json` lists multiple deck
 - Use the Style (🎨) modal to tweak colors, overlay defaults, and opacity while previewing slides. Save will persist to localStorage if “Persist” is enabled.
 - Keyboard: B (background), T (opacity), U (UI), O (outline), S (slides), N (notes).
 
+## Style modal layout
+
+The redesigned Style modal organizes controls into responsive columns so the same content works from mobile widths through widescreen desktops.
+
+Wide viewport (≥ 1024px)
+
+![Style modal wide layout](images/style-modal-wide.png)
+
+Narrow viewport (≤ 640px) stacks sections vertically while keeping sticky headers for each group.
+
+![Style modal narrow layout](images/style-modal-narrow.png)
+
+When the browser reports “reduced motion,” section dividers and overlays skip animated transitions but keep the same structure.
+
+![Style modal in reduced-motion mode](images/style-modal-reduced-motion.png)
+
 ## Button styling
 
 Global controls that affect the application buttons (header, footer, and controls):
@@ -98,4 +114,3 @@ External config
 
 Validation
 - The validator accepts these keys. Unknown values (e.g., `button-fill: glass`) will be flagged with a clear message.
-
