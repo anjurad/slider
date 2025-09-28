@@ -16,15 +16,13 @@ test.describe('Slider markdown rendering (WebKit)', () => {
 
   test('loads app and renders demo slides', async ({ page }) => {
     await page.goto(toFileUrl(appPath));
-    await page.waitForSelector('.slide.active .md');
+    await page.waitForSelector('.slide.active');
     // Should show slide counter like 1/N
     const counter = page.locator('#slideNo');
     await expect(counter).toContainText('/');
 
-  // Basic check: first rendered slide should be visible and contain some content
-  await expect(page.locator('.slide.active .md')).toBeVisible();
-  const firstTxt = await page.locator('.slide.active .md').evaluate(el => (el.textContent||'').trim());
-  expect(firstTxt.length).toBeGreaterThan(0);
+  const introText = await page.locator('.slide.active').evaluate(el => (el.textContent || '').trim());
+  expect(introText.length).toBeGreaterThan(0);
   });
 
   test('can load markdown file and navigate slides', async ({ page }) => {
@@ -35,78 +33,49 @@ test.describe('Slider markdown rendering (WebKit)', () => {
     await chooser.setInputFiles(mdPath);
 
     // Wait for first rendered slide
-    await page.waitForSelector('.slide.active .md');
+    await page.waitForSelector('.slide.active');
 
-  // Verify first slide content (title and bullets): non-empty content check
-  await expect(page.locator('.slide.active .md')).toBeVisible();
-  const firstTxt2 = await page.locator('.slide.active .md').evaluate(el => (el.textContent||'').trim());
-  expect(firstTxt2.length).toBeGreaterThan(0);
+  // Verify slides exist
+  const thumbCount = await page.locator('.thumb').count();
+  expect(thumbCount).toBeGreaterThanOrEqual(4);
 
-    // Locate which slide contains the code block and navigate to it
-    const targetIndex = await page.evaluate(() => {
+    // Locate slide containing workflow code block
+    const codeIndex = await page.evaluate(() => {
       const slides = Array.from(document.querySelectorAll('.slide'));
-      for (let i = 0; i < slides.length; i++) {
-        const pc = slides[i].querySelector('pre code');
-        if (pc && (pc.textContent || '').includes('function greet')) return i;
-      }
-      return -1;
+      return slides.findIndex(slide => {
+        const block = slide.querySelector('pre code');
+        return block && (block.textContent || '').includes('window.postMessage');
+      });
     });
-    expect(targetIndex).toBeGreaterThan(-1);
-  // Navigate to the target slide by clicking its thumbnail for robustness
-  await page.locator('.thumb').nth(targetIndex).click();
-  await page.waitForTimeout(120);
-    // Check code block rendering escaped with <pre><code>
-    await expect(page.locator('.slide.active .md pre code', { hasText: 'function greet' })).toHaveCount(1);
+    expect(codeIndex).toBeGreaterThan(-1);
+    await page.locator('.thumb').nth(codeIndex).click();
+    await page.waitForTimeout(150);
+    await expect(page.locator('.slide.active pre code', { hasText: 'window.postMessage' })).toHaveCount(1);
 
-    // Find slide that contains an image and navigate to it via thumbnail
-    const imgIndex = await page.evaluate(() => {
+    // Find slide with media figure
+    const mediaIndex = await page.evaluate(() => {
       const slides = Array.from(document.querySelectorAll('.slide'));
-      for (let i = 0; i < slides.length; i++) if (slides[i].querySelector('img')) return i;
-      return -1;
+      return slides.findIndex(slide => !!slide.querySelector('figure img'));
     });
-    expect(imgIndex).toBeGreaterThan(-1);
-    await page.locator('.thumb').nth(imgIndex).click();
+    expect(mediaIndex).toBeGreaterThan(-1);
+    await page.locator('.thumb').nth(mediaIndex).click();
     await page.waitForTimeout(120);
-    await expect(page.locator('.slide.active .md img')).toHaveCount(1);
+    await expect(page.locator('.slide.active figure img')).toHaveCount(1);
 
-    // Find slide with 2+ blockquotes and 3+ list items
-    const quotesIndex = await page.evaluate(() => {
+    // Find accessibility slide with meter element
+    const meterIndex = await page.evaluate(() => {
       const slides = Array.from(document.querySelectorAll('.slide'));
-      for (let i = 0; i < slides.length; i++) {
-        const bq = slides[i].querySelectorAll('blockquote').length;
-        const lis = slides[i].querySelectorAll('ul li').length;
-        if (bq >= 2 && lis >= 3) return i;
-      }
-      return -1;
+      return slides.findIndex(slide => !!slide.querySelector('meter'));
     });
-    expect(quotesIndex).toBeGreaterThan(-1);
-    await page.locator('.thumb').nth(quotesIndex).click();
+    expect(meterIndex).toBeGreaterThan(-1);
+    await page.locator('.thumb').nth(meterIndex).click();
     await page.waitForTimeout(120);
-    await expect(page.locator('.slide.active .md blockquote')).toHaveCount(2);
-    await expect(page.locator('.slide.active .md ul li')).toHaveCount(3);
+    await expect(page.locator('.slide.active meter')).toHaveCount(1);
 
-    // Find slide with a table
-    const tableIndex = await page.evaluate(() => {
-      const slides = Array.from(document.querySelectorAll('.slide'));
-      for (let i = 0; i < slides.length; i++) if (slides[i].querySelector('table')) return i;
-      return -1;
-    });
-    expect(tableIndex).toBeGreaterThan(-1);
-    await page.locator('.thumb').nth(tableIndex).click();
+    // Final slide should contain CTA buttons
+    await page.locator('.thumb').last().click();
     await page.waitForTimeout(120);
-  const tableCount = await page.locator('.slide.active .md table').count();
-  expect(tableCount).toBeGreaterThan(0);
-
-    // Find slide with columns shortcode (.cols .col) and assert 3 columns
-    const colsIndex = await page.evaluate(() => {
-      const slides = Array.from(document.querySelectorAll('.slide'));
-      for (let i = 0; i < slides.length; i++) if (slides[i].querySelectorAll('.cols .col').length >= 2) return i;
-      return -1;
-    });
-    expect(colsIndex).toBeGreaterThan(-1);
-    await page.locator('.thumb').nth(colsIndex).click();
-    await page.waitForTimeout(120);
-    await expect(page.locator('.slide.active .md .cols .col')).toHaveCount(3);
+    await expect(page.locator('.slide.active a.btn', { hasText: 'Read the docs' })).toHaveCount(1);
   });
 
   test('does not split on --- inside code fences', async ({ page }) => {

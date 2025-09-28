@@ -16,7 +16,7 @@ async function setInputFile(page, selector, content, filename='deck.md'){
 test.describe('Clear preset and deck frontmatter', () => {
   test('Clear button sets opacity to 0%', async ({ page }) => {
     await page.goto(toFileUrl(appPath));
-    await page.waitForSelector('.slide.active .md');
+    await page.waitForSelector('.slide.active');
     await page.click('#styleBtn');
     // Click the clear button next to slider
     await page.getByRole('button', { name: /^Clear$/ }).click();
@@ -28,7 +28,7 @@ test.describe('Clear preset and deck frontmatter', () => {
 
   test('Deck frontmatter background applies on load', async ({ page }) => {
     await page.goto(toFileUrl(appPath));
-    await page.waitForSelector('.slide.active .md');
+    await page.waitForSelector('.slide.active');
 
     // Create a small deck with background frontmatter
     const md = `---\nbackground: particles\n---\n# A\n\n---\n# B\n`;

@@ -25,7 +25,7 @@ Render decks directly from the repository without uploading files.
   "decks": [
     { "title": "Welcome", "path": "content/welcome.md" },
     { "title": "Demo Deck", "path": "content/demo.md" },
-    { "title": "Sample Presentation", "path": "sample_presentation.md" }
+    { "title": "Slider Launchpad", "path": "sample_presentation.md" }
   ]
 }
 ```
