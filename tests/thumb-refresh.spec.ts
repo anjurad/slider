@@ -14,8 +14,8 @@ test.describe('Thumbnail refresh', () => {
     await page.click('#styleBtn');
     await page.waitForSelector('#cfgModal', { state: 'visible' });
 
-    // Click the preset named "Light 1" (button text)
-    const preset = page.locator('button.preset-btn', { hasText: 'Light 1' });
+    // Click the preset named "Arctic Daylight" (button text)
+    const preset = page.locator('button.preset-btn', { hasText: 'Arctic Daylight' });
     await expect(preset).toHaveCount(1);
     await preset.click();
 
@@ -31,8 +31,8 @@ test.describe('Thumbnail refresh', () => {
     const bg = await firstThumb.evaluate((el) => getComputedStyle(el).backgroundImage || getComputedStyle(el).background);
     // Expect the computed background to contain 'rgb' or 'linear-gradient' (indicating updated CSS var applied)
     expect(bg).toBeTruthy();
-    // Also assert that the page's root --app-bg1 is the Light 1 preset value
+    // Also assert that the page's root --app-bg1 is the Arctic Daylight preset value
     const appBg1 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--app-bg1').trim());
-    expect(appBg1).toBe('#f8fafc');
+    expect(appBg1).toBe('#eceff4');
   });
 });

@@ -6,7 +6,7 @@
 (function initParticlesRuntime(){
   let particles = [];
   let rafId = null;
-  let cfg = { count: 60, gridSize: 120, maxVelocity: 0.6, lineDistance: 120, effectColor: '#64FFFC' };
+  let cfg = { count: 60, gridSize: 120, maxVelocity: 0.6, lineDistance: 120, effectColor: '#3C9DFF' };
   let canvas = null;
   let ctx = null;
 
@@ -48,7 +48,7 @@
     }
     // simple linking lines (O(n^2) but OK for modest counts)
     ctx.lineWidth = 0.6;
-    const stroke = (getComputedStyle(document.documentElement).getPropertyValue('--effect-color').trim() || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || cfg.effectColor || '#64FFFC');
+    const stroke = (getComputedStyle(document.documentElement).getPropertyValue('--effect-color').trim() || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || cfg.effectColor || '#3C9DFF');
     ctx.strokeStyle = stroke;
     for(let i=0;i<particles.length;i++){
       const a = particles[i];

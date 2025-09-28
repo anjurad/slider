@@ -198,7 +198,7 @@ You can now load and update theme/config externally without editing code.
 window.postMessage({
   type: 'slider.config',
   action: 'merge', // 'merge' (default) | 'replace'
-  config: { primary: '#01B4E1', accent: '#64FFFC', contentPos: 'mr' }
+  config: { primary: '#007ACC', accent: '#3C9DFF', contentPos: 'mr' }
 }, '*');
 ```
 

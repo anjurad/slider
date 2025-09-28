@@ -298,7 +298,7 @@
   </div>
   <!-- Validation modal -->
   <div id="valOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:30"></div>
-  <div id="valModal" role="dialog" aria-modal="true" aria-labelledby="valTitle" style="position:fixed;top:40px;bottom:40px;left:40px;right:40px;width:auto;max-width:none;background:linear-gradient(135deg,var(--app-bg1, #0b1220),var(--app-bg2, #0f172a));color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column">
+  <div id="valModal" role="dialog" aria-modal="true" aria-labelledby="valTitle" style="position:fixed;top:40px;bottom:40px;left:40px;right:40px;width:auto;max-width:none;background:linear-gradient(135deg,var(--app-bg1, #1e1e1e),var(--app-bg2, #252526));color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column">
     <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex:0 0 auto">
       <h3 id="valTitle" style="margin:0;font-weight:600">Deck Validation</h3>
       <button class="btn" id="valClose">Close</button>
@@ -309,7 +309,7 @@
     </footer>
   </div>
   <div id="tocOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);display:none;z-index:30"></div>
-  <div id="tocModal" role="dialog" aria-modal="true" aria-labelledby="tocTitle" style="position:fixed;top:40px;bottom:40px;left:40px;right:40px;width:auto;max-width:none;background:linear-gradient(135deg,var(--app-bg1, #0b1220),var(--app-bg2, #0f172a));color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column">
+  <div id="tocModal" role="dialog" aria-modal="true" aria-labelledby="tocTitle" style="position:fixed;top:40px;bottom:40px;left:40px;right:40px;width:auto;max-width:none;background:linear-gradient(135deg,var(--app-bg1, #1e1e1e),var(--app-bg2, #252526));color:var(--text);border:1px solid rgba(255,255,255,.08);border-radius:12px;box-shadow:var(--shadow);display:none;z-index:31;flex-direction:column">
     <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex:0 0 auto">
       <h3 id="tocTitle" style="margin:0;font-weight:600">Table of Contents</h3>
       <button class="btn" id="tocClose">Close</button>
@@ -410,35 +410,46 @@
     CONFIG.appName = CONFIG.brand;
   }
   const PRESETS=[
-  // Default preset (used when no saved config exists)
-  {name:'Default', primary:'#01B4E1', accent:'#64FFFC', textColor:'#e2e8f0', group:'default', appBg1:'#0f172a', appBg2:'#1e293b', slideBg1:'#111827', slideBg2:'#111827'},
-  // Dark presets (order shown in modal)
-  {name:'Dark 1', primary:'#01B4E1', accent:'#64FFFC', textColor:'#ffffff', group:'dark', appBg1:'#0f1723', appBg2:'#111827', slideBg1:'#111827', slideBg2:'#111827'},
-  {name:'Dark 2', primary:'#232337', accent:'#64FFFC', textColor:'#ffffff', group:'dark', appBg1:'#0b1220', appBg2:'#111827', slideBg1:'#0f1723', slideBg2:'#111827'},
-  {name:'Dark 3', primary:'#01B4E1', accent:'#64FFFC', textColor:'#ffffff', group:'dark', appBg1:'#000000', appBg2:'#0b0b0b', slideBg1:'#000000', slideBg2:'#0b0b0b'},
-  // Light presets
-  {name:'Light 1', primary:'#086384', accent:'#64FFFC', textColor:'#0b1220', group:'light', appBg1:'#f8fafc', appBg2:'#eef2ff', slideBg1:'#ffffff', slideBg2:'#f8fafc'},
-  {name:'Light 2', primary:'#50677B', accent:'#01B4E1', textColor:'#0b1220', group:'light', appBg1:'#f8fafc', appBg2:'#ffffff', slideBg1:'#ffffff', slideBg2:'#f7fbff'},
-  {name:'Light 3', primary:'#01B4E1', accent:'#50677B', textColor:'#0b1220', group:'light', appBg1:'#ffffff', appBg2:'#ffffff', slideBg1:'#ffffff', slideBg2:'#ffffff'}
+    {key:'default', name:'Dark+ (Default)', group:'dark', primary:'#007ACC', accent:'#3C9DFF', textColor:'#D4D4D4', appBg1:'#1E1E1E', appBg2:'#252526', slideBg1:'#1F2428', slideBg2:'#1B2024', btnFill:'outline', btnBorderWidth:1, btnText:'auto'},
+    {key:'monokai-sunset', name:'Monokai Sunset', group:'dark', primary:'#F92672', accent:'#66D9EF', textColor:'#F8F8F2', appBg1:'#2D2A2E', appBg2:'#1B191C', slideBg1:'#272822', slideBg2:'#1F201B', btnFill:'outline', btnBorderWidth:1, btnText:'auto'},
+    {key:'nord-night', name:'Nord Night', group:'dark', primary:'#88C0D0', accent:'#BF616A', textColor:'#E5E9F0', appBg1:'#2E3440', appBg2:'#232832', slideBg1:'#2E3440', slideBg2:'#20242C', btnFill:'outline', btnBorderWidth:1, btnText:'auto'},
+    {key:'solarized-twilight', name:'Solarized Twilight', group:'dark', primary:'#268BD2', accent:'#2AA198', textColor:'#EEE8D5', appBg1:'#002B36', appBg2:'#073642', slideBg1:'#002B36', slideBg2:'#003845', btnFill:'outline', btnBorderWidth:1, btnText:'auto'},
+    {key:'high-contrast-slate', name:'High Contrast Slate', group:'dark', primary:'#0A84FF', accent:'#FF375F', textColor:'#F9FAFB', appBg1:'#111111', appBg2:'#161616', slideBg1:'#111111', slideBg2:'#1C1C1C', btnFill:'outline', btnBorderWidth:1, btnText:'auto'},
+    {key:'arctic-daylight', name:'Arctic Daylight', group:'light', primary:'#5E81AC', accent:'#88C0D0', textColor:'#2E3440', appBg1:'#ECEFF4', appBg2:'#F5F7FA', slideBg1:'#FFFFFF', slideBg2:'#EDEFF2', btnFill:'outline', btnBorderWidth:1, btnText:'auto'},
+    {key:'vs-minimal-light', name:'VS Minimal Light', group:'light', primary:'#007ACC', accent:'#D83B01', textColor:'#202124', appBg1:'#FFFFFF', appBg2:'#F3F6FB', slideBg1:'#FFFFFF', slideBg2:'#F7F9FC', btnFill:'outline', btnBorderWidth:1, btnText:'auto'},
+    {key:'solarized-day', name:'Solarized Day', group:'light', primary:'#268BD2', accent:'#CB4B16', textColor:'#586E75', appBg1:'#FDF6E3', appBg2:'#EEE8D5', slideBg1:'#FFFFFF', slideBg2:'#F5F1DA', btnFill:'solid', btnBorderWidth:1, btnText:'auto'},
+    {key:'nimbus-mono', name:'Nimbus Mono', group:'light', primary:'#1C64F2', accent:'#F97316', textColor:'#1F2933', appBg1:'#F8FAFC', appBg2:'#EEF2FF', slideBg1:'#FFFFFF', slideBg2:'#F4F7FF', btnFill:'solid', btnBorderWidth:1, btnText:'auto'}
   ];
   window.PRESETS = PRESETS;
 
-  // If no theme values in saved CONFIG, apply the Default preset (non-persistent) so the UI shows a consistent base
+  // If no theme values in saved CONFIG, apply the default preset (non-persistent) so the UI shows a consistent base
   (function applyDefaultIfMissing(){
     try{
       const hasAny = (typeof CONFIG.primary === 'string' && CONFIG.primary.trim()) || (typeof CONFIG.accent === 'string' && CONFIG.accent.trim()) || (typeof CONFIG.appBg1 === 'string' && CONFIG.appBg1.trim()) || (typeof CONFIG.textColor === 'string' && CONFIG.textColor.trim());
       if(!hasAny){
-        const def = PRESETS.find(p=>p.name==='Default');
+        const def = PRESETS.find(p=>p && p.key==='default');
         if(def){
-          CONFIG.primary = def.primary; CONFIG.accent = def.accent; CONFIG.textColor = def.textColor; CONFIG.appBg1 = def.appBg1; CONFIG.appBg2 = def.appBg2; CONFIG.slideBg1 = def.slideBg1; CONFIG.slideBg2 = def.slideBg2;
+          CONFIG.primary = def.primary;
+          CONFIG.accent = def.accent;
+          CONFIG.textColor = def.textColor;
+          CONFIG.appBg1 = def.appBg1;
+          CONFIG.appBg2 = def.appBg2;
+          CONFIG.slideBg1 = def.slideBg1;
+          CONFIG.slideBg2 = def.slideBg2;
+          CONFIG.btnFill = def.btnFill || 'outline';
+          CONFIG.btnBorderWidth = (typeof def.btnBorderWidth === 'number') ? Math.max(1, Math.min(6, def.btnBorderWidth)) : 1;
+          CONFIG.btnTextColor = (def.btnText && def.btnText !== 'auto') ? def.btnText : 'auto';
         }
       }
     }catch(e){}
   })();
+  if(typeof CONFIG.btnFill !== 'string') CONFIG.btnFill = 'outline';
+  if(typeof CONFIG.btnBorderWidth !== 'number') CONFIG.btnBorderWidth = 1;
+  if(typeof CONFIG.btnTextColor !== 'string') CONFIG.btnTextColor = 'auto';
   // Default outline setting: on when not present
   if(typeof CONFIG.slideBorderOn !== 'boolean') CONFIG.slideBorderOn = true;
   // Default outline width (px)
-  if(typeof CONFIG.slideBorderWidth !== 'number') CONFIG.slideBorderWidth = 3;
+  if(typeof CONFIG.slideBorderWidth !== 'number') CONFIG.slideBorderWidth = 1;
   // Default progress bar behavior: hide when UI is off
   if(typeof CONFIG.hideProgressWithUi !== 'boolean') CONFIG.hideProgressWithUi = true;
   // Overlay & typography defaults (with migration from previous keys)
@@ -536,16 +547,16 @@
           // fall back to legacy local computation below
           const s1 = (typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()) ? normalizeHex(CONFIG.slideBg1) : null;
           const s2 = (typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()) ? normalizeHex(CONFIG.slideBg2) : null;
-          if(s1){ const c = hexToRgb(s1); if(c) document.documentElement.style.setProperty('--slide-bg1', `rgba(${c.r},${c.g},${c.b},${o1})`); else document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); } else { document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); }
-          if(s2){ const c = hexToRgb(s2); if(c) document.documentElement.style.setProperty('--slide-bg2', `rgba(${c.r},${c.g},${c.b},${o2})`); else document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); } else { document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
+          if(s1){ const c = hexToRgb(s1); if(c) document.documentElement.style.setProperty('--slide-bg1', `rgba(${c.r},${c.g},${c.b},${o1})`); else document.documentElement.style.setProperty('--slide-bg1', `rgba(31,36,40,${o1})`); } else { document.documentElement.style.setProperty('--slide-bg1', `rgba(31,36,40,${o1})`); }
+          if(s2){ const c = hexToRgb(s2); if(c) document.documentElement.style.setProperty('--slide-bg2', `rgba(${c.r},${c.g},${c.b},${o2})`); else document.documentElement.style.setProperty('--slide-bg2', `rgba(27,32,36,${o2})`); } else { document.documentElement.style.setProperty('--slide-bg2', `rgba(27,32,36,${o2})`); }
         }
       } else {
         const s1 = (typeof CONFIG.slideBg1 === 'string' && CONFIG.slideBg1.trim()) ? normalizeHex(CONFIG.slideBg1) : null;
         const s2 = (typeof CONFIG.slideBg2 === 'string' && CONFIG.slideBg2.trim()) ? normalizeHex(CONFIG.slideBg2) : null;
-        if(s1){ const c = hexToRgb(s1); if(c) document.documentElement.style.setProperty('--slide-bg1', `rgba(${c.r},${c.g},${c.b},${o1})`); else document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); } else { document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); }
-        if(s2){ const c = hexToRgb(s2); if(c) document.documentElement.style.setProperty('--slide-bg2', `rgba(${c.r},${c.g},${c.b},${o2})`); else document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); } else { document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
+        if(s1){ const c = hexToRgb(s1); if(c) document.documentElement.style.setProperty('--slide-bg1', `rgba(${c.r},${c.g},${c.b},${o1})`); else document.documentElement.style.setProperty('--slide-bg1', `rgba(31,36,40,${o1})`); } else { document.documentElement.style.setProperty('--slide-bg1', `rgba(31,36,40,${o1})`); }
+        if(s2){ const c = hexToRgb(s2); if(c) document.documentElement.style.setProperty('--slide-bg2', `rgba(${c.r},${c.g},${c.b},${o2})`); else document.documentElement.style.setProperty('--slide-bg2', `rgba(27,32,36,${o2})`); } else { document.documentElement.style.setProperty('--slide-bg2', `rgba(27,32,36,${o2})`); }
       }
-    }catch(e){ document.documentElement.style.setProperty('--slide-bg1', `rgba(17,24,39,${o1})`); document.documentElement.style.setProperty('--slide-bg2', `rgba(17,24,39,${o2})`); }
+    }catch(e){ document.documentElement.style.setProperty('--slide-bg1', `rgba(31,36,40,${o1})`); document.documentElement.style.setProperty('--slide-bg2', `rgba(27,32,36,${o2})`); }
   // Also scale blur and shadow so 0% is truly clear
   const blurPx = (8 * dec).toFixed(2) + 'px';
   // scale the alpha of the existing shadow; base shadow is rgba(0,0,0,0.25)
@@ -1653,11 +1664,11 @@
     return;
   }
     }catch{}
-  const DEMO_MD = `---
+const DEMO_MD = `---
 app-name: SlideApp
-theme-primary: "#01B4E1"
-theme-accent: "#64FFFC"
-theme-text: "#e2e8f0"
+theme-primary: "#007ACC"
+theme-accent: "#3C9DFF"
+theme-text: "#d4d4d4"
 background: particles
 ui: on
 ---

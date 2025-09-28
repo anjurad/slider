@@ -9,9 +9,9 @@ Put a YAML‑like block at the very start of your Markdown file:
 ```
 ---
 app-name: My Talk
-theme-primary: "#01B4E1"
-theme-accent: "#64FFFC"
-theme-text: "#e2e8f0"
+theme-primary: "#007ACC"
+theme-accent: "#3C9DFF"
+theme-text: "#d4d4d4"
 background: particles   # gradient | particles | off
 defaults-title-size: 28 # 12..64
 defaults-subtitle-size: 16 # 10..48
@@ -38,8 +38,8 @@ overlay-pos: br               # tl|tr|bl|br
 overlay-subtitle: on          # on|off|true|false|1|0
 overlay-subtitle-size: 18     # 10..48
 overlay-subtitle-color: accent# primary|accent
-slide-bg1: "#0f172a"           # optional per‑slide background gradient start
-slide-bg2: "#1e293b"           # optional per‑slide background gradient end
+slide-bg1: "#1f2428"           # optional per‑slide background gradient start
+slide-bg2: "#1b2024"           # optional per‑slide background gradient end
 content-pos: mr               # per‑slide content position
 ---
 ```
@@ -90,6 +90,20 @@ When the browser reports “reduced motion,” section dividers and overlays ski
 
 ![Style modal in reduced-motion mode](images/style-modal-reduced-motion.png)
 
+## Preset themes
+
+The built-in presets now borrow color systems from popular editor themes so slides feel familiar in developer contexts. Each preset defines primary/accent hues, application backgrounds, slide chrome, and whether the buttons use a filled or outlined style by default.
+
+- Dark+ (Default) — VS Code inspired blues with outlined buttons.
+- Monokai Sunset — dark charcoal with magenta/cyan highlights and solid buttons.
+- Nord Night — dark slate with ice accents and outlined buttons.
+- Solarized Twilight — teal/blue duotone on deep cyan with outlined buttons.
+- High Contrast Slate — accessibility-focused dark preset with vivid outlines.
+- Arctic Daylight — Nordic-inspired light theme with outlined buttons.
+- VS Minimal Light — crisp light UI inspired by VS Code, outlined buttons.
+- Solarized Day — warm paper-like light preset with soft filled buttons.
+- Nimbus Mono — cool-neutral light preset with solid translucent buttons.
+
 ## Button styling
 
 Global controls that affect the application buttons (header, footer, and controls):
@@ -106,6 +120,7 @@ Global controls that affect the application buttons (header, footer, and control
   - Behavior:
     - Solid uses the theme gradient fill (default).
     - Outline removes the fill but keeps the button outline/border and text color.
+- The default Dark+ preset ships with outlined buttons using a 1 px border; adjust `Button fill` or border width in the Style modal if you need heavier chrome.
 
 External config
 - JSON keys mirror the Style UI / deck keys:

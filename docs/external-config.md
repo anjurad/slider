@@ -19,11 +19,11 @@ Schema (accepted keys)
 {
   "appName": "SlideApp",
   "brand": "SlideApp", // legacy alias for appName
-  "primary": "#01B4E1", "accent": "#64FFFC", "textColor": "#e2e8f0",
+  "primary": "#569CD6", "accent": "#4FC1FF", "textColor": "#d4d4d4",
   "btnTextColor": "auto", // or "#rrggbb" for custom
-  "btnFill": "solid",     // or "outline"
-  "appBg1": "#0f172a", "appBg2": "#1e293b",
-  "slideBg1": "#111827", "slideBg2": "#111827",
+  "btnFill": "outline",     // or "solid"
+  "appBg1": "#1e1e1e", "appBg2": "#252526",
+  "slideBg1": "#1f2428", "slideBg2": "#1b2024",
   "slideOpacity": 0.85, // 0..1
   "slideBorderOn": true, "slideBorderWidth": 3, // px 0..8
   "overlayOn": false, "overlayPos": "tl",
@@ -52,7 +52,7 @@ Examples
 window.postMessage({
   type: 'slider.config',
   action: 'merge', // or 'replace'
-  config: { primary: '#01B4E1', accent: '#64FFFC', contentPos: 'mm' }
+  config: { primary: '#569CD6', accent: '#4FC1FF', contentPos: 'mm' }
 }, '*');
 ```
 

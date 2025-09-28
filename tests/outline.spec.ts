@@ -21,7 +21,7 @@ function expectShadowHasAccent(shadow, accentRgb){
   const s = norm(shadow);
   expect(s).toContain(accentRgb);
   expect(s).toContain('inset');
-  expect(s).toContain('0px 0px 0px 3px');
+  expect(s).toContain('0px 0px 0px 1px');
 }
 
 test.describe('Slide outline', () => {
@@ -29,8 +29,8 @@ test.describe('Slide outline', () => {
     await page.goto(toFileUrl(appPath));
     await page.waitForSelector('.slide.active');
     const shadow = await getBeforeBoxShadow(page, '.slide.active');
-  // default accent is #64fffc => rgb(100, 255, 252)
-  expectShadowHasAccent(shadow, 'rgb(100, 255, 252)');
+  // default accent is #3c9dff => rgb(60, 157, 255)
+  expectShadowHasAccent(shadow, 'rgb(60, 157, 255)');
   });
 
   test('outline follows accent after save', async ({ page }) => {

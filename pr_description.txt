@@ -1,1 +1,25 @@
-Title: Style modal layout cleanup + CI workflow resilience\n\nSummary\nPolishes the Style modal experience by reorganizing the markup into responsive sections, adds matching layout primitives in CSS, and hardens CI workflows with explicit cache restores and manual dispatch support. Focus stays on UI structure and pipeline hygiene without altering underlying theme behavior.\n\nWhat’s included\n- UI: Rebuild Style modal markup into columnar sections (App, Colors, Backgrounds, Overlay, Content Position, Fonts, Buttons, Outline, Config) using reusable grid/inline helpers.\n- CSS: Add grid/card utilities so the modal adapts cleanly from mobile to desktop breakpoints while inheriting themed colors.\n- Runtime: Preserve existing event wiring; preview paths still reference the same element IDs, just under new structural containers.\n- CI: Add lockfile diagnostics, explicit npm cache restore, and `workflow_dispatch` triggers for both `ci.yml` and `e2e.yml`.\n- Docs: Refresh internal Copilot instructions to reference `slider.html`.\n\nValidation (local)\n- Unit: PASS (`npm run test:unit`)\n- E2E: PASS (`npm run test:e2e`)\n\nNotes\n- Manual browser smoke test still recommended to confirm layout at narrow/wide widths and reduced-motion mode.\n- Follow-up: add updated screenshots in docs once UI validation is complete.\n\nChecklist\n- [x] UI restructuring\n- [x] CI workflow adjustments\n- [x] Tests green\n- [x] PR description\nEOF
+Title: Refresh theme presets and defaults
+
+Summary
+Introduce a new preset palette inspired by popular editor themes, update the default Slider look-and-feel to VS Code’s Dark+ palette with lean 1 px outlines, and document the refreshed options so teams can start from balanced, accessible color schemes.
+
+What’s included
+- Presets: Replace legacy Light/Dark presets with nine curated themes (Dark+ (Default), Monokai Sunset, Nord Night, Solarized Twilight, High Contrast Slate, Arctic Daylight, VS Minimal Light, Solarized Day, Nimbus Mono) and capture per-preset button fill/outline preferences.
+- Defaults: Align global CSS variables, demo deck, and sample content with the Dark+ baseline; outline buttons and slides now use 1 px borders by default.
+- UI wiring: Ensure Style modal preset buttons apply `btnFill`, `btnBorderWidth`, and text-color mode without forcing thicker outlines when switching modes.
+- Docs & assets: Document the preset lineup, refresh screenshots, examples, and SVG/README/config snippets to match the new colors.
+- Tests: Adjust Playwright expectations for new defaults and ensure preset/app background regressions remain covered.
+
+Validation (local)
+- Unit: PASS (`npm run test:unit`)
+- E2E: PASS (`npm run test:e2e`)
+
+Notes
+- Manual smoke in a real browser can confirm subjective theme balance (try outline presets and button hover states).
+
+Checklist
+- [x] Preset palette refresh
+- [x] Default theme alignment
+- [x] Docs updated
+- [x] Tests green
+- [x] PR description

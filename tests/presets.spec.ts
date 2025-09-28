@@ -72,7 +72,7 @@ test.describe('Style Presets', () => {
     const cssPrimary = await getCssVar(page, '--primary');
     const cssAccent = await getCssVar(page, '--accent');
 
-    expect(cssPrimary.toLowerCase()).toBe('#01b4e1');
-    expect(cssAccent.toLowerCase()).toBe('#64fffc');
+    expect(cssPrimary.toLowerCase()).toBe('#007acc');
+    expect(cssAccent.toLowerCase()).toBe('#3c9dff');
   });
 });

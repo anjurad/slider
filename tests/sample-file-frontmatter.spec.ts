@@ -52,8 +52,8 @@ test.describe('Sample deck frontmatter application', () => {
   // Colors applied to CSS variables
   const primary = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim());
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
-  expect(primary.toLowerCase()).toBe('#01b4e1');
-  expect(accent.toLowerCase()).toBe('#64fffc');
+  expect(primary.toLowerCase()).toBe('#007acc');
+  expect(accent.toLowerCase()).toBe('#3c9dff');
 
     // Opacity applied per sample frontmatter (check CSS var alphas derived dynamically)
     const bg1 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--slide-bg1').trim());
@@ -77,8 +77,8 @@ test.describe('Sample deck frontmatter application', () => {
     }
     const exp1 = (0.75 * expectedDec).toFixed(3).replace(/0+$/,'0');
     const exp2 = (0.55 * expectedDec).toFixed(3).replace(/0+$/,'0');
-    const re1 = new RegExp(`rgba\\(\\s*17\\s*,\\s*24\\s*,\\s*39\\s*,\\s*${exp1.replace('.', '\\.')}\\s*\\)`);
-    const re2 = new RegExp(`rgba\\(\\s*17\\s*,\\s*24\\s*,\\s*39\\s*,\\s*${exp2.replace('.', '\\.')}\\s*\\)`);
+    const re1 = new RegExp(`rgba\\(\\s*31\\s*,\\s*36\\s*,\\s*40\\s*,\\s*${exp1.replace('.', '\\.')}\\s*\\)`);
+    const re2 = new RegExp(`rgba\\(\\s*27\\s*,\\s*32\\s*,\\s*36\\s*,\\s*${exp2.replace('.', '\\.')}\\s*\\)`);
     expect(bg1).toMatch(re1);
     expect(bg2).toMatch(re2);
 

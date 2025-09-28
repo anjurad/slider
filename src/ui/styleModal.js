@@ -27,13 +27,13 @@
       cfgModal.style.display='flex';
       withSafe(()=>{ document.getElementById('cfgName').value=((w.CONFIG?.appName)||w.CONFIG?.brand||''); });
       // colors & backgrounds
-      withSafe(()=>{ const pNorm = normalizeHexLocal(w.CONFIG?.primary||'') || '#01B4E1'; document.getElementById('cfgPrimary').value = pNorm; });
-      withSafe(()=>{ const aNorm = normalizeHexLocal(w.CONFIG?.accent||'') || '#64FFFC'; document.getElementById('cfgAccent').value = aNorm; });
+      withSafe(()=>{ const pNorm = normalizeHexLocal(w.CONFIG?.primary||'') || '#569cd6'; document.getElementById('cfgPrimary').value = pNorm; });
+      withSafe(()=>{ const aNorm = normalizeHexLocal(w.CONFIG?.accent||'') || '#4fc1ff'; document.getElementById('cfgAccent').value = aNorm; });
       withSafe(()=>{
-        const appBg1 = normalizeHexLocal(w.CONFIG?.appBg1) || normalizeHexLocal(getComputedStyle(document.documentElement).getPropertyValue('--app-bg1').trim()) || '#0f172a';
-        const appBg2 = normalizeHexLocal(w.CONFIG?.appBg2) || normalizeHexLocal(getComputedStyle(document.documentElement).getPropertyValue('--app-bg2').trim()) || '#1e293b';
-        const slideBg1 = normalizeHexLocal(w.CONFIG?.slideBg1) || '#111827';
-        const slideBg2 = normalizeHexLocal(w.CONFIG?.slideBg2) || '#111827';
+        const appBg1 = normalizeHexLocal(w.CONFIG?.appBg1) || normalizeHexLocal(getComputedStyle(document.documentElement).getPropertyValue('--app-bg1').trim()) || '#1e1e1e';
+        const appBg2 = normalizeHexLocal(w.CONFIG?.appBg2) || normalizeHexLocal(getComputedStyle(document.documentElement).getPropertyValue('--app-bg2').trim()) || '#252526';
+        const slideBg1 = normalizeHexLocal(w.CONFIG?.slideBg1) || '#1f2428';
+        const slideBg2 = normalizeHexLocal(w.CONFIG?.slideBg2) || '#1b2024';
         document.getElementById('cfgAppBg1').value = appBg1;
         document.getElementById('cfgAppBg2').value = appBg2;
         document.getElementById('cfgSlideBg1').value = slideBg1;
@@ -41,7 +41,7 @@
       });
       // text & button controls
       withSafe(()=>{
-        const txt = normalizeHexLocal(w.CONFIG?.textColor) || normalizeHexLocal(getComputedStyle(document.documentElement).getPropertyValue('--text').trim()) || '#e2e8f0';
+        const txt = normalizeHexLocal(w.CONFIG?.textColor) || normalizeHexLocal(getComputedStyle(document.documentElement).getPropertyValue('--text').trim()) || '#d4d4d4';
         document.getElementById('cfgTextColor').value = txt;
         const modeSel = document.getElementById('cfgBtnTextMode');
         const btnClr = document.getElementById('cfgBtnTextColor');
@@ -107,7 +107,20 @@
   modeSel.onchange = ()=>{ if(modeSel.value==='auto'){ w.CONFIG.btnTextColor = 'auto'; } else { const n=normalizeHexLocal(btnClr.value||''); if(n) w.CONFIG.btnTextColor = n; } withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ typeof w.applyConfig==='function' && w.applyConfig(); }); };
         const fillSel = document.getElementById('cfgBtnFill');
   fillSel.onchange = ()=>{ const v=String(fillSel.value||'solid').toLowerCase(); w.CONFIG.btnFill = (v==='outline'?'outline':'solid');
-    try{ const bwEl = document.getElementById('cfgBtnBorderWidth'); const bwRead = document.getElementById('cfgBtnBorderWidthVal'); if(bwEl){ let n = Math.max(1, Math.min(6, Math.round(Number(bwEl.value)|| (v==='outline'?2:1)))); if(!(typeof w.CONFIG.btnBorderWidth==='number')){ n = (v==='outline'?2:1); bwEl.value = String(n); } if(bwRead) bwRead.textContent = `(${n}px)`; w.CONFIG.btnBorderWidth = n; } }catch(e){ /* eslint-disable no-empty */ }
+    try{
+      const bwEl = document.getElementById('cfgBtnBorderWidth');
+      const bwRead = document.getElementById('cfgBtnBorderWidthVal');
+      if(bwEl){
+        const parsed = Number(bwEl.value);
+        let n = Math.max(1, Math.min(6, Math.round(isFinite(parsed) ? parsed : 1)));
+        if(!(typeof w.CONFIG.btnBorderWidth==='number')){
+          n = (v==='outline'?1:1);
+          bwEl.value = String(n);
+        }
+        if(bwRead) bwRead.textContent = `(${n}px)`;
+        w.CONFIG.btnBorderWidth = n;
+      }
+    }catch(e){ /* eslint-disable no-empty */ }
     withSafe(()=>{ w.Theme && w.Theme.applyConfig && w.Theme.applyConfig(w.CONFIG); }); withSafe(()=>{ typeof w.applyConfig==='function' && w.applyConfig(); }); withSafe(()=>{ setTimeout(()=>{ document.getElementById('cfgSave')?.scrollIntoView({block:'center'}); }, 0); }); };
         bindLive('cfgAppBg1','appBg1', true);
         bindLive('cfgAppBg2','appBg2', true);
@@ -123,10 +136,16 @@
         const setActivePreset = (idx)=>{ [...row.querySelectorAll('button.preset-btn')].forEach(b=>{ const on = b.dataset.presetIndex===String(idx); b.classList.toggle('active', on); b.setAttribute('aria-pressed', on? 'true':'false'); }); };
         const presets = (w.PRESETS || []);
         presets.forEach((p,idx)=>{
-          const b=document.createElement('button'); b.className='btn preset-btn'; b.textContent=p.name; b.title = `Apply ${p.name}`; b.dataset.presetIndex = String(idx); b.setAttribute('aria-pressed','false');
+          const b=document.createElement('button'); b.className='btn preset-btn'; b.textContent=p.name; b.title = `Apply ${p.name}`; b.dataset.presetIndex = String(idx); if(p.key) b.dataset.presetKey = p.key; b.setAttribute('aria-pressed','false');
           withSafe(()=>{ b.style.removeProperty('color'); });
           withSafe(()=>{ b.style.borderColor = 'rgba(255,255,255,0.06)'; });
           b.onclick = ()=>{
+            const fillValue = (p.btnFill === 'outline' ? 'outline' : 'solid');
+            const borderWidth = (typeof p.btnBorderWidth === 'number' && isFinite(p.btnBorderWidth))
+              ? Math.max(1, Math.min(6, Math.round(p.btnBorderWidth)))
+              : (fillValue === 'outline' ? 2 : 1);
+            const btnTextRaw = (typeof p.btnText === 'string' && p.btnText.trim().length) ? p.btnText.trim() : 'auto';
+            const normalizedBtnText = btnTextRaw === 'auto' ? 'auto' : (normalizeHexLocal(btnTextRaw) || btnTextRaw);
             withSafe(()=>{ document.getElementById('cfgPrimary').value = p.primary; });
             withSafe(()=>{ document.getElementById('cfgAccent').value = p.accent; });
             withSafe(()=>{ if(p.textColor) document.getElementById('cfgTextColor').value = p.textColor; });
@@ -134,6 +153,9 @@
             withSafe(()=>{ if(p.appBg2) document.getElementById('cfgAppBg2').value = p.appBg2; });
             withSafe(()=>{ if(p.slideBg1) document.getElementById('cfgSlideBg1').value = p.slideBg1; });
             withSafe(()=>{ if(p.slideBg2) document.getElementById('cfgSlideBg2').value = p.slideBg2; });
+            withSafe(()=>{ const fillSel=document.getElementById('cfgBtnFill'); if(fillSel) fillSel.value = fillValue; });
+            withSafe(()=>{ const bwEl=document.getElementById('cfgBtnBorderWidth'); const bwRead=document.getElementById('cfgBtnBorderWidthVal'); if(bwEl){ bwEl.value = String(borderWidth); if(bwRead) bwRead.textContent = `(${borderWidth}px)`; } });
+            withSafe(()=>{ const modeSel=document.getElementById('cfgBtnTextMode'); const btnClr=document.getElementById('cfgBtnTextColor'); if(modeSel && btnClr){ if(normalizedBtnText === 'auto'){ modeSel.value = 'auto'; btnClr.disabled = true; } else { modeSel.value = 'custom'; btnClr.disabled = false; btnClr.value = normalizedBtnText; } } });
             withSafe(()=>{
               const nPrimary = normalizeHexLocal(p.primary) || p.primary;
               const nAccent = normalizeHexLocal(p.accent) || p.accent;
@@ -144,6 +166,9 @@
               if(p.appBg2) w.CONFIG.appBg2 = normalizeHexLocal(p.appBg2) || p.appBg2; else delete w.CONFIG.appBg2;
               if(p.slideBg1) w.CONFIG.slideBg1 = normalizeHexLocal(p.slideBg1) || p.slideBg1; else delete w.CONFIG.slideBg1;
               if(p.slideBg2) w.CONFIG.slideBg2 = normalizeHexLocal(p.slideBg2) || p.slideBg2; else delete w.CONFIG.slideBg2;
+              w.CONFIG.btnFill = fillValue;
+              w.CONFIG.btnBorderWidth = borderWidth;
+              w.CONFIG.btnTextColor = normalizedBtnText;
               // Apply via both paths for consistency with page-level side effects
               withSafe(()=>{ if(w.Theme && typeof w.Theme.applyConfig === 'function'){ try{ w.Theme.applyConfig(w.CONFIG); }catch(e){ /* ignore */ } } });
               withSafe(()=>{ if (typeof w.applyConfig==='function'){ try{ w.applyConfig(); }catch(e){ /* ignore */ } } });
@@ -156,7 +181,7 @@
         });
         if(darkGroup.group.children.length){ row.appendChild(darkGroup.container); }
         if(lightGroup.group.children.length){ row.appendChild(lightGroup.container); }
-        withSafe(()=>{ const raw = localStorage.getItem('slideapp.config'); if(!raw){ const defaultIdx = presets.findIndex(p=>p.name && p.name.toLowerCase()==='default'); if(defaultIdx>=0) setActivePreset(defaultIdx); } });
+        withSafe(()=>{ const raw = localStorage.getItem('slideapp.config'); if(!raw){ const defaultIdx = presets.findIndex(p=>p && p.key==='default'); if(defaultIdx>=0) setActivePreset(defaultIdx); } });
       });
       // opacity slider
       withSafe(()=>{
@@ -346,7 +371,7 @@
       }catch(e){ try{ console.error('Save failed', e); }catch(_){ /* eslint-disable no-empty */ } }
       // Always close the modal even if a non-critical field failed, to avoid trapping the UI
       cfgOverlay.style.display=cfgModal.style.display='none';
-      withSafe(()=>{ w.showToast && w.showToast(`Saved: ${(w.CONFIG.appName||w.CONFIG.brand||'SlideApp')} • ${(w.CONFIG.primary||'#01B4E1')} / ${(w.CONFIG.accent||'#64FFFC')} • Opacity ${Math.round(w.CONFIG.slideOpacity*100)}% • Outline ${(w.CONFIG.slideBorderOn!==false?'on':'off')} ${w.CONFIG.slideBorderWidth}px`); });
+      withSafe(()=>{ w.showToast && w.showToast(`Saved: ${(w.CONFIG.appName||w.CONFIG.brand||'SlideApp')} • ${(w.CONFIG.primary||'#007acc')} / ${(w.CONFIG.accent||'#3c9dff')} • Opacity ${Math.round(w.CONFIG.slideOpacity*100)}% • Outline ${(w.CONFIG.slideBorderOn!==false?'on':'off')} ${w.CONFIG.slideBorderWidth}px`); });
       // Update baseline for T toggle
       withSafe(()=>{
         w.BASE_OPACITY = w.CONFIG.slideOpacity;

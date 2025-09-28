@@ -1,8 +1,8 @@
 ---
 app-name: Slider Static Site
-theme-primary: "#01B4E1"
-theme-accent: "#64FFFC"
-theme-text: "#e2e8f0"
+theme-primary: "#569CD6"
+theme-accent: "#4FC1FF"
+theme-text: "#d4d4d4"
 background: particles
 ui: on
 ---
@@ -26,4 +26,3 @@ This deck is served directly from the repository — no upload needed.
 - Use front matter to set theme and defaults
 - Query param `?deck=content/welcome.md` deep-links to a deck
 - Keep using all existing Slider features
-

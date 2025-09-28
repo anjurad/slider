@@ -1,19 +1,19 @@
-Title: Style modal layout cleanup + CI workflow resilience
+Title: Refresh preset palette and default theme
 
 Summary
-Reorganizes the Style modal markup into semantically grouped sections, layers in responsive layout helpers, and updates CI workflows for better cache reuse and manual triggers. Aims to improve maintainability of the UI while keeping existing theming logic intact.
+Replace the dated Light/Dark presets with a curated set of nine editor-inspired themes, update Slider’s Dark+ defaults, and wire the Style modal so presets control button outline/solid states alongside colors.
 
 Changes
-- HTML (`slider.html`): Replace flat flex rows with a two-column sectioned layout covering App, Colors, Backgrounds, Overlay, Content Position, Fonts, Buttons, Outline, and Config controls.
-- CSS (`assets/app.css`): Add grid, card, and inline utility classes to drive the new layout while inheriting current theme variables.
-- JS (`src/ui/styleModal.js`): Confirmed selectors/IDs remain consistent; no behavioral edits beyond structure awareness.
-- CI (`.github/workflows/ci.yml`, `.github/workflows/e2e.yml`): Enable `workflow_dispatch`, add explicit npm cache restore, and print lockfile diagnostics before installation.
-- Docs (`.github/copilot-instructions.md`): Update references to the renamed `slider.html` entry file.
+- Data (`slider.html`): redefine `PRESETS` with keys, metadata, and per-preset `btnFill`/`btnBorderWidth`; update default demo frontmatter to the VS Code Dark+ palette and ensure bootstrap config seeds outline buttons.
+- UI (`src/ui/styleModal.js`): set fill/outline mode and border width when presets are applied, keep button text color modes in sync, and allow 1 px outlines when toggling modes.
+- Styling (`assets/app.css`, `assets/preview.svg`): align root CSS variables, gradients, and backgrounds with the new Dark+ look while standardising slide/button borders to 1 px.
+- Runtime helpers (`src/app/theme.ts`, `src/runtime/particles.js`): use new fallback colors for theme computations and particle effects.
+- Content & docs (`content/welcome.md`, `docs/authoring.md`, `docs/external-config.md`, `README.md`): refresh examples/screenshots and document the new presets plus outline default.
+- Tests (`tests/*.spec.ts`): update Playwright expectations for default colors, outline width, and sample deck backgrounds.
 
 Validation
 - Unit: PASS (`npm run test:unit`)
 - E2E: PASS (`npm run test:e2e`)
 
 Notes
-- Manual browser verification across narrow and wide breakpoints plus reduced-motion mode is covered via Playwright smoke screenshots (`docs/images/style-modal-*.png`).
-- External docs now embed updated Style modal screenshots captured after validation.
+- Manual review of the new light/dark outline presets is still recommended to confirm subjective aesthetics.

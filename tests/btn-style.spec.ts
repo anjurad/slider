@@ -44,4 +44,41 @@ test.describe('Button styles', () => {
     const modalBtnColor = await page.locator('#cfgLoadUrl').evaluate(el => getComputedStyle(el).color);
     expect(modalBtnColor.replace(/\s+/g,'')).toMatch(/rgb\(255,0,255\)/);
   });
+
+  test('Auto button text uses preset text color for outline presets', async ({ page }) => {
+    const appPath = path.resolve(__dirname, '..', 'slider.html');
+    await page.goto(toFileUrl(appPath));
+
+    // Open Style modal and choose a light outline preset
+    await page.click('#styleBtn');
+    await page.waitForSelector('#cfgModal', { state: 'visible' });
+    await page.locator('button.preset-btn', { hasText: 'Arctic Daylight' }).click();
+    await page.click('#cfgSave');
+
+    // Ensure mode stayed on auto
+    await page.click('#styleBtn');
+    const modeValue = await page.$eval('#cfgBtnTextMode', (el: HTMLSelectElement) => el.value);
+    expect(modeValue).toBe('auto');
+    await page.click('#cfgSave');
+
+    const { btnColor, textVar } = await page.evaluate(() => {
+      const styleBtn = document.getElementById('styleBtn');
+      if (!styleBtn) throw new Error('style button missing');
+      const btnColor = getComputedStyle(styleBtn).color.trim();
+      const textVar = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+      return { btnColor, textVar };
+    });
+
+    const toRgb = (hex: string) => {
+      const clean = hex.replace(/[^0-9a-f]/gi, '');
+      if (clean.length !== 6) return null;
+      const r = parseInt(clean.slice(0, 2), 16);
+      const g = parseInt(clean.slice(2, 4), 16);
+      const b = parseInt(clean.slice(4, 6), 16);
+      return `rgb(${r}, ${g}, ${b})`;
+    };
+
+    const expected = toRgb(textVar) ?? textVar;
+    expect(btnColor.replace(/\s+/g, '')).toBe(expected.replace(/\s+/g, ''));
+  });
 });

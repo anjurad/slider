@@ -27,7 +27,7 @@ test.describe('Button Fill dropdown', () => {
       return { bg: cs.backgroundImage, bw: cs.borderWidth, bc: cs.borderColor };
     });
     expect(stylesOutline.bg).toBe('none');
-    expect(stylesOutline.bw).toBe('2px');
+    expect(stylesOutline.bw).toBe('1px');
     expect(stylesOutline.bc.replace(/\s+/g,'')).toMatch(/rgb\(0,255,0\)/);
 
     // Re-open Style, switch to solid and Save
